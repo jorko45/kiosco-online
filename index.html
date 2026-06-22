@@ -1,804 +1,1066 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kiosco Online</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --negro: #0f0f0f;
-      --negro2: #1a1a1a;
-      --negro3: #242424;
-      --dorado: #C9A84C;
-      --dorado2: #e8c86a;
-      --blanco: #ffffff;
-      --gris: #f5f5f5;
-      --gris2: #e0e0e0;
-      --texto: #1a1a1a;
-      --rojo: #e53935;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Montserrat', sans-serif; background: #f7f7f7; color: var(--texto); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K24 — Kiosco Online 24hs · Córdoba</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --oro:#c9a84c;--oro-claro:#e8c96a;--negro:#0a0a0a;--negro2:#111;--negro3:#1a1a1a;
+  --gris:#888;--blanco:#fff;--verde:#25d366;--azul:#1a3a5c;--azul2:#0f2540;--azul-acc:#3b82f6;
+}
+html{scroll-behavior:smooth}
+body{background:var(--negro);color:var(--blanco);font-family:'Inter',sans-serif;overflow-x:hidden}
 
-    /* ── NAV ── */
-    nav {
-      background: var(--negro);
-      padding: 0 2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 60px; position: sticky; top: 0; z-index: 200;
-      border-bottom: 2px solid var(--dorado);
-    }
-    .logo { font-size: 22px; font-weight: 900; color: var(--dorado); letter-spacing: 2px; text-transform: uppercase; text-decoration: none; }
-    .logo span { color: var(--blanco); font-weight: 400; }
-    .nav-links { display: flex; gap: 28px; list-style: none; }
-    .nav-links a { color: rgba(255,255,255,.7); text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; transition: color .2s; }
-    .nav-links a:hover { color: var(--dorado); }
-    .cart-btn {
-      background: var(--dorado); color: var(--negro); border: none;
-      padding: 8px 18px; font-family: 'Montserrat', sans-serif;
-      font-size: 13px; font-weight: 700; letter-spacing: 1px;
-      text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 8px;
-      transition: background .2s;
-    }
-    .cart-btn:hover { background: var(--dorado2); }
-    .cart-count {
-      background: var(--negro); color: var(--dorado);
-      border-radius: 50%; width: 20px; height: 20px;
-      font-size: 11px; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-    }
+/* TICKER */
+.ticker-wrap{background:var(--oro);overflow:hidden;height:36px;display:flex;align-items:center}
+.ticker{display:flex;animation:ticker 26s linear infinite;white-space:nowrap}
+.ticker span{color:#111;font-weight:600;font-size:.78rem;letter-spacing:.5px;padding:0 40px}
+.ticker span::before{content:'◆  ';color:#7a5f1a}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-    /* ── HERO ── */
-    .hero {
-      background: var(--negro);
-      padding: 4.5rem 2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      position: relative; overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
-      background: linear-gradient(135deg, transparent 30%, rgba(201,168,76,.07) 100%);
-    }
-    .hero-content { position: relative; z-index: 1; max-width: 520px; }
-    .hero-tag { display: inline-block; background: var(--dorado); color: var(--negro); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; margin-bottom: 20px; }
-    .hero h1 { font-size: 58px; font-weight: 900; color: var(--blanco); line-height: 1.05; text-transform: uppercase; margin-bottom: 18px; }
-    .hero h1 em { font-style: normal; color: var(--dorado); }
-    .hero p { font-size: 15px; color: rgba(255,255,255,.65); line-height: 1.7; margin-bottom: 32px; max-width: 400px; }
-    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
-    .btn-gold { background: var(--dorado); color: var(--negro); border: none; padding: 13px 32px; font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background .2s; }
-    .btn-gold:hover { background: var(--dorado2); }
-    .btn-ghost { background: transparent; color: var(--blanco); border: 1.5px solid rgba(255,255,255,.35); padding: 12px 28px; font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: border-color .2s; }
-    .btn-ghost:hover { border-color: var(--dorado); color: var(--dorado); }
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.95);backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(201,168,76,.2);
+    display:flex;align-items:center;justify-content:space-between;padding:0 5vw;height:64px}
+.logo{font-family:'Syne',sans-serif;font-size:2rem;font-weight:900;letter-spacing:-1px;
+      display:flex;align-items:center;gap:4px}
+.logo-k{background:var(--oro);color:#111;width:40px;height:40px;display:flex;align-items:center;
+        justify-content:center;border-radius:8px;font-size:1.5rem}
+.logo-sub{font-family:'Inter',sans-serif;font-size:.55rem;font-weight:500;color:var(--gris);
+          letter-spacing:3px;margin-left:2px;align-self:flex-end;margin-bottom:6px}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{color:var(--gris);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--oro)}
+.nav-links a.may-link{color:#7aadff}
+.nav-cta{display:flex;align-items:center;gap:10px}
+.btn-carrito{background:var(--oro);color:#111;border:none;padding:8px 16px;border-radius:8px;
+             font-weight:700;font-size:.85rem;cursor:pointer;display:flex;align-items:center;gap:6px;
+             transition:transform .15s,background .15s}
+.btn-carrito:hover{background:var(--oro-claro);transform:scale(1.04)}
+.cart-badge{background:#111;color:var(--oro);border-radius:50%;width:20px;height:20px;
+            display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+.btn-may-nav{background:transparent;border:1.5px solid var(--azul-acc);color:#7aadff;
+             padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:600;
+             cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+.btn-may-nav:hover{background:var(--azul-acc);color:#fff}
+.btn-may-carrito{background:var(--azul-acc);color:#fff;border:none;padding:8px 16px;border-radius:8px;
+                 font-weight:700;font-size:.85rem;cursor:pointer;display:none;
+                 align-items:center;gap:6px;transition:transform .15s,background .15s}
+.btn-may-carrito.visible{display:flex}
+.btn-may-carrito:hover{background:#2563eb;transform:scale(1.04)}
+.may-cart-badge{background:#1e3a5f;color:#7aadff;border-radius:50%;width:20px;height:20px;
+                display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
 
-    /* ── TICKER ── */
-    .ticker { background: var(--dorado); padding: 10px 2rem; display: flex; align-items: center; gap: 18px; overflow: hidden; }
-    .ticker-label { background: var(--negro); color: var(--dorado); font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; flex-shrink: 0; }
-    .ticker-inner { overflow: hidden; flex: 1; }
-    .ticker-text { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--negro); white-space: nowrap; animation: scroll-left 30s linear infinite; display: inline-block; }
-    @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+/* HERO */
+.hero{min-height:88vh;display:flex;align-items:center;padding:0 5vw;
+      position:relative;overflow:hidden;background:var(--negro2)}
+.hero::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(105deg,transparent,transparent 60px,
+    rgba(201,168,76,.03) 60px,rgba(201,168,76,.03) 61px);pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:620px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(201,168,76,.4);
+            border-radius:20px;padding:6px 14px;font-size:.75rem;color:var(--oro);font-weight:600;
+            letter-spacing:1px;margin-bottom:28px;animation:fadeUp .6s ease both}
+.hero-badge .dot{width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(3rem,7vw,5.5rem);font-weight:900;
+         line-height:.95;letter-spacing:-2px;animation:fadeUp .6s .1s ease both}
+.hero h1 .line2{color:var(--oro);display:block}
+.hero-sub{color:var(--gris);font-size:1rem;margin:20px 0 36px;max-width:400px;
+          line-height:1.6;animation:fadeUp .6s .2s ease both}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;animation:fadeUp .6s .3s ease both}
+.btn-primary{background:var(--oro);color:#111;padding:14px 28px;border-radius:10px;
+             text-decoration:none;font-weight:700;font-size:.95rem;
+             display:inline-flex;align-items:center;gap:8px;transition:transform .15s,background .15s}
+.btn-primary:hover{background:var(--oro-claro);transform:translateY(-2px)}
+.btn-secondary{border:1.5px solid rgba(255,255,255,.2);color:var(--blanco);padding:14px 28px;
+               border-radius:10px;text-decoration:none;font-weight:600;font-size:.95rem;
+               display:inline-flex;align-items:center;gap:8px;transition:border-color .15s,transform .15s}
+.btn-secondary:hover{border-color:var(--oro);color:var(--oro);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:40px;margin-top:48px;animation:fadeUp .6s .4s ease both}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--oro)}
+.stat-lbl{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:1px}
+.hero-visual{position:absolute;right:-40px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:1}
+.big-k{font-family:'Syne',sans-serif;font-size:clamp(280px,35vw,480px);font-weight:900;
+       color:rgba(201,168,76,.04);user-select:none;animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-52%) translateX(-8px)}}
 
-    /* ── ENVÍO BANNER ── */
-    .shipping-bar { background: var(--negro2); display: flex; justify-content: center; gap: 60px; padding: 14px 2rem; }
-    .shipping-item { display: flex; align-items: center; gap: 10px; }
-    .shipping-icon { font-size: 20px; }
-    .shipping-text strong { display: block; font-size: 12px; font-weight: 700; color: var(--dorado); letter-spacing: .5px; }
-    .shipping-text span { font-size: 11px; color: rgba(255,255,255,.5); }
+/* FEATURES */
+.features{display:flex;background:var(--negro3);border-top:1px solid rgba(201,168,76,.15);
+          border-bottom:1px solid rgba(201,168,76,.15)}
+.feat{flex:1;padding:24px 5vw;display:flex;align-items:center;gap:14px;
+      border-right:1px solid rgba(255,255,255,.06)}
+.feat:last-child{border-right:none}
+.feat-icon{font-size:1.6rem;flex-shrink:0}
+.feat-title{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.feat-desc{font-size:.75rem;color:var(--gris)}
 
-    /* ── MAIN ── */
-    .main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem; }
+/* CATÁLOGO */
+.seccion{padding:64px 5vw}
+.sec-eyebrow{font-size:.72rem;color:var(--oro);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.sec-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:32px}
+.cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
+.cat-btn{padding:8px 18px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);
+         background:transparent;color:var(--gris);cursor:pointer;font-size:.82rem;
+         font-weight:500;transition:all .15s;font-family:'Inter',sans-serif}
+.cat-btn:hover,.cat-btn.active{background:var(--oro);color:#111;border-color:var(--oro);font-weight:700}
 
-    /* ── CATEGORÍAS ── */
-    .section-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; }
-    .section-title { font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--negro); }
-    .section-title span { color: var(--dorado); }
-    .section-line { width: 40px; height: 3px; background: var(--dorado); margin-top: 6px; }
+/* CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px}
+.card{background:var(--negro3);border:1px solid rgba(255,255,255,.07);border-radius:14px;
+      overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover{transform:translateY(-4px);border-color:rgba(201,168,76,.4);box-shadow:0 12px 32px rgba(0,0,0,.4)}
+.card-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+          font-size:3.2rem;background:#151515;overflow:hidden;position:relative}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.card:hover .card-img img{transform:scale(1.06)}
+.card-img .fallback{position:absolute;font-size:3rem}
+.card-body{padding:12px 14px 14px}
+.card-nombre{font-weight:600;font-size:.88rem;margin-bottom:3px;line-height:1.3}
+.card-desc{font-size:.73rem;color:var(--gris);margin-bottom:10px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.precio{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:var(--oro)}
+.add-btn{background:var(--oro);color:#111;border:none;width:30px;height:30px;border-radius:8px;
+         font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+         transition:transform .1s,background .15s;font-weight:700}
+.add-btn:hover{background:var(--oro-claro);transform:scale(1.15)}
+.add-btn:active{transform:scale(.95)}
 
-    .cats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 2.5rem; }
-    .cat {
-      background: var(--blanco); border: 1.5px solid var(--gris2);
-      padding: 10px 20px; cursor: pointer;
-      font-family: 'Montserrat',sans-serif; font-size: 12px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase; color: #555;
-      display: flex; align-items: center; gap: 8px;
-      transition: all .15s;
-    }
-    .cat:hover { border-color: var(--dorado); color: var(--negro); }
-    .cat.active { background: var(--negro); border-color: var(--negro); color: var(--dorado); }
-    .cat-emoji { font-size: 16px; }
+/* BANNER DELIVERY */
+.banner{background:var(--negro3);border:1px solid rgba(201,168,76,.2);border-radius:16px;
+        margin:0 5vw 64px;padding:40px 5vw;display:flex;align-items:center;
+        justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;overflow:hidden}
+.banner::after{content:'🚴';position:absolute;right:5vw;font-size:7rem;opacity:.08;top:50%;transform:translateY(-50%)}
+.banner-txt h2{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:8px}
+.banner-txt p{color:var(--gris);font-size:.9rem;max-width:380px}
+.banner-cta{background:var(--verde);color:white;padding:14px 28px;border-radius:10px;
+            text-decoration:none;font-weight:700;font-size:.95rem;
+            display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:transform .15s,opacity .15s}
+.banner-cta:hover{opacity:.9;transform:translateY(-2px)}
 
-    /* ── PRODUCTOS ── */
-    .products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+/* CÓMO FUNCIONA */
+.como{padding:64px 5vw;background:var(--negro2)}
+.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-top:40px}
+.paso{background:var(--negro3);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:28px 24px;position:relative}
+.paso-num{font-family:'Syne',sans-serif;font-size:3rem;font-weight:900;color:rgba(201,168,76,.15);position:absolute;top:16px;right:20px;line-height:1}
+.paso-icon{font-size:1.8rem;margin-bottom:14px}
+.paso-title{font-weight:700;font-size:.95rem;margin-bottom:6px}
+.paso-desc{font-size:.8rem;color:var(--gris);line-height:1.5}
 
-    .product {
-      background: var(--blanco);
-      border: 1px solid var(--gris2);
-      display: flex; flex-direction: column;
-      transition: box-shadow .2s, transform .2s;
-      position: relative;
-    }
-    .product:hover { box-shadow: 0 8px 28px rgba(0,0,0,.12); transform: translateY(-3px); }
+/* ══════════════════════════════════
+   MAYORISTA
+══════════════════════════════════ */
+.may-banner{margin:0 5vw 64px;background:linear-gradient(135deg,var(--azul2),var(--azul));
+            border:1px solid rgba(59,130,246,.3);border-radius:16px;padding:40px 5vw;
+            display:flex;align-items:center;justify-content:space-between;gap:24px;
+            flex-wrap:wrap;position:relative;overflow:hidden}
+.may-banner::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(105deg,transparent,transparent 60px,
+    rgba(59,130,246,.04) 60px,rgba(59,130,246,.04) 61px);pointer-events:none}
+.may-banner::after{content:'🏪';position:absolute;right:5vw;font-size:7rem;opacity:.1;top:50%;transform:translateY(-50%)}
+.may-banner-txt .eyebrow{font-size:.72rem;color:#7aadff;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.may-banner-txt h2{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:8px}
+.may-banner-txt p{color:rgba(255,255,255,.5);font-size:.9rem;max-width:380px}
+.may-banner-cta{background:var(--azul-acc);color:white;padding:14px 28px;border-radius:10px;
+                border:none;font-weight:700;font-size:.95rem;cursor:pointer;
+                display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+                transition:transform .15s,background .15s;font-family:'Inter',sans-serif}
+.may-banner-cta:hover{background:#2563eb;transform:translateY(-2px)}
 
-    .product-badge {
-      position: absolute; top: 10px; left: 10px;
-      background: var(--dorado); color: var(--negro);
-      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; padding: 3px 8px; z-index: 1;
-    }
-    .product-badge.popular { background: var(--negro); color: var(--dorado); }
+/* Modal */
+.may-modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+                z-index:300;backdrop-filter:blur(6px);align-items:center;justify-content:center}
+.may-modal-wrap.open{display:flex}
+.may-modal{background:#0f2540;border:1px solid rgba(59,130,246,.3);border-radius:20px;
+           padding:40px 36px;width:min(420px,90vw);position:relative;
+           animation:modalIn .25s cubic-bezier(.34,1.56,.64,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.may-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);
+                 border:none;color:white;width:32px;height:32px;border-radius:8px;
+                 cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.may-modal-icon{font-size:2.5rem;margin-bottom:16px}
+.may-modal h3{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:8px}
+.may-modal p{color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:28px;line-height:1.5}
+.may-input{width:100%;background:rgba(255,255,255,.07);border:1.5px solid rgba(59,130,246,.3);
+           border-radius:10px;padding:13px 16px;color:white;font-family:'Inter',sans-serif;
+           outline:none;transition:border-color .2s;letter-spacing:4px;text-align:center;
+           font-size:1.2rem;margin-bottom:14px}
+.may-input:focus{border-color:var(--azul-acc)}
+.may-input.err{border-color:#ef4444;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.may-err{color:#f87171;font-size:.78rem;margin-bottom:14px;display:none;text-align:center}
+.may-err.show{display:block}
+.may-submit{width:100%;background:var(--azul-acc);color:white;border:none;padding:14px;
+            border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;
+            font-family:'Inter',sans-serif;transition:background .15s,transform .15s}
+.may-submit:hover{background:#2563eb;transform:translateY(-1px)}
+.may-hint{text-align:center;margin-top:12px;font-size:.75rem;color:rgba(255,255,255,.3)}
+.may-hint a{color:#7aadff}
 
-    .product-img {
-      width: 100%; aspect-ratio: 1;
-      object-fit: contain;
-      background: #fafafa;
-      border-bottom: 1px solid var(--gris2);
-      padding: 12px;
-      font-size: 56px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .product-img img { width: 100%; height: 100%; object-fit: contain; }
-    .product-img.emoji-fallback { font-size: 56px; }
+/* Sección mayorista */
+#sec-may{display:none}
+#sec-may.visible{display:block}
+.may-sec{padding:64px 5vw;background:var(--azul2)}
+.may-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.may-eyebrow{font-size:.72rem;color:#7aadff;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.may-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:0}
+.may-sesion{display:flex;align-items:center;gap:8px;background:rgba(59,130,246,.12);
+            border:1px solid rgba(59,130,246,.25);border-radius:20px;padding:6px 16px;font-size:.78rem;color:#7aadff}
+.may-sesion .dot{width:6px;height:6px;background:#22c55e;border-radius:50%}
+.may-logout{background:none;border:1px solid rgba(255,255,255,.12);color:var(--gris);
+            padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.78rem;transition:all .15s;font-family:'Inter',sans-serif}
+.may-logout:hover{border-color:#ef4444;color:#f87171}
+.may-pills{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;margin-top:20px}
+.may-pill{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:10px 16px;font-size:.8rem;color:#93c5fd}
+.may-pill strong{display:block;font-size:.95rem;font-weight:700;color:white;margin-bottom:1px}
+.may-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.may-cat-btn{padding:8px 18px;border-radius:20px;border:1.5px solid rgba(59,130,246,.2);
+             background:transparent;color:rgba(255,255,255,.45);cursor:pointer;font-size:.82rem;
+             font-weight:500;transition:all .15s;font-family:'Inter',sans-serif}
+.may-cat-btn:hover,.may-cat-btn.active{background:var(--azul-acc);color:#fff;border-color:var(--azul-acc);font-weight:700}
 
-    .product-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .product-brand { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--dorado); }
-    .product-name { font-size: 13px; font-weight: 700; color: var(--negro); line-height: 1.3; }
-    .product-prices { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
-    .product-price { font-size: 20px; font-weight: 900; color: var(--negro); }
-    .product-old { font-size: 12px; font-weight: 600; color: #bbb; text-decoration: line-through; }
+/* Cards mayorista */
+.may-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.may-card{background:rgba(255,255,255,.04);border:1px solid rgba(59,130,246,.15);
+          border-radius:14px;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
+.may-card:hover{transform:translateY(-4px);border-color:rgba(59,130,246,.5);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.may-card-img{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+              font-size:3rem;background:rgba(15,37,64,.8);overflow:hidden;position:relative}
+.may-card-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.may-card:hover .may-card-img img{transform:scale(1.06)}
+.may-card-img .fallback{position:absolute;font-size:3rem}
+.may-badge{position:absolute;top:8px;right:8px;background:var(--azul-acc);color:white;
+           font-size:.62rem;font-weight:700;padding:3px 7px;border-radius:6px;letter-spacing:.5px}
+.may-card-body{padding:12px 14px 14px}
+.may-card-nombre{font-weight:600;font-size:.88rem;margin-bottom:2px;line-height:1.3}
+.may-card-desc{font-size:.73rem;color:rgba(255,255,255,.38);margin-bottom:3px}
+.may-card-min{font-size:.7rem;color:#7aadff;margin-bottom:10px}
+.may-card-footer{display:flex;align-items:center;justify-content:space-between}
+.may-precio{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#60a5fa}
+.may-tachado{font-size:.72rem;color:rgba(255,255,255,.25);text-decoration:line-through;margin-left:4px}
+.may-add-btn{background:var(--azul-acc);color:#fff;border:none;width:30px;height:30px;border-radius:8px;
+             font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+             transition:transform .1s,background .15s;font-weight:700}
+.may-add-btn:hover{background:#2563eb;transform:scale(1.15)}
+.may-add-btn:active{transform:scale(.95)}
 
-    .product-footer { padding: 0 14px 14px; }
-    .add-btn {
-      width: 100%; background: var(--negro); color: var(--dorado);
-      border: none; padding: 10px;
-      font-family: 'Montserrat',sans-serif; font-size: 12px; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
-      transition: background .15s, color .15s;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .add-btn:hover { background: var(--dorado); color: var(--negro); }
-    .add-btn.added { background: #1b5e20; color: #fff; }
+/* INFO BAR */
+.info-bar{display:flex;flex-wrap:wrap;background:var(--negro3);border-top:1px solid rgba(201,168,76,.15)}
+.info-cel{flex:1;min-width:180px;padding:28px 5vw;border-right:1px solid rgba(255,255,255,.05)}
+.info-cel:last-child{border-right:none}
+.info-ico{font-size:1.3rem;margin-bottom:8px}
+.info-lbl{font-size:.68rem;color:var(--gris);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.info-val{font-weight:600;font-size:.9rem}
+footer{text-align:center;padding:24px;font-size:.75rem;color:var(--gris);border-top:1px solid rgba(255,255,255,.05)}
+footer span{color:var(--oro)}
 
-    .no-products { grid-column: 1/-1; text-align: center; padding: 3rem; color: #aaa; font-size: 14px; }
-    .loading-msg { grid-column: 1/-1; text-align: center; padding: 3rem; color: #aaa; font-size: 14px; }
-    .error-msg { grid-column: 1/-1; text-align: center; padding: 2rem; background: #fff5f5; border: 1px solid #fdd; color: var(--rojo); font-size: 14px; line-height: 1.7; }
+/* PANELES CARRITO */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;backdrop-filter:blur(4px)}
+.overlay.open{display:block}
+.panel{position:fixed;top:0;right:-100%;width:min(400px,100vw);height:100%;
+       background:var(--negro2);z-index:201;transition:right .28s cubic-bezier(.4,0,.2,1);
+       display:flex;flex-direction:column;border-left:1px solid rgba(201,168,76,.2)}
+.panel.may-panel{background:var(--azul2);border-left-color:rgba(59,130,246,.25)}
+.panel.open{right:0}
+.panel-head{padding:20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.07)}
+.panel-head h2{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800}
+.cerrar{background:rgba(255,255,255,.08);border:none;color:white;width:32px;height:32px;
+        border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.panel-items{flex:1;overflow-y:auto;padding:16px}
+.panel-items::-webkit-scrollbar{width:4px}
+.panel-items::-webkit-scrollbar-thumb{background:rgba(201,168,76,.3);border-radius:4px}
+.may-panel .panel-items::-webkit-scrollbar-thumb{background:rgba(59,130,246,.3)}
+.empty-cart{text-align:center;color:var(--gris);margin-top:80px}
+.empty-cart div{font-size:3rem;margin-bottom:12px}
+.item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.item-emoji{font-size:1.6rem;flex-shrink:0;background:var(--negro3);width:44px;height:44px;
+            border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.item-emoji img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.item-info{flex:1}
+.item-nombre{font-weight:600;font-size:.85rem;margin-bottom:2px}
+.item-sub{font-size:.8rem;font-weight:600}
+.item-sub.min{color:var(--oro)}
+.item-sub.may{color:#60a5fa}
+.controles{display:flex;align-items:center;gap:8px}
+.ctrl{width:28px;height:28px;border-radius:7px;border:1.5px solid rgba(255,255,255,.15);
+      background:transparent;color:white;cursor:pointer;font-size:1rem;
+      display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+.ctrl.min:hover{border-color:var(--oro);color:var(--oro)}
+.ctrl.may:hover{border-color:var(--azul-acc);color:#60a5fa}
+.qty{font-weight:700;font-size:.9rem;min-width:18px;text-align:center}
+.panel-foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.07)}
+.total-row{display:flex;justify-content:space-between;margin-bottom:14px;align-items:center}
+.total-lbl{font-size:.85rem;color:var(--gris)}
+.total-amt{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--oro)}
+.total-amt.may{color:#60a5fa}
+.wa-btn{display:block;width:100%;color:white;border:none;padding:15px;border-radius:10px;
+        font-weight:700;font-size:1rem;cursor:pointer;text-align:center;text-decoration:none;transition:opacity .15s,transform .15s}
+.wa-btn:hover{opacity:.9;transform:translateY(-1px)}
+.wa-btn.min{background:var(--verde)}
+.wa-btn.may{background:var(--azul-acc)}
 
-    /* ── CARRITO LATERAL ── */
-    .cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 300; opacity: 0; pointer-events: none; transition: opacity .25s; }
-    .cart-overlay.open { opacity: 1; pointer-events: all; }
-    .cart-panel {
-      position: fixed; top: 0; right: 0; bottom: 0; width: 400px; max-width: 95vw;
-      background: var(--blanco); z-index: 301;
-      transform: translateX(100%); transition: transform .3s;
-      display: flex; flex-direction: column;
-    }
-    .cart-panel.open { transform: translateX(0); }
-    .cart-header { background: var(--negro); padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--dorado); }
-    .cart-header h2 { font-size: 16px; font-weight: 900; color: var(--dorado); letter-spacing: 2px; text-transform: uppercase; }
-    .cart-close { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; line-height: 1; }
-    .cart-items { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
-    .cart-empty { text-align: center; padding: 3rem 1rem; color: #aaa; font-size: 14px; }
-    .cart-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gris2); }
-    .cart-item-img { width: 56px; height: 56px; object-fit: contain; background: #fafafa; border: 1px solid var(--gris2); padding: 4px; font-size: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .cart-item-img img { width: 100%; height: 100%; object-fit: contain; }
-    .cart-item-info { flex: 1; }
-    .cart-item-name { font-size: 13px; font-weight: 700; color: var(--negro); line-height: 1.3; }
-    .cart-item-brand { font-size: 11px; color: #aaa; margin-bottom: 6px; }
-    .cart-item-controls { display: flex; align-items: center; gap: 8px; }
-    .qty-btn { background: var(--gris2); border: none; width: 26px; height: 26px; cursor: pointer; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: background .15s; }
-    .qty-btn:hover { background: var(--dorado); }
-    .qty-num { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
-    .cart-item-price { font-size: 15px; font-weight: 900; color: var(--negro); align-self: center; }
-    .cart-item-remove { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; align-self: flex-start; transition: color .15s; }
-    .cart-item-remove:hover { color: var(--rojo); }
+/* WA FLOTANTE */
+.wa-float{position:fixed;right:24px;bottom:24px;background:var(--verde);color:white;
+          padding:12px 20px;border-radius:50px;text-decoration:none;font-weight:700;
+          font-size:.9rem;display:flex;align-items:center;gap:8px;z-index:150;
+          box-shadow:0 4px 20px rgba(37,211,102,.35);transition:transform .15s,box-shadow .15s}
+.wa-float:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(37,211,102,.45)}
 
-    .cart-footer { padding: 1.2rem 1.5rem; border-top: 2px solid var(--gris2); background: #fafafa; }
-    .cart-subtotal { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #666; }
-    .cart-shipping { display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 13px; color: #666; }
-    .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: var(--negro); margin-bottom: 16px; padding-top: 10px; border-top: 1px solid var(--gris2); }
-    .checkout-btn { width: 100%; background: var(--dorado); color: var(--negro); border: none; padding: 14px; font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background .2s; }
-    .checkout-btn:hover { background: var(--dorado2); }
-    .checkout-btn:disabled { background: var(--gris2); color: #aaa; cursor: not-allowed; }
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);
+       background:var(--negro3);border:1px solid rgba(201,168,76,.3);color:white;
+       padding:10px 22px;border-radius:24px;font-size:.85rem;font-weight:500;
+       transition:transform .25s cubic-bezier(.34,1.56,.64,1);z-index:500;pointer-events:none}
+.toast.may-t{border-color:rgba(59,130,246,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
 
-    /* ── CHECKOUT MODAL ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 400; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .25s; }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal { background: var(--blanco); width: 480px; max-width: 95vw; max-height: 92vh; overflow-y: auto; }
-    .modal-header { background: var(--negro); padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--dorado); }
-    .modal-header h2 { font-size: 15px; font-weight: 900; color: var(--dorado); letter-spacing: 2px; text-transform: uppercase; }
-    .modal-close { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-    .modal-body { padding: 1.5rem; }
-    .form-section { margin-bottom: 1.5rem; }
-    .form-section h3 { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--dorado); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gris2); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #666; margin-bottom: 5px; }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%; border: 1.5px solid var(--gris2); padding: 10px 12px;
-      font-family: 'Montserrat',sans-serif; font-size: 13px; color: var(--negro);
-      background: var(--blanco); outline: none; transition: border-color .15s;
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--dorado); }
-    .form-group textarea { resize: vertical; min-height: 70px; }
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){
+  .hero{min-height:auto;padding:60px 5vw 40px}
+  .hero-visual{display:none}
+  .features{flex-direction:column}
+  .feat{border-right:none;border-bottom:1px solid rgba(255,255,255,.06)}
+  .feat:last-child{border-bottom:none}
+  .hero-stats{gap:24px}
+  nav .nav-links,.btn-may-nav{display:none}
+}
 
-    .payment-options { display: flex; gap: 12px; }
-    .payment-opt {
-      flex: 1; border: 1.5px solid var(--gris2); padding: 14px 10px;
-      text-align: center; cursor: pointer; transition: all .15s;
-    }
-    .payment-opt:hover { border-color: var(--dorado); }
-    .payment-opt.selected { border-color: var(--dorado); background: #fffbf0; }
-    .payment-opt-icon { font-size: 24px; margin-bottom: 6px; display: block; }
-    .payment-opt-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--negro); }
-    .payment-opt-detail { font-size: 11px; color: #999; margin-top: 3px; }
+/* ── MODAL PRODUCTO ──────────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:20px}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--negro2);border:1px solid rgba(201,168,76,.25);
+  border-radius:16px;width:100%;max-width:520px;max-height:90vh;
+  overflow-y:auto;transform:translateY(20px);transition:transform .25s;position:relative}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.1);
+  border:none;color:#fff;font-size:18px;width:32px;height:32px;border-radius:50%;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;z-index:1}
+.modal-close:hover{background:rgba(255,255,255,.2)}
+.modal-img{width:100%;aspect-ratio:1;object-fit:contain;background:#111;
+  border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;max-height:300px}
+.modal-img img{width:100%;height:100%;object-fit:contain}
+.modal-img .fallback{font-size:6rem}
+.modal-info{padding:20px 24px 24px}
+.modal-badge{display:inline-block;background:var(--dorado);color:var(--negro);
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 10px;border-radius:4px;margin-bottom:10px}
+.modal-nombre{font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3}
+.modal-desc{font-size:.85rem;color:var(--gris);margin-bottom:16px}
+.modal-precio-wrap{display:flex;align-items:baseline;gap:10px;margin-bottom:20px}
+.modal-precio{font-size:2rem;font-weight:900;color:var(--dorado)}
+.modal-qty-wrap{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.modal-qty-label{font-size:.8rem;color:var(--gris);text-transform:uppercase;letter-spacing:1px}
+.qty-ctrl{display:flex;align-items:center;gap:0;border:1px solid rgba(255,255,255,.15);border-radius:8px;overflow:hidden}
+.qty-ctrl button{background:rgba(255,255,255,.07);border:none;color:#fff;
+  width:36px;height:36px;font-size:18px;cursor:pointer;transition:background .15s}
+.qty-ctrl button:hover{background:rgba(201,168,76,.3)}
+.qty-ctrl span{min-width:36px;text-align:center;font-size:1rem;font-weight:700;color:#fff}
+.modal-add-btn{width:100%;background:var(--dorado);color:var(--negro);border:none;
+  padding:14px;border-radius:10px;font-family:inherit;font-size:1rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.modal-add-btn:hover{background:#e8c86a}
+.modal-add-btn.agregado{background:#2e7d32;color:#fff}
 
-    .order-summary { background: var(--gris); padding: 14px; margin-bottom: 16px; }
-    .order-summary h4 { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #888; margin-bottom: 10px; }
-    .order-line { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-bottom: 5px; }
-    .order-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 900; color: var(--negro); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--gris2); }
+/* ── MODAL PRODUCTO ── */
+.prod-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .25s}
+.prod-overlay.open{opacity:1;pointer-events:all}
+.prod-box{background:var(--negro2);border:1px solid rgba(201,168,76,.3);
+  border-radius:18px;width:100%;max-width:480px;max-height:92vh;
+  overflow-y:auto;position:relative;
+  transform:translateY(24px);transition:transform .25s}
+.prod-overlay.open .prod-box{transform:translateY(0)}
+.prod-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);
+  border:none;color:#fff;font-size:16px;width:32px;height:32px;border-radius:50%;
+  cursor:pointer;z-index:1;transition:background .15s}
+.prod-close:hover{background:rgba(255,255,255,.25)}
+.prod-img-wrap{width:100%;aspect-ratio:1;max-height:280px;overflow:hidden;
+  background:#111;border-radius:18px 18px 0 0;
+  display:flex;align-items:center;justify-content:center}
+.prod-img-wrap img{width:100%;height:100%;object-fit:contain}
+.prod-img-wrap .big-emoji{font-size:7rem}
+.prod-info{padding:22px 24px 28px}
+.prod-cat-tag{display:inline-block;background:var(--dorado);color:var(--negro);
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 10px;border-radius:4px;margin-bottom:10px}
+.prod-nombre{font-size:1.25rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px}
+.prod-desc{font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:16px}
+.prod-precio{font-size:2rem;font-weight:900;color:var(--dorado);margin-bottom:20px}
+.prod-qty-row{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.prod-qty-label{font-size:.75rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px}
+.prod-qty-ctrl{display:flex;align-items:center;border:1px solid rgba(255,255,255,.15);border-radius:8px;overflow:hidden}
+.prod-qty-ctrl button{background:rgba(255,255,255,.07);border:none;color:#fff;
+  width:36px;height:36px;font-size:20px;cursor:pointer;transition:background .15s}
+.prod-qty-ctrl button:hover{background:rgba(201,168,76,.25)}
+.prod-qty-ctrl span{min-width:38px;text-align:center;font-size:1.1rem;font-weight:700;color:#fff}
+.prod-agregar-btn{width:100%;padding:14px;background:var(--dorado);color:var(--negro);
+  border:none;border-radius:10px;font-family:inherit;font-size:1rem;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.prod-agregar-btn:hover{background:#e8c86a}
+.prod-agregar-btn.ok{background:#2e7d32;color:#fff}
 
-    .confirm-btn { width: 100%; background: var(--negro); color: var(--dorado); border: none; padding: 15px; font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background .2s; }
-    .confirm-btn:hover { background: var(--negro3); }
 
-    /* ── SUCCESS ── */
-    .success-screen { text-align: center; padding: 3rem 2rem; }
-    .success-icon { font-size: 60px; margin-bottom: 20px; }
-    .success-screen h2 { font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--negro); margin-bottom: 12px; }
-    .success-screen p { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 24px; }
-    .whatsapp-btn { display: inline-flex; align-items: center; gap: 10px; background: #25D366; color: #fff; border: none; padding: 14px 28px; font-family: 'Montserrat',sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; text-decoration: none; transition: background .2s; }
-    .whatsapp-btn:hover { background: #1ebe5d; }
+/* ── MERCADO PAGO BTN ── */
+.mp-btn{display:block;width:100%;padding:13px;margin-top:10px;
+  background:#009ee3;color:#fff;border:none;border-radius:10px;
+  font-family:inherit;font-size:.95rem;font-weight:700;
+  text-align:center;cursor:pointer;transition:background .2s}
+.mp-btn:hover{background:#0082c8}
+.mp-btn:disabled{background:#555;cursor:not-allowed}
+.mp-btn.cargando{background:#555}
 
-    /* ── INFO ── */
-    .info-section { background: var(--negro); margin-top: 3rem; }
-    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-    .info-item { padding: 2rem; border-right: 1px solid rgba(255,255,255,.07); }
-    .info-item:last-child { border-right: none; }
-    .info-icon { font-size: 28px; margin-bottom: 12px; display: block; }
-    .info-item strong { display: block; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--dorado); margin-bottom: 6px; }
-    .info-item span { font-size: 12px; color: rgba(255,255,255,.5); line-height: 1.7; }
-
-    footer { background: #080808; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(201,168,76,.2); }
-    .footer-logo { font-size: 18px; font-weight: 900; color: var(--dorado); letter-spacing: 2px; text-transform: uppercase; }
-    .footer-logo span { color: rgba(255,255,255,.4); font-weight: 400; }
-    .footer-copy { font-size: 11px; color: rgba(255,255,255,.25); }
-
-    @media (max-width: 900px) { .products { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 680px) {
-      .hero h1 { font-size: 38px; }
-      .nav-links { display: none; }
-      .products { grid-template-columns: repeat(2, 1fr); }
-      .info-grid { grid-template-columns: 1fr; }
-      .info-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,.07); }
-      .shipping-bar { flex-wrap: wrap; gap: 16px; justify-content: flex-start; }
-      footer { flex-direction: column; gap: 8px; text-align: center; }
-    }
-  </style>
+</style>
 </head>
 <body>
 
-<script>
-  // ══════════════════════════════════════════════
-  //  CONFIGURACIÓN — pegá tu URL CSV de Google Sheets
-  // ══════════════════════════════════════════════
-  const SHEET_CSV_URL   = 'PEGAR_URL_AQUI';
-  const WHATSAPP_NUMBER = '5493515479266';
-  const ALIAS_MP        = 'k24online';
-  const COSTO_ENVIO     = 1500;
-</script>
+<div class="ticker-wrap"><div class="ticker" id="ticker"></div></div>
 
-<!-- NAV -->
 <nav>
-  <a href="#" class="logo">Kiosco<span> Online</span></a>
+  <div class="logo">
+    <div class="logo-k">K</div>
+    <span>24</span>
+    <span class="logo-sub">ONLINE</span>
+  </div>
   <ul class="nav-links">
-    <li><a href="#productos">Productos</a></li>
-    <li><a href="#ofertas">Ofertas</a></li>
-    <li><a href="#info">Contacto</a></li>
+    <li><a href="#catalogo">Catálogo</a></li>
+    <li><a href="#como">Cómo funciona</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+    <li><a href="#mayorista" class="may-link">🏪 Mayorista</a></li>
   </ul>
-  <button class="cart-btn" onclick="toggleCart()">
-    🛒 Carrito
-    <span class="cart-count" id="cart-count">0</span>
-  </button>
+  <div class="nav-cta">
+    <button class="btn-may-carrito" id="btn-may-carrito" onclick="toggleMayPanel()">
+      📦 Mayorista <span class="may-cart-badge" id="may-cart-count">0</span>
+    </button>
+    <button class="btn-carrito" onclick="togglePanel()">
+      🛒 Carrito <span class="cart-badge" id="cart-count">0</span>
+    </button>
+  </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
   <div class="hero-content">
-    <span class="hero-tag">Envíos a toda Córdoba</span>
-    <h1>Tu kiosco,<br><em>en tu puerta</em></h1>
-    <p>Bebidas, golosinas, snacks, cigarrillos y más. Pedí ahora y recibís en el día.</p>
+    <div class="hero-badge"><span class="dot"></span> ABIERTO LAS 24 HORAS</div>
+    <h1>Tu kiosco,<span class="line2">siempre.</span></h1>
+    <p class="hero-sub">Todo lo que necesitás, en minutos. Delivery en Córdoba capital sin sorpresas.</p>
     <div class="hero-btns">
-      <button class="btn-gold" onclick="document.getElementById('productos').scrollIntoView({behavior:'smooth'})">Ver productos</button>
-      <button class="btn-ghost" onclick="document.getElementById('ofertas').scrollIntoView({behavior:'smooth'})">Ver ofertas</button>
+      <a class="btn-primary" href="#catalogo">Ver catálogo →</a>
+      <a class="btn-secondary" href="https://wa.me/5493515479266" target="_blank">📲 WhatsApp</a>
     </div>
+    <div class="hero-stats">
+      <div><div class="stat-num">24hs</div><div class="stat-lbl">Siempre abierto</div></div>
+      <div><div class="stat-num">-30min</div><div class="stat-lbl">Delivery express</div></div>
+      <div><div class="stat-num">+200</div><div class="stat-lbl">Productos</div></div>
+    </div>
+  </div>
+  <div class="hero-visual"><div class="big-k">K</div></div>
+</section>
+
+<div class="features">
+  <div class="feat"><div class="feat-icon">⚡</div><div><div class="feat-title">Delivery en 20-30 min</div><div class="feat-desc">Córdoba capital</div></div></div>
+  <div class="feat"><div class="feat-icon">🌙</div><div><div class="feat-title">Abierto toda la noche</div><div class="feat-desc">365 días al año</div></div></div>
+  <div class="feat"><div class="feat-icon">💳</div><div><div class="feat-title">Múltiples pagos</div><div class="feat-desc">Efectivo · Transferencia · MP</div></div></div>
+  <div class="feat"><div class="feat-icon">📲</div><div><div class="feat-title">Pedido por WhatsApp</div><div class="feat-desc">Respuesta inmediata</div></div></div>
+</div>
+
+<section class="seccion" id="catalogo">
+  <div class="sec-eyebrow">Catálogo minorista</div>
+  <div class="sec-title">¿Qué te mandamos hoy?</div>
+  <div class="cats">
+    <button class="cat-btn active" onclick="filtrar('todo',this)">Todo</button>
+    <button class="cat-btn" onclick="filtrar('bebidas',this)">🥤 Bebidas</button>
+    <button class="cat-btn" onclick="filtrar('botellas',this)">🍾 Botellas</button>
+    <button class="cat-btn" onclick="filtrar('promos',this)">🎁 Promos</button>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<div class="banner">
+  <div class="banner-txt">
+    <h2>Delivery <span style="color:var(--oro)">exprés</span> a tu puerta</h2>
+    <p>Pedís por WhatsApp, confirmamos en segundos y salimos a llevártelo.</p>
+  </div>
+  <a class="banner-cta" href="https://wa.me/5493515479266" target="_blank">📲 Pedir ahora</a>
+</div>
+
+<section class="como" id="como">
+  <div class="sec-eyebrow" style="padding:0 0 6px">Proceso</div>
+  <div class="sec-title" style="margin-bottom:0">Tan fácil como 1, 2, 3</div>
+  <div class="pasos">
+    <div class="paso"><div class="paso-num">1</div><div class="paso-icon">🛒</div><div class="paso-title">Armá tu pedido</div><div class="paso-desc">Elegí los productos y sumálos al carrito.</div></div>
+    <div class="paso"><div class="paso-num">2</div><div class="paso-icon">📲</div><div class="paso-title">Enviás por WhatsApp</div><div class="paso-desc">Tu pedido se arma automáticamente con un toque.</div></div>
+    <div class="paso"><div class="paso-num">3</div><div class="paso-icon">🚴</div><div class="paso-title">Lo recibís en casa</div><div class="paso-desc">Salimos en minutos. Pagás al recibir o por transferencia.</div></div>
+    <div class="paso"><div class="paso-num">4</div><div class="paso-icon">💰</div><div class="paso-title">Elegís cómo pagás</div><div class="paso-desc">Efectivo, transferencia o Mercado Pago. Alias: k24online</div></div>
   </div>
 </section>
 
-<!-- TICKER -->
-<div class="ticker" id="ofertas">
-  <span class="ticker-label">Ofertas</span>
-  <div class="ticker-inner">
-    <span class="ticker-text" id="ticker-text">Cargando ofertas...</span>
+<!-- BANNER MAYORISTA -->
+<div class="may-banner" id="mayorista">
+  <div class="may-banner-txt">
+    <div class="eyebrow">Zona exclusiva</div>
+    <h2>Sección <span style="color:#60a5fa">Mayorista</span></h2>
+    <p>Precios especiales para revendedores, almacenes y kioscos. Ingresá con tu código de acceso.</p>
+  </div>
+  <button class="may-banner-cta" onclick="abrirModalMay()">🔐 Ingresar al área mayorista</button>
+</div>
+
+<!-- SECCIÓN MAYORISTA -->
+<div id="sec-may">
+  <section class="may-sec">
+    <div class="may-top">
+      <div>
+        <div class="may-eyebrow">Zona mayorista</div>
+        <div class="may-title">Precios mayoristas</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="may-sesion"><span class="dot"></span> Sesión activa</div>
+        <button class="may-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+      </div>
+    </div>
+    <div class="may-pills">
+      <div class="may-pill"><strong>💰 Precios</strong>Mayoristas exclusivos</div>
+      <div class="may-pill"><strong>📦 Pedido mín.</strong>A convenir</div>
+      <div class="may-pill"><strong>🚚 Entrega</strong>Córdoba Capital</div>
+      <div class="may-pill"><strong>💳 Alias MP</strong>k24online</div>
+    </div>
+    <div class="may-cats">
+      <button class="may-cat-btn active" onclick="filtrarMay('todo',this)">Todo</button>
+      <button class="may-cat-btn" onclick="filtrarMay('bebidas',this)">🥤 Bebidas</button>
+      <button class="may-cat-btn" onclick="filtrarMay('botellas',this)">🍾 Botellas</button>
+      <button class="may-cat-btn" onclick="filtrarMay('promos',this)">🎁 Promos</button>
+    </div>
+    <div class="may-grid" id="may-grid"></div>
+  </section>
+</div>
+
+<div class="info-bar" id="contacto">
+  <div class="info-cel"><div class="info-ico">📍</div><div class="info-lbl">Zona de delivery</div><div class="info-val">Córdoba Capital</div></div>
+  <div class="info-cel"><div class="info-ico">🕐</div><div class="info-lbl">Horario</div><div class="info-val">Las 24 horas, todos los días</div></div>
+  <div class="info-cel"><div class="info-ico">📲</div><div class="info-lbl">WhatsApp</div><div class="info-val">+54 351 547-9266</div></div>
+  <div class="info-cel"><div class="info-ico">💳</div><div class="info-lbl">Transferencia</div><div class="info-val">Alias: k24online</div></div>
+</div>
+<footer>© 2025 <span>K24 Online</span> · Kiosco 24 horas · Córdoba, Argentina</footer>
+
+<a class="wa-float" href="https://wa.me/5493515479266" target="_blank">📲 WhatsApp</a>
+
+<!-- MODAL -->
+<div class="may-modal-wrap" id="may-modal">
+  <div class="may-modal">
+    <button class="may-modal-close" onclick="cerrarModalMay()">✕</button>
+    <div class="may-modal-icon">🔐</div>
+    <h3>Acceso Mayorista</h3>
+    <p>Ingresá el código que te proporcionamos para ver los precios especiales.</p>
+    <input class="may-input" id="may-codigo" type="password" placeholder="• • • • • •"
+           maxlength="12" onkeydown="if(event.key==='Enter')verificar()">
+    <div class="may-err" id="may-err">Código incorrecto. Contactanos por WhatsApp.</div>
+    <button class="may-submit" onclick="verificar()">Ingresar →</button>
+    <div class="may-hint">¿No tenés código? <a href="https://wa.me/5493515479266" target="_blank">Pedilo por WhatsApp</a></div>
   </div>
 </div>
 
-<!-- SHIPPING BAR -->
-<div class="shipping-bar">
-  <div class="shipping-item">
-    <span class="shipping-icon">🚀</span>
-    <div class="shipping-text">
-      <strong>Envío rápido</strong>
-      <span>Toda la ciudad de Córdoba</span>
-    </div>
-  </div>
-  <div class="shipping-item">
-    <span class="shipping-icon">💳</span>
-    <div class="shipping-text">
-      <strong>Mercado Pago / Transferencia</strong>
-      <span>Alias: k24online</span>
-    </div>
-  </div>
-  <div class="shipping-item">
-    <span class="shipping-icon">📲</span>
-    <div class="shipping-text">
-      <strong>Confirmación por WhatsApp</strong>
-      <span>Te avisamos cuando sale tu pedido</span>
-    </div>
+<!-- PANEL MINORISTA -->
+<div class="overlay" id="overlay" onclick="togglePanel()"></div>
+<div class="panel" id="panel">
+  <div class="panel-head"><h2>Tu pedido 🛒</h2><button class="cerrar" onclick="togglePanel()">✕</button></div>
+  <div class="panel-items" id="panel-items"><div class="empty-cart"><div>🛒</div>Todavía no agregaste nada</div></div>
+  <div class="panel-foot">
+    <div class="total-row"><span class="total-lbl">Total estimado</span><span class="total-amt" id="total-amt">$0</span></div>
+    <a class="wa-btn min" id="wa-link" href="#" target="_blank">📲 Enviar pedido por WhatsApp</a>
+    <button class="mp-btn" id="mp-btn" onclick="pagarConMP()" disabled>💳 Pagar con Mercado Pago</button>
   </div>
 </div>
 
-<!-- PRODUCTOS -->
-<div class="main" id="productos">
-  <div class="section-header">
-    <div>
-      <div class="section-title">Nuestros <span>Productos</span></div>
-      <div class="section-line"></div>
-    </div>
-  </div>
-
-  <div class="cats" id="cats-container">
-    <div class="cat active" onclick="filterCat(this,'todas')">
-      <span class="cat-emoji">🛒</span> Todos
-    </div>
-    <div class="cat" onclick="filterCat(this,'bebidas')">
-      <span class="cat-emoji">🥤</span> Bebidas
-    </div>
-    <div class="cat" onclick="filterCat(this,'golosinas')">
-      <span class="cat-emoji">🍬</span> Golosinas
-    </div>
-    <div class="cat" onclick="filterCat(this,'snacks')">
-      <span class="cat-emoji">🍟</span> Snacks
-    </div>
-    <div class="cat" onclick="filterCat(this,'almacen')">
-      <span class="cat-emoji">🧉</span> Almacén
-    </div>
-    <div class="cat" onclick="filterCat(this,'cigarrillos')">
-      <span class="cat-emoji">🚬</span> Cigarrillos
-    </div>
-    <div class="cat" onclick="filterCat(this,'fiambres')">
-      <span class="cat-emoji">🧀</span> Fiambres y Lácteos
-    </div>
-  </div>
-
-  <div class="products" id="products-grid">
-    <div class="loading-msg">⏳ Cargando productos...</div>
+<!-- PANEL MAYORISTA -->
+<div class="overlay" id="may-overlay" onclick="toggleMayPanel()"></div>
+<div class="panel may-panel" id="may-panel">
+  <div class="panel-head"><h2 style="color:#7aadff">Pedido Mayorista 📦</h2><button class="cerrar" onclick="toggleMayPanel()">✕</button></div>
+  <div class="panel-items" id="may-panel-items"><div class="empty-cart"><div>📦</div>Todavía no agregaste nada</div></div>
+  <div class="panel-foot">
+    <div class="total-row"><span class="total-lbl">Total estimado</span><span class="total-amt may" id="may-total-amt">$0</span></div>
+    <a class="wa-btn may" id="may-wa-link" href="#" target="_blank">📲 Enviar pedido mayorista</a>
   </div>
 </div>
 
-<!-- INFO -->
-<div class="info-section" id="info">
-  <div class="info-grid">
-    <div class="info-item">
-      <span class="info-icon">🕐</span>
-      <strong>Horario de pedidos</strong>
-      <span>Lunes a Sábado<br>9:00 a 21:00 hs</span>
-    </div>
-    <div class="info-item">
-      <span class="info-icon">📍</span>
-      <strong>Zona de envío</strong>
-      <span>Ciudad de Córdoba<br>y alrededores</span>
-    </div>
-    <div class="info-item">
-      <span class="info-icon">💬</span>
-      <strong>Contacto</strong>
-      <span>WhatsApp: 351 547-9266<br>Respondemos en minutos</span>
-    </div>
-  </div>
-</div>
-
-<footer>
-  <div class="footer-logo">Kiosco<span> Online</span></div>
-  <span class="footer-copy">© 2026 — Todos los derechos reservados</span>
-</footer>
-
-<!-- CARRITO LATERAL -->
-<div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
-<div class="cart-panel" id="cart-panel">
-  <div class="cart-header">
-    <h2>Tu Carrito</h2>
-    <button class="cart-close" onclick="toggleCart()">✕</button>
-  </div>
-  <div class="cart-items" id="cart-items">
-    <div class="cart-empty">Tu carrito está vacío 🛒</div>
-  </div>
-  <div class="cart-footer">
-    <div class="cart-subtotal">
-      <span>Subtotal</span>
-      <span id="cart-subtotal">$0</span>
-    </div>
-    <div class="cart-shipping">
-      <span>Envío (Córdoba)</span>
-      <span id="cart-shipping-cost">$1.500</span>
-    </div>
-    <div class="cart-total">
-      <span>Total</span>
-      <span id="cart-total">$0</span>
-    </div>
-    <button class="checkout-btn" id="checkout-btn" onclick="openCheckout()" disabled>
-      Finalizar pedido →
-    </button>
-  </div>
-</div>
-
-<!-- CHECKOUT MODAL -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <h2>Finalizar pedido</h2>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modal-body">
-      <!-- se rellena dinámicamente -->
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-//  ESTADO
-// ══════════════════════════════════════════════
-let allProducts = [];
-let currentCat  = 'todas';
-let cart        = [];
-let selectedPayment = 'mp';
+const WA = '5493515479266';
+const CLAVE = 'k24may'; // ← cambiá por tu código real
 
-// ══════════════════════════════════════════════
-//  PARSEAR CSV
-// ══════════════════════════════════════════════
-function parseCsv(text) {
-  const lines   = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).map(line => {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (let ch of line) {
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    cols.push(cur.trim());
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = (cols[i]||'').replace(/^"|"$/g,'').trim());
-    return obj;
+// ── helper: render imagen con fallback emoji ──────────────────────────────
+function imgHtml(url, emoji, cls='') {
+  if(url) return `<img src="${url}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="fallback" style="display:none">${emoji}</span>`;
+  return `<span class="fallback">${emoji}</span>`;
+}
+
+// ── PRODUCTOS MINORISTA ───────────────────────────────────────────────────
+const productos = [
+  // BEBIDAS
+  {id:1,  cat:'bebidas', e:'🥤', n:'Coca-Cola 500ml',           d:'Descartable',         p:1700,  img:'https://delparquebebidas.com.ar/wp-content/uploads/2025/04/Gaseosa-CocaCola-500mL-x1-scaled.jpg'},
+  {id:2,  cat:'bebidas', e:'🥤', n:'Coca-Cola 1L',              d:'Descartable',         p:2300,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080013_f.jpg'},
+  {id:3,  cat:'bebidas', e:'🥤', n:'Coca-Cola 1,25L',           d:'Retornable',          p:2000,  img:'https://atencion24.ar/wp-content/uploads/2022/11/2b53f55e-5057-4548-90fa-cae1a589fe12.jpg'},
+  {id:4,  cat:'bebidas', e:'🥤', n:'Coca-Cola 1,5L',            d:'Descartable',         p:3700,  img:'https://atencion24.ar/wp-content/uploads/2022/03/28f51ca7-d44b-4d25-b137-9077ecbc5400.jpg'},
+  {id:5,  cat:'bebidas', e:'🥤', n:'Coca-Cola 2L',              d:'Retornable',          p:3900,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080077_f.jpg'},
+  {id:6,  cat:'bebidas', e:'🥤', n:'Coca-Cola 2,25L',           d:'Descartable',         p:4900,  img:'https://www.casa-segal.com/wp-content/uploads/2020/03/coca-cola-225L-almacen-gaseosas-casa-segal-mendoza.jpg'},
+  {id:7,  cat:'bebidas', e:'🥤', n:'Coca-Cola 2,5L',            d:'Descartable',         p:5500,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080288_f.jpg'},
+  {id:8,  cat:'bebidas', e:'🥤', n:'Coca-Cola 2,5L',            d:'Retornable',          p:4100,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080167_f.jpg'},
+  {id:9,  cat:'bebidas', e:'🥤', n:'Sprite 500ml',              d:'Descartable',         p:1700,  img:'https://jumboargentina.vtexassets.com/arquivos/ids/791799-800-auto?v=638291793659030000&width=800&height=auto&aspect=true'},
+  {id:10, cat:'bebidas', e:'🥤', n:'Sprite 1,5L',               d:'Descartable',         p:3800,  img:'https://arcordiezb2c.vteximg.com.br/arquivos/ids/185732/Gaseosa-Sprite-1-5-Lt-1-42.jpg?v=638654889697900000'},
+  {id:11, cat:'bebidas', e:'🥤', n:'Sprite 2L',                 d:'Retornable',          p:3900,  img:'https://delparquebebidas.com.ar/wp-content/uploads/2025/04/Gaseosa-Sprite-Retornable-2L-x1-scaled.jpg'},
+  {id:12, cat:'bebidas', e:'🥤', n:'Sprite 2,25L',              d:'Descartable',         p:4900,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_768434-MLA99395510832_112025-F.webp'},
+  {id:13, cat:'bebidas', e:'🧡', n:'Fanta 500ml',               d:'Descartable',         p:1700,  img:'https://acdn-us.mitiendanube.com/stores/001/147/879/products/48-4d01c9dfb58cd1351217381889102077-1024-1024.webp'},
+  {id:14, cat:'bebidas', e:'🧡', n:'Fanta 1,5L',                d:'Descartable',         p:3800,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080017_f.jpg'},
+  {id:15, cat:'bebidas', e:'🧡', n:'Fanta 2L',                  d:'Retornable',          p:3900,  img:'https://delparquebebidas.com.ar/wp-content/uploads/2025/04/Gaseosa-Fanta-Retornable-2L-x1-scaled.jpg'},
+  {id:16, cat:'bebidas', e:'🧡', n:'Fanta 2,25L',               d:'Descartable',         p:4900,  img:'https://arcordiezb2c.vteximg.com.br/arquivos/ids/156628/GASEOSA-FANTA-NARANJA-PET-1-1203.jpg?v=637432166280100000'},
+  {id:17, cat:'bebidas', e:'💧', n:'Agua Bonaqua 500ml',        d:'Sin gas',             p:1500,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040341_f.jpg'},
+  {id:18, cat:'bebidas', e:'💧', n:'Agua Bonaqua 1,5L',         d:'Sin gas',             p:2200,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040339_f.jpg'},
+  {id:19, cat:'bebidas', e:'💧', n:'Agua Bonaqua 2L',           d:'Sin gas',             p:2800,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040393_f.jpg'},
+  {id:20, cat:'bebidas', e:'⚡', n:'Red Bull 250ml',            d:'Energy drink',        p:2420,  img:'https://aremsaprod.vtexassets.com/arquivos/ids/1029464-800-auto?v=638962315762000000&width=800&height=auto&aspect=true'},
+  {id:21, cat:'bebidas', e:'🏃', n:'Gatorade 500ml',            d:'Isotónica',           p:1320,  img:'https://kioscovanvan.com/wp-content/uploads/2023/12/WhatsApp-Image-2024-01-08-at-18.05.22-2-scaled.jpeg'},
+  {id:22, cat:'bebidas', e:'🧃', n:'Cepita 1L',                 d:'Naranja / durazno',   p:1490,  img:'https://i.imgur.com/EzjIC4G.png'},
+  {id:23, cat:'bebidas', e:'💪', n:'Powerade 500ml',            d:'Mountain Blast',      p:1210,  img:'https://www.rimoldimayorista.com.ar/datos/uploads/mod_catalogo/31308/powerade-500ml-6463cbad6cd20_thumbnail.png?t=1684261805'},
+  // BOTELLAS
+  {id:50, cat:'botellas', e:'🍾', n:'Smirnoff 700ml',           d:'Vodka',               p:10450, img:'https://dcdn-us.mitiendanube.com/stores/001/139/098/products/esmirnoff-sabore1-de918628887432ef7e15867214061341-1024-1024.webp'},
+  {id:51, cat:'botellas', e:'🍾', n:'Sernova',                  d:'Vodka nacional',      p:8580,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_903306-MLA82293452901_022025-F.webp'},
+  {id:52, cat:'botellas', e:'🍾', n:'Absolut',                  d:'Vodka premium',       p:27510, img:'https://http2.mlstatic.com/D_NQ_NP_2X_708877-MLA91224902559_082025-F.webp'},
+  {id:53, cat:'botellas', e:'🍾', n:'Skyy',                     d:'Vodka',               p:11000, img:'https://http2.mlstatic.com/D_NQ_NP_2X_982315-MLA69386512535_052023-F.webp'},
+  {id:54, cat:'botellas', e:'🍾', n:'Fernet Branca 750ml',      d:'Fernet',              p:16290, img:'https://dcdn-us.mitiendanube.com/stores/006/690/901/products/7790290001193_021-4b208b0def7cea643615813429003257-480-0-e3be9279a20eb6627817589937882777-1024-1024.webp'},
+  {id:55, cat:'botellas', e:'🍾', n:'Fernet Branca 450ml',      d:'Fernet',              p:12110, img:'https://http2.mlstatic.com/D_NQ_NP_2X_611836-MLA71643626820_092023-F.webp'},
+  {id:56, cat:'botellas', e:'🍾', n:'Cancillier',               d:'Aperitivo',           p:3860,  img:'https://i.imgur.com/iTMFB3s.png'},
+  {id:57, cat:'botellas', e:'🍋', n:'Dr Lemon',                 d:'Aperitivo',           p:3860,  img:'https://scontent.fcor18-1.fna.fbcdn.net/v/t1.6435-9/51089105_262734867955964_7610691643468939264_n.jpg?stp=dst-jpg_tt6&cstp=mx980x980&ctp=s980x980&_nc_cat=104&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeF2gSpmw7TUJjQjSdQ99r8y-SvBxyuhfyn5K8HHK6F_KZv6oC3m6Yrh9EhCycBwiNAe51zzuGAK55O3K6xuI3jw&_nc_ohc=OlHbDhy4TFEQ7kNvwFgy7On&_nc_oc=Adq17zC1zmE9vRl6Rhh71Ioj6k7c7m-3ctMvMb6SKMJ2Kz6z4vPg87FC1UCwXq10wLkI3SNP9vKJrKJ4oYgwvH-C&_nc_zt=23&_nc_ht=scontent.fcor18-1.fna&_nc_gid=9PrguGpfYZLg8s9xyBdiog&_nc_ss=7b2a8&oh=00_Af9nam5avy5V7MmkyV5byjdNY-fy7qJbayv1P3-PzcbzmQ&oe=6A5AD0E8'},
+  {id:58, cat:'botellas', e:'🥂', n:'Gancia',                   d:'Aperitivo',           p:8580,  img:'https://acdn-us.mitiendanube.com/stores/001/147/879/products/83-b9eb9647280a35fcfb17153592228403-1024-1024.webp'},
+  {id:59, cat:'botellas', e:'🍷', n:'Santa Julia',              d:'Vino',                p:9350,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_601658-MLA46003325717_052021-F.webp'},
+  {id:60, cat:'botellas', e:'🍷', n:'Balvo',                    d:'Vino',                p:3310,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_995520-MLA79380508677_092024-F.webp'},
+  {id:61, cat:'botellas', e:'🍷', n:'Estancia Mendoza',         d:'Vino',                p:3860,  img:'https://barrinhasvinhos.com.br/wp-content/uploads/2025/09/15379776121-kit-em-site-800x800.jpg'},
+  {id:62, cat:'botellas', e:'🍷', n:'Dadá',                     d:'Vino espumante',      p:8800,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_836187-MLA75428012612_032024-F.webp'},
+  {id:63, cat:'botellas', e:'🍷', n:'Frizze',                   d:'Espumante',           p:3090,  img:'https://franodriozola.com.ar/web/wp-content/uploads/2015/10/frizze.jpg'},
+  {id:64, cat:'botellas', e:'🥂', n:'Du Champan',               d:'Champán',             p:7710,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_854447-MLA48254107343_112021-F.webp'},
+  {id:65, cat:'botellas', e:'🍾', n:'Caña Legui',               d:'Caña',                p:7160,  img:'https://www.deliargentina.com/image/cache/catalog/product/vino/licor-cana-legui/Licor%20de%20Ca%C3%B1a%20Legui%20Argentino%20Oferta%20Pack%203%20Botellas-1000x1000.jpeg'},
+  {id:66, cat:'botellas', e:'🍾', n:'Gin Gordons',              d:'Gin',                 p:16500, img:'https://http2.mlstatic.com/D_NQ_NP_2X_991546-MLA76520332705_052024-F.webp'},
+  {id:67, cat:'botellas', e:'🍷', n:'Vino Piel de Cordero',     d:'Vino',                p:5280,  img:'https://http2.mlstatic.com/D_NQ_NP_2X_752534-MLA99447819806_112025-F.webp'},
+  {id:68, cat:'botellas', e:'🍷', n:'Vino Pato Criollo',        d:'Vino',                p:3860,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3064132_f.jpg'},
+  // PROMOS
+  {id:100, cat:'promos', e:'🎁', n:'Smirnoff + 2 Speed',        d:'Promo vodka',         p:15410, img:'https://atencion24.ar/wp-content/uploads/2023/08/cb759892-c7b8-4fc7-b749-8580c8002492.jpg'},
+  {id:101, cat:'promos', e:'🎁', n:'Skyy + 2 Speed',            d:'Promo vodka',         p:15960, img:'https://kioscovanvan.com/wp-content/uploads/2023/12/WhatsApp-Image-2024-01-05-at-17.44.36-1-scaled-e1704489033288.jpeg'},
+  {id:102, cat:'promos', e:'🎁', n:'Skyy + 2 Monster',          d:'Promo vodka',         p:18150, img:null},
+  {id:103, cat:'promos', e:'🎁', n:'Sernova + 2 Speed',         d:'Promo vodka',         p:13760, img:'https://atencion24.ar/wp-content/uploads/2023/08/sernova-berry-2-speed-xl.jpeg'},
+  {id:104, cat:'promos', e:'🎁', n:'Absolut + 2 Speed',         d:'Promo vodka',         p:32460, img:'https://http2.mlstatic.com/D_Q_NP_790992-MLA45413911395_042021-O.webp'},
+  {id:105, cat:'promos', e:'🎁', n:'New Style + 2 Speed',       d:'Promo vodka',         p:11560, img:'https://i.imgur.com/nr1jag8.png'},
+  {id:110, cat:'promos', e:'🎁', n:'Santa Julia + 1 Speed',     d:'Promo vino',          p:11560, img:'https://kioscovanvan.com/wp-content/uploads/2023/12/WhatsApp-Image-2024-01-06-at-18.14.44-scaled.jpeg'},
+  {id:111, cat:'promos', e:'🎁', n:'Balvo + Pritty 3L',         d:'Promo vino',          p:6610,  img:'https://i.imgur.com/0JOMAsQ.png'},
+  {id:112, cat:'promos', e:'🎁', n:'Balvo + Pritty 2,25L',      d:'Promo vino',          p:5840,  img:'https://dcdn-us.mitiendanube.com/stores/004/336/021/products/img_5676-c148fce654d1687b8917100307450570-1024-1024.webp'},
+  {id:113, cat:'promos', e:'🎁', n:'Vino Blanco + Sprite 1,5L', d:'Promo vino',          p:6390,  img:null},
+  {id:114, cat:'promos', e:'🎁', n:'Vino Toro + Pritty 2,25L',  d:'Promo vino',          p:4950,  img:'https://assets.domun.co/prod/cache/image-tool/4b30e1444843d6e23a881c010976c6b717179b69.webp'},
+  {id:115, cat:'promos', e:'🎁', n:'Vino Toro + Pritty 3L',     d:'Promo vino',          p:5500,  img:'https://assets.domun.co/prod/cache/image-tool/03c9e3e17c4856bf501eeb078822720eb6148601.webp'},
+  {id:116, cat:'promos', e:'🎁', n:'Vino Toro + Sprite 1,5L',   d:'Promo vino',          p:6390,  img:null},
+  {id:117, cat:'promos', e:'🎁', n:'Cancillier + 1 Speed',      d:'Promo aperitivo',     p:6610,  img:'https://scontent.fcor18-1.fna.fbcdn.net/v/t39.30808-6/599938357_2058207681681476_4659111851241164550_n.jpg?stp=dst-jpg_tt6&cstp=mx720x1560&ctp=s720x1560&_nc_cat=109&ccb=1-7&_nc_sid=aa7b47&_nc_eui2=AeFjtS65g-nFI3q1dCB3I0LqAbN0OhJSlK0Bs3Q6ElKUrZiTJ13EFB11NhjOZjgdGzdELeV9dsKQWN2bQQvt20d4&_nc_ohc=Tkps9--oZ_UQ7kNvwEdEbHe&_nc_oc=Adod0S2qJnI4yhd_7csWGt7JH7jSQ5PNaCs_uWuL4B_Lli7cN2qqmdLNNbXvqJbTyPETNkYFJsHL7MFvRQ8vAPUv&_nc_zt=23&_nc_ht=scontent.fcor18-1.fna&_nc_gid=JIMigqYdekMY3bYIuoHJuQ&_nc_ss=7b2a8&oh=00_Af8ZNxMXgDyNu5XNzH9ihsSoEfnH60UyGRzk_EqO3wlb-Q&oe=6A3989EB'},
+  {id:118, cat:'promos', e:'🎁', n:'Cancillier + 1 Rockstar',   d:'Promo aperitivo',     p:5840,  img:null},
+  {id:120, cat:'promos', e:'🎁', n:'Gancia + Sprite Ret. 2L',   d:'Promo aperitivo',     p:12110, img:null},
+  {id:121, cat:'promos', e:'🎁', n:'Gancia + Sprite 2,25L',     d:'Promo aperitivo',     p:13210, img:'https://kioscovanvan.com/wp-content/uploads/2023/12/WhatsApp-Image-2024-01-05-at-18.21.03-scaled-e1704492060124.jpeg'},
+  {id:122, cat:'promos', e:'🎁', n:'Dadá + 1 Speed',            d:'Promo espumante',     p:11560, img:'https://kioscovanvan.com/wp-content/uploads/2024/01/WhatsApp-Image-2024-01-06-at-17.01.24-scaled.jpeg'},
+  {id:130, cat:'promos', e:'🎁', n:'Fernet 750 + 1 Coca 2L',    d:'Promo fernet',        p:19800, img:'https://i.imgur.com/U2nlrBN.png'},
+  {id:131, cat:'promos', e:'🎁', n:'Fernet 750 + 2 Cocas 2L',   d:'Promo fernet',        p:24210, img:'https://i.imgur.com/UXjufDB.png'},
+  {id:132, cat:'promos', e:'🎁', n:'Fernet 750 + 1 Coca 2,5L',  d:'Promo fernet',        p:20350, img:'https://i.imgur.com/wwRyC6c.png'},
+  {id:133, cat:'promos', e:'🎁', n:'Fernet 750 + 2 Cocas 2,5L', d:'Promo fernet',        p:25310, img:'https://i.imgur.com/C54mEic.png'},
+  {id:134, cat:'promos', e:'🎁', n:'Fernet 450 + 1 Coca 2L',    d:'Promo fernet',        p:15410, img:null},
+  {id:135, cat:'promos', e:'🎁', n:'Fernet 450 + 1 Coca 2,5L',  d:'Promo fernet',        p:16500, img:null},
+  {id:136, cat:'promos', e:'🎁', n:'Fernet 750 + 1 Coca desc.',  d:'Promo fernet',        p:22000, img:null},
+];
+
+// ── MAYORISTA ─────────────────────────────────────────────────────────────
+const productosMay = [
+  {id:201, cat:'bebidas', e:'🥤', n:'Coca-Cola 1,5L x6',       d:'Pack',    min:'Mín. 6 unid', pMin:3700,  pMay:3200, img:'https://atencion24.ar/wp-content/uploads/2022/03/28f51ca7-d44b-4d25-b137-9077ecbc5400.jpg'},
+  {id:202, cat:'bebidas', e:'🥤', n:'Coca-Cola 2,25L x6',      d:'Pack',    min:'Mín. 6 unid', pMin:4900,  pMay:4200, img:'https://www.casa-segal.com/wp-content/uploads/2020/03/coca-cola-225L-almacen-gaseosas-casa-segal-mendoza.jpg'},
+  {id:203, cat:'bebidas', e:'🥤', n:'Coca-Cola 2,5L ret. x6',  d:'Pack',    min:'Mín. 6 unid', pMin:4100,  pMay:3500, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080167_f.jpg'},
+  {id:204, cat:'bebidas', e:'🥤', n:'Sprite 1,5L x6',          d:'Pack',    min:'Mín. 6 unid', pMin:3800,  pMay:3200, img:'https://arcordiezb2c.vteximg.com.br/arquivos/ids/185732/Gaseosa-Sprite-1-5-Lt-1-42.jpg?v=638654889697900000'},
+  {id:205, cat:'bebidas', e:'🧡', n:'Fanta 1,5L x6',           d:'Pack',    min:'Mín. 6 unid', pMin:3800,  pMay:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080017_f.jpg'},
+  {id:206, cat:'bebidas', e:'💧', n:'Agua Bonaqua 2L x12',     d:'Caja',    min:'Mín. 12 unid',pMin:2800,  pMay:2300, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040393_f.jpg'},
+  {id:207, cat:'bebidas', e:'⚡', n:'Monster 473ml x24',       d:'Caja',    min:'Mín. 24 unid',pMin:2200,  pMay:1800, img:'https://aremsaprod.vtexassets.com/arquivos/ids/1029464-800-auto?v=638962315762000000&width=800&height=auto&aspect=true'},
+  {id:301, cat:'botellas', e:'🍾', n:'Fernet Branca 750ml x12',d:'Caja',    min:'Mín. 1 caja', pMin:16290, pMay:13800,img:'https://dcdn-us.mitiendanube.com/stores/006/690/901/products/7790290001193_021-4b208b0def7cea643615813429003257-480-0-e3be9279a20eb6627817589937882777-1024-1024.webp'},
+  {id:302, cat:'botellas', e:'🍾', n:'Fernet Branca 450ml x12',d:'Caja',    min:'Mín. 1 caja', pMin:12110, pMay:10200,img:'https://http2.mlstatic.com/D_NQ_NP_2X_611836-MLA71643626820_092023-F.webp'},
+  {id:303, cat:'botellas', e:'🍾', n:'Smirnoff 700ml x12',     d:'Caja',    min:'Mín. 1 caja', pMin:10450, pMay:8800, img:'https://dcdn-us.mitiendanube.com/stores/001/139/098/products/esmirnoff-sabore1-de918628887432ef7e15867214061341-1024-1024.webp'},
+  {id:304, cat:'botellas', e:'🍾', n:'Skyy 750ml x12',         d:'Caja',    min:'Mín. 1 caja', pMin:11000, pMay:9200, img:'https://http2.mlstatic.com/D_NQ_NP_2X_982315-MLA69386512535_052023-F.webp'},
+  {id:305, cat:'botellas', e:'🍾', n:'Absolut 750ml x6',       d:'Pack',    min:'Mín. 6 unid', pMin:27510, pMay:23500,img:'https://http2.mlstatic.com/D_NQ_NP_2X_708877-MLA91224902559_082025-F.webp'},
+  {id:306, cat:'botellas', e:'🍾', n:'Gin Gordons 750ml x12',  d:'Caja',    min:'Mín. 1 caja', pMin:16500, pMay:14000,img:'https://http2.mlstatic.com/D_NQ_NP_2X_791447-MLA74560440079_022024-F.webp'},
+  {id:307, cat:'botellas', e:'🍷', n:'Piel de Cordero x12',    d:'Caja',    min:'Mín. 1 caja', pMin:5280,  pMay:4400, img:'https://http2.mlstatic.com/D_NQ_NP_2X_825384-MLA74748614502_022024-F.webp'},
+  {id:401, cat:'promos', e:'🎁', n:'Fernet 750 + 1 Coca 2L',  d:'x6 combos',min:'Mín. 6 combos',pMin:19800,pMay:17500,img:null},
+  {id:402, cat:'promos', e:'🎁', n:'Fernet 750 + 2 Cocas 2L', d:'x6 combos',min:'Mín. 6 combos',pMin:24210,pMay:21000,img:null},
+  {id:403, cat:'promos', e:'🎁', n:'Smirnoff + 2 Speed',      d:'x6 combos',min:'Mín. 6 combos',pMin:15410,pMay:13200,img:null},
+  {id:404, cat:'promos', e:'🎁', n:'Skyy + 2 Monster',        d:'x6 combos',min:'Mín. 6 combos',pMin:18150,pMay:15800,img:null},
+];
+
+// ── TICKER ───────────────────────────────────────────────────────────────
+(function(){
+  const msgs=['🕒 Abierto las 24 horas, todos los días','🚴 Delivery express en Córdoba Capital',
+    '💳 Efectivo, transferencia o Mercado Pago','📲 Pedidos por WhatsApp al instante',
+    '⚡ Salimos en menos de 10 minutos','🎯 Alias: k24online',
+    '🏪 Zona mayorista — pedí tu código por WhatsApp'];
+  const all=[...msgs,...msgs];
+  document.getElementById('ticker').innerHTML=all.map(m=>`<span>${m}</span>`).join('');
+})();
+
+// ── CARRITO MINORISTA ─────────────────────────────────────────────────────
+let carrito={};
+function agregar(id){
+  carrito[id]=(carrito[id]||0)+1; actualizarUI();
+  const p=productos.find(x=>x.id===id);
+  toast(`${p.e} ${p.n} agregado`);
+}
+function cambiar(id,d){
+  carrito[id]=(carrito[id]||0)+d;
+  if(carrito[id]<=0)delete carrito[id]; actualizarUI();
+}
+function actualizarUI(){
+  const total=Object.values(carrito).reduce((a,b)=>a+b,0);
+  document.getElementById('cart-count').textContent=total;
+  const keys=Object.keys(carrito).map(Number);
+  const pi=document.getElementById('panel-items');
+  if(!keys.length){
+    pi.innerHTML='<div class="empty-cart"><div>🛒</div>Todavía no agregaste nada</div>';
+    document.getElementById('total-amt').textContent='$0';
+    document.getElementById('wa-link').href='#';
+    document.getElementById('mp-btn').disabled = true;
+    return;
+  }
+  let html='',tot=0,msg='Hola! Quiero hacer un pedido:%0A';
+  keys.forEach(id=>{
+    const p=productos.find(x=>x.id===id),q=carrito[id],s=p.p*q; tot+=s;
+    msg+=`- ${q}x ${p.n} ($${p.p.toLocaleString('es-AR')})%0A`;
+    const thumb=p.img?`<img src="${p.img}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:10px">`:`${p.e}`;
+    html+=`<div class="item-row">
+      <div class="item-emoji">${thumb}</div>
+      <div class="item-info"><div class="item-nombre">${p.n}</div>
+      <div class="item-sub min">$${s.toLocaleString('es-AR')}</div></div>
+      <div class="controles">
+        <button class="ctrl min" onclick="cambiar(${id},-1)">−</button>
+        <span class="qty">${q}</span>
+        <button class="ctrl min" onclick="cambiar(${id},+1)">+</button>
+      </div></div>`;
   });
+  msg+=`%0ATotal: $${tot.toLocaleString('es-AR')}`;
+  pi.innerHTML=html;
+  document.getElementById('total-amt').textContent=`$${tot.toLocaleString('es-AR')}`;
+  document.getElementById('wa-link').href=`https://wa.me/${WA}?text=${msg}`;
+  document.getElementById('mp-btn').disabled = false;
 }
 
-// ══════════════════════════════════════════════
-//  FORMATO PRECIO
-// ══════════════════════════════════════════════
-function fmt(n) {
-  return '$' + parseInt(n).toLocaleString('es-AR');
+// ── CARRITO MAYORISTA ─────────────────────────────────────────────────────
+let carritoMay={};
+function agregarMay(id){
+  carritoMay[id]=(carritoMay[id]||0)+1; actualizarUIMay();
+  const p=productosMay.find(x=>x.id===id);
+  toast(`${p.e} ${p.n} agregado`,true);
 }
-
-// ══════════════════════════════════════════════
-//  TICKER
-// ══════════════════════════════════════════════
-function buildTicker(products) {
-  const oferts = products.filter(p => p.precio_tachado && parseInt(p.precio_tachado) > 0 && p.visible === 'si');
-  if (!oferts.length) return;
-  const txt = oferts.map(p => `${p.nombre} — ${fmt(p.precio)}`).join(' &nbsp;·&nbsp; ');
-  const el = document.getElementById('ticker-text');
-  el.innerHTML = txt + ' &nbsp;&nbsp;&nbsp;&nbsp; ' + txt;
+function cambiarMay(id,d){
+  carritoMay[id]=(carritoMay[id]||0)+d;
+  if(carritoMay[id]<=0)delete carritoMay[id]; actualizarUIMay();
 }
-
-// ══════════════════════════════════════════════
-//  RENDER PRODUCTOS
-// ══════════════════════════════════════════════
-function renderProducts(cat) {
-  const grid = document.getElementById('products-grid');
-  const list = allProducts.filter(p =>
-    p.visible === 'si' && (cat === 'todas' || p.categoria === cat)
-  );
-  if (!list.length) {
-    grid.innerHTML = '<div class="no-products">No hay productos en esta categoría.</div>';
-    return;
+function actualizarUIMay(){
+  const total=Object.values(carritoMay).reduce((a,b)=>a+b,0);
+  document.getElementById('may-cart-count').textContent=total;
+  const btn=document.getElementById('btn-may-carrito');
+  total>0?btn.classList.add('visible'):btn.classList.remove('visible');
+  const keys=Object.keys(carritoMay).map(Number);
+  const pi=document.getElementById('may-panel-items');
+  if(!keys.length){
+    pi.innerHTML='<div class="empty-cart"><div>📦</div>Todavía no agregaste nada</div>';
+    document.getElementById('may-total-amt').textContent='$0';
+    document.getElementById('may-wa-link').href='#'; return;
   }
-  grid.innerHTML = list.map(p => {
-    const hasImg = p.imagen_url && p.imagen_url.length > 5;
-    const imgHtml = hasImg
-      ? `<div class="product-img"><img src="${p.imagen_url}" alt="${p.nombre}" onerror="this.parentNode.classList.add('emoji-fallback'); this.parentNode.innerHTML='${p.emoji||'📦'}';"/></div>`
-      : `<div class="product-img emoji-fallback">${p.emoji||'📦'}</div>`;
-    const badgeHtml = p.badge
-      ? `<span class="product-badge ${p.badge.toLowerCase()==='popular'?'popular':''}">${p.badge}</span>`
-      : '';
-    const oldHtml = p.precio_tachado && parseInt(p.precio_tachado) > 0
-      ? `<span class="product-old">${fmt(p.precio_tachado)}</span>` : '';
-    return `
-      <div class="product" data-id="${p.id}">
-        ${badgeHtml}
-        ${imgHtml}
-        <div class="product-body">
-          <span class="product-brand">${p.marca}</span>
-          <span class="product-name">${p.nombre}</span>
-          <div class="product-prices">
-            <span class="product-price">${fmt(p.precio)}</span>
-            ${oldHtml}
-          </div>
-        </div>
-        <div class="product-footer">
-          <button class="add-btn" onclick="addToCart(${p.id})">
-            + Agregar al carrito
-          </button>
-        </div>
-      </div>`;
-  }).join('');
+  let html='',tot=0,msg='Hola! Soy cliente mayorista. Quiero pedir:%0A';
+  keys.forEach(id=>{
+    const p=productosMay.find(x=>x.id===id),q=carritoMay[id],s=p.pMay*q; tot+=s;
+    msg+=`- ${q}x ${p.n} (${p.d}) — $${p.pMay.toLocaleString('es-AR')} c/u%0A`;
+    const thumb=p.img?`<img src="${p.img}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:10px">`:`${p.e}`;
+    html+=`<div class="item-row">
+      <div class="item-emoji">${thumb}</div>
+      <div class="item-info"><div class="item-nombre">${p.n}</div>
+      <div class="item-sub may">$${s.toLocaleString('es-AR')}</div></div>
+      <div class="controles">
+        <button class="ctrl may" onclick="cambiarMay(${id},-1)">−</button>
+        <span class="qty">${q}</span>
+        <button class="ctrl may" onclick="cambiarMay(${id},+1)">+</button>
+      </div></div>`;
+  });
+  msg+=`%0ATotal estimado: $${tot.toLocaleString('es-AR')}`;
+  pi.innerHTML=html;
+  document.getElementById('may-total-amt').textContent=`$${tot.toLocaleString('es-AR')}`;
+  document.getElementById('may-wa-link').href=`https://wa.me/${WA}?text=${msg}`;
 }
 
-function filterCat(el, cat) {
-  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  currentCat = cat;
-  renderProducts(cat);
+// ── FILTROS ───────────────────────────────────────────────────────────────
+function cardHTML(p){
+  const imgContent = p.img
+    ? `<img src="${p.img}" alt="${p.n}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="fallback" style="display:none">${p.e}</span>`
+    : `<span class="fallback">${p.e}</span>`;
+  return `<div class="card" onclick="abrirModal(${p.id})" style="cursor:pointer">
+    <div class="card-img">${imgContent}</div>
+    <div class="card-body">
+      <div class="card-nombre">${p.n}</div>
+      <div class="card-desc">${p.d}</div>
+      <div class="card-footer">
+        <span class="precio">$${p.p.toLocaleString('es-AR')}</span>
+        <button class="add-btn" onclick="event.stopPropagation();agregar(${p.id})">+</button>
+      </div>
+    </div>
+  </div>`;
+}
+function mayCardHTML(p){
+  const imgContent = p.img
+    ? `<img src="${p.img}" alt="${p.n}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="fallback" style="display:none">${p.e}</span>`
+    : `<span class="fallback">${p.e}</span>`;
+  return `<div class="may-card" onclick="abrirModal(${p.id})" style="cursor:pointer">
+    <div class="may-card-img">${imgContent}<span class="may-badge">MAY</span></div>
+    <div class="may-card-body">
+      <div class="may-card-nombre">${p.n}</div>
+      <div class="may-card-desc">${p.d}</div>
+      <div class="may-card-min">📦 ${p.min}</div>
+      <div class="may-card-footer">
+        <div><span class="may-precio">$${p.pMay.toLocaleString('es-AR')}</span>
+        <span class="may-tachado">$${p.pMin.toLocaleString('es-AR')}</span></div>
+        <button class="may-add-btn" onclick="event.stopPropagation();agregarMay(${p.id})">+</button>
+      </div>
+    </div>
+  </div>`;
 }
 
-// ══════════════════════════════════════════════
-//  CARGAR DESDE SHEETS
-// ══════════════════════════════════════════════
-async function loadProducts() {
-  const grid = document.getElementById('products-grid');
-  if (!SHEET_CSV_URL || SHEET_CSV_URL === 'PEGAR_URL_AQUI') {
-    grid.innerHTML = `<div class="error-msg">
-      ⚠️ <strong>Falta conectar la planilla.</strong><br>
-      Abrí el archivo index.html, buscá <code>PEGAR_URL_AQUI</code>
-      y reemplazalo con la URL CSV de tu Google Sheets.<br>
-      Seguí las instrucciones en el archivo Excel.
-    </div>`;
-    return;
+function filtrar(cat,btn){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const lista=cat==='todo'?productos:productos.filter(p=>p.cat===cat);
+  document.getElementById('grid').innerHTML=lista.map(cardHTML).join('');
+}
+function filtrarMay(cat,btn){
+  document.querySelectorAll('.may-cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const lista=cat==='todo'?productosMay:productosMay.filter(p=>p.cat===cat);
+  document.getElementById('may-grid').innerHTML=lista.map(mayCardHTML).join('');
+}
+
+// ── PANELS ────────────────────────────────────────────────────────────────
+function togglePanel(){
+  document.getElementById('panel').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+function toggleMayPanel(){
+  document.getElementById('may-panel').classList.toggle('open');
+  document.getElementById('may-overlay').classList.toggle('open');
+}
+
+// ── MODAL MAYORISTA ───────────────────────────────────────────────────────
+function abrirModalMay(){
+  document.getElementById('may-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('may-codigo').focus(),100);
+}
+function cerrarModalMay(){
+  document.getElementById('may-modal').classList.remove('open');
+  document.getElementById('may-codigo').value='';
+  document.getElementById('may-err').classList.remove('show');
+  document.getElementById('may-codigo').classList.remove('err');
+}
+function verificar(){
+  const val=document.getElementById('may-codigo').value.trim().toLowerCase();
+  if(val===CLAVE){
+    cerrarModalMay();
+    document.getElementById('sec-may').classList.add('visible');
+    document.getElementById('mayorista').style.display='none';
+    filtrarMay('todo',document.querySelector('.may-cat-btn'));
+    setTimeout(()=>document.getElementById('sec-may').scrollIntoView({behavior:'smooth'}),100);
+    toast('✅ Bienvenido al área mayorista',true);
+  } else {
+    const inp=document.getElementById('may-codigo');
+    inp.classList.add('err');
+    document.getElementById('may-err').classList.add('show');
+    setTimeout(()=>inp.classList.remove('err'),400);
   }
+}
+function cerrarSesion(){
+  document.getElementById('sec-may').classList.remove('visible');
+  document.getElementById('mayorista').style.display='';
+  carritoMay={}; actualizarUIMay();
+  toast('Sesión mayorista cerrada');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let tt;
+function toast(msg,esMay=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  esMay?t.classList.add('may-t'):t.classList.remove('may-t');
+  t.classList.add('show');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+filtrar('todo',document.querySelector('.cat-btn'));
+
+// ── MODAL DETALLE PRODUCTO ───────────────────────────────────────────────
+let _pmId  = null;
+let _pmQty = 1;
+let _pmMay = false;
+
+const _catLabels = {
+  bebidas:'🥤 Bebidas', botellas:'🍾 Botellas', promos:'🎁 Promo'
+};
+
+function abrirModal(id) {
+  const todos = [...productos, ...productosMay];
+  const p = todos.find(x => x.id === id);
+  if (!p) return;
+
+  _pmId  = id;
+  _pmQty = 1;
+  _pmMay = p.pMay !== undefined;
+  document.getElementById('pm-qty').textContent = 1;
+
+  // Imagen
+  const imgWrap = document.getElementById('pm-img');
+  imgWrap.innerHTML = p.img
+    ? `<img src="${p.img}" alt="${p.n}" onerror="this.parentNode.innerHTML='<span class=big-emoji>${p.e}</span>'">`
+    : `<span class="big-emoji">${p.e}</span>`;
+
+  // Tag categoría
+  const tag = document.getElementById('pm-tag');
+  tag.textContent = _catLabels[p.cat] || p.cat;
+
+  document.getElementById('pm-nombre').textContent = p.n;
+  document.getElementById('pm-desc').textContent   = p.d || '';
+  document.getElementById('pm-precio').textContent =
+    '$' + (p.p || p.pMin).toLocaleString('es-AR');
+
+  const btn = document.getElementById('pm-btn');
+  btn.textContent = 'Agregar al carrito';
+  btn.classList.remove('ok');
+
+  document.getElementById('prod-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarProdModal() {
+  document.getElementById('prod-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function pmQty(delta) {
+  _pmQty = Math.max(1, _pmQty + delta);
+  document.getElementById('pm-qty').textContent = _pmQty;
+}
+
+function pmAgregar() {
+  if (!_pmId) return;
+  for (let i = 0; i < _pmQty; i++) {
+    _pmMay ? agregarMay(_pmId) : agregar(_pmId);
+  }
+  const btn = document.getElementById('pm-btn');
+  btn.textContent = '✓ Agregado';
+  btn.classList.add('ok');
+  setTimeout(cerrarProdModal, 900);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarProdModal();
+});
+
+
+// ── PAGO CON MERCADO PAGO ───────────────────────────────────────────────
+async function pagarConMP() {
+  const btn = document.getElementById('mp-btn');
+  btn.disabled = true;
+  btn.classList.add('cargando');
+  btn.textContent = '⏳ Procesando...';
+
+  // Armar lista de items del carrito
+  const items = Object.keys(carrito).map(id => {
+    const p = productos.find(x => x.id === Number(id));
+    return { nombre: p.n, cantidad: carrito[id], precio: p.p };
+  });
+
   try {
-    const res  = await fetch(SHEET_CSV_URL);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    allProducts = parseCsv(text);
-    buildTicker(allProducts);
-    renderProducts(currentCat);
-  } catch(e) {
-    grid.innerHTML = `<div class="error-msg">
-      ❌ <strong>Error al cargar los productos.</strong><br>
-      Verificá que la planilla esté publicada como CSV público.<br>
-      <small>${e.message}</small>
-    </div>`;
+    const resp = await fetch('/api/crear-pago', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+
+    const data = await resp.json();
+
+    if (data.init_point) {
+      // Redirigir al checkout de Mercado Pago
+      window.location.href = data.init_point;
+    } else {
+      alert('No se pudo iniciar el pago. Intentá de nuevo o pedí por WhatsApp.');
+      btn.disabled = false;
+      btn.classList.remove('cargando');
+      btn.textContent = '💳 Pagar con Mercado Pago';
+    }
+  } catch (e) {
+    alert('Error de conexión. Intentá de nuevo o pedí por WhatsApp.');
+    btn.disabled = false;
+    btn.classList.remove('cargando');
+    btn.textContent = '💳 Pagar con Mercado Pago';
   }
 }
 
-// ══════════════════════════════════════════════
-//  CARRITO
-// ══════════════════════════════════════════════
-function addToCart(id) {
-  const prod = allProducts.find(p => parseInt(p.id) === parseInt(id));
-  if (!prod) return;
-  const existing = cart.find(i => i.id == id);
-  if (existing) existing.qty++;
-  else cart.push({ ...prod, qty: 1 });
-  updateCartUI();
-  const btn = document.querySelector(`.product[data-id="${id}"] .add-btn`);
-  if (btn) {
-    btn.textContent = '✓ Agregado';
-    btn.classList.add('added');
-    setTimeout(() => { btn.textContent = '+ Agregar al carrito'; btn.classList.remove('added'); }, 1200);
-  }
-}
-
-function changeQty(id, delta) {
-  const item = cart.find(i => i.id == id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) cart = cart.filter(i => i.id != id);
-  updateCartUI();
-}
-
-function removeItem(id) {
-  cart = cart.filter(i => i.id != id);
-  updateCartUI();
-}
-
-function getSubtotal() { return cart.reduce((s, i) => s + parseInt(i.precio) * i.qty, 0); }
-function getTotal()    { return cart.length ? getSubtotal() + COSTO_ENVIO : 0; }
-
-function updateCartUI() {
-  const total  = cart.reduce((s,i) => s + i.qty, 0);
-  document.getElementById('cart-count').textContent = total;
-  document.getElementById('cart-subtotal').textContent = fmt(getSubtotal());
-  document.getElementById('cart-total').textContent = fmt(getTotal());
-  document.getElementById('checkout-btn').disabled = cart.length === 0;
-
-  const el = document.getElementById('cart-items');
-  if (!cart.length) { el.innerHTML = '<div class="cart-empty">Tu carrito está vacío 🛒</div>'; return; }
-
-  el.innerHTML = cart.map(item => {
-    const hasImg = item.imagen_url && item.imagen_url.length > 5;
-    const imgHtml = hasImg
-      ? `<div class="cart-item-img"><img src="${item.imagen_url}" alt="${item.nombre}" onerror="this.parentNode.innerHTML='${item.emoji||'📦'}';"/></div>`
-      : `<div class="cart-item-img">${item.emoji||'📦'}</div>`;
-    return `
-      <div class="cart-item">
-        ${imgHtml}
-        <div class="cart-item-info">
-          <div class="cart-item-name">${item.nombre}</div>
-          <div class="cart-item-brand">${item.marca}</div>
-          <div class="cart-item-controls">
-            <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
-            <span class="qty-num">${item.qty}</span>
-            <button class="qty-btn" onclick="changeQty(${item.id}, +1)">+</button>
-          </div>
-        </div>
-        <span class="cart-item-price">${fmt(parseInt(item.precio)*item.qty)}</span>
-        <button class="cart-item-remove" onclick="removeItem(${item.id})">✕</button>
-      </div>`;
-  }).join('');
-}
-
-function toggleCart() {
-  document.getElementById('cart-overlay').classList.toggle('open');
-  document.getElementById('cart-panel').classList.toggle('open');
-}
-
-// ══════════════════════════════════════════════
-//  CHECKOUT
-// ══════════════════════════════════════════════
-function openCheckout() {
-  toggleCart();
-  renderCheckoutForm();
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-}
-
-function renderCheckoutForm() {
-  const orderLines = cart.map(i =>
-    `<div class="order-line"><span>${i.nombre} x${i.qty}</span><span>${fmt(parseInt(i.precio)*i.qty)}</span></div>`
-  ).join('');
-
-  document.getElementById('modal-body').innerHTML = `
-    <div class="form-section">
-      <h3>Tus datos</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nombre *</label>
-          <input type="text" id="f-nombre" placeholder="Tu nombre completo"/>
-        </div>
-        <div class="form-group">
-          <label>Teléfono / WhatsApp *</label>
-          <input type="tel" id="f-tel" placeholder="351 000-0000"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3>Dirección de envío</h3>
-      <div class="form-group">
-        <label>Calle y número *</label>
-        <input type="text" id="f-calle" placeholder="Ej: Av. Colón 1234"/>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Barrio</label>
-          <input type="text" id="f-barrio" placeholder="Ej: Nueva Córdoba"/>
-        </div>
-        <div class="form-group">
-          <label>Piso / Depto</label>
-          <input type="text" id="f-piso" placeholder="Opcional"/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Referencia (opcional)</label>
-        <textarea id="f-ref" placeholder="Ej: Portón negro, timbre no funciona..."></textarea>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3>Método de pago</h3>
-      <div class="payment-options">
-        <div class="payment-opt selected" id="opt-mp" onclick="selectPayment('mp')">
-          <span class="payment-opt-icon">💙</span>
-          <div class="payment-opt-name">Mercado Pago</div>
-          <div class="payment-opt-detail">Alias: k24online</div>
-        </div>
-        <div class="payment-opt" id="opt-trans" onclick="selectPayment('trans')">
-          <span class="payment-opt-icon">🏦</span>
-          <div class="payment-opt-name">Transferencia</div>
-          <div class="payment-opt-detail">Alias: k24online</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3>Resumen del pedido</h3>
-      <div class="order-summary">
-        <h4>Productos</h4>
-        ${orderLines}
-        <div class="order-line"><span>Envío</span><span>${fmt(COSTO_ENVIO)}</span></div>
-        <div class="order-total"><span>Total</span><span>${fmt(getTotal())}</span></div>
-      </div>
-      <button class="confirm-btn" onclick="confirmOrder()">
-        Confirmar pedido por WhatsApp →
-      </button>
-    </div>`;
-}
-
-function selectPayment(type) {
-  selectedPayment = type;
-  document.getElementById('opt-mp').classList.toggle('selected', type === 'mp');
-  document.getElementById('opt-trans').classList.toggle('selected', type === 'trans');
-}
-
-function confirmOrder() {
-  const nombre = document.getElementById('f-nombre').value.trim();
-  const tel    = document.getElementById('f-tel').value.trim();
-  const calle  = document.getElementById('f-calle').value.trim();
-  const barrio = document.getElementById('f-barrio').value.trim();
-  const piso   = document.getElementById('f-piso').value.trim();
-  const ref    = document.getElementById('f-ref').value.trim();
-
-  if (!nombre || !tel || !calle) {
-    alert('Por favor completá los campos obligatorios: nombre, teléfono y dirección.');
-    return;
-  }
-
-  const itemsText = cart.map(i => `• ${i.nombre} x${i.qty} — ${fmt(parseInt(i.precio)*i.qty)}`).join('\n');
-  const payMethod = selectedPayment === 'mp' ? 'Mercado Pago (alias: k24online)' : 'Transferencia bancaria (alias: k24online)';
-  const address   = [calle, barrio, piso].filter(Boolean).join(', ');
-
-  const msg = encodeURIComponent(
-`🛒 *NUEVO PEDIDO — Kiosco Online*
-
-👤 *Cliente:* ${nombre}
-📞 *Teléfono:* ${tel}
-📍 *Dirección:* ${address}
-${ref ? `📝 *Referencia:* ${ref}\n` : ''}
-*Productos:*
-${itemsText}
-
-🚚 Envío: ${fmt(COSTO_ENVIO)}
-💰 *TOTAL: ${fmt(getTotal())}*
-💳 *Pago:* ${payMethod}
-
-_Pedido realizado desde kiosco-online.web_`
-  );
-
-  // Mostrar pantalla de éxito
-  document.getElementById('modal-body').innerHTML = `
-    <div class="success-screen">
-      <div class="success-icon">🎉</div>
-      <h2>¡Pedido listo!</h2>
-      <p>Hacé clic en el botón para enviarnos tu pedido por WhatsApp.<br>
-      Te confirmamos la disponibilidad y el tiempo de entrega en minutos.</p>
-      <a class="whatsapp-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${msg}" target="_blank">
-        Enviar pedido por WhatsApp
-      </a>
-    </div>`;
-
-  cart = [];
-  updateCartUI();
-}
-
-// ══════════════════════════════════════════════
-//  INICIO
-// ══════════════════════════════════════════════
-loadProducts();
 </script>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal-overlay" id="prod-modal" onclick="cerrarModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('prod-modal').classList.remove('open')">✕</button>
+    <div class="modal-img" id="modal-img"></div>
+    <div class="modal-info">
+      <div id="modal-badge" class="modal-badge" style="display:none"></div>
+      <div class="modal-nombre" id="modal-nombre"></div>
+      <div class="modal-desc" id="modal-desc"></div>
+      <div class="modal-precio-wrap">
+        <span class="modal-precio" id="modal-precio"></span>
+      </div>
+      <div class="modal-qty-wrap">
+        <span class="modal-qty-label">Cantidad</span>
+        <div class="qty-ctrl">
+          <button onclick="cambiarQty(-1)">−</button>
+          <span id="modal-qty">1</span>
+          <button onclick="cambiarQty(1)">+</button>
+        </div>
+      </div>
+      <button class="modal-add-btn" id="modal-add-btn" onclick="agregarDesdeModal()">
+        Agregar al carrito
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE PRODUCTO -->
+<div class="prod-overlay" id="prod-overlay" onclick="if(event.target===this)cerrarProdModal()">
+  <div class="prod-box">
+    <button class="prod-close" onclick="cerrarProdModal()">✕</button>
+    <div class="prod-img-wrap" id="pm-img"></div>
+    <div class="prod-info">
+      <div class="prod-cat-tag" id="pm-tag"></div>
+      <div class="prod-nombre" id="pm-nombre"></div>
+      <div class="prod-desc" id="pm-desc"></div>
+      <div class="prod-precio" id="pm-precio"></div>
+      <div class="prod-qty-row">
+        <span class="prod-qty-label">Cantidad</span>
+        <div class="prod-qty-ctrl">
+          <button onclick="pmQty(-1)">−</button>
+          <span id="pm-qty">1</span>
+          <button onclick="pmQty(+1)">+</button>
+        </div>
+      </div>
+      <button class="prod-agregar-btn" id="pm-btn" onclick="pmAgregar()">
+        Agregar al carrito
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
