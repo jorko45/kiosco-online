@@ -479,7 +479,19 @@ footer span{color:var(--oro)}
     <button class="cat-btn" onclick="filtrar('botellas',this)">🍾 Botellas</button>
     <button class="cat-btn" onclick="filtrar('promos',this)">🎁 Promos</button>
   </div>
-  <div class="grid" id="grid"></div>
+  <a href="bebidas.html" style="display:block;text-decoration:none;margin-bottom:16px">
+  <div style="background:linear-gradient(135deg,#1a1a1a,#0e1e2c);border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='#C9A84C'" onmouseout="this.style.borderColor='rgba(201,168,76,.3)'">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="font-size:2.5rem">🥤</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#C9A84C;text-transform:uppercase;letter-spacing:1px">Heladera de Bebidas</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">Coca-Cola, Sprite, Fanta, Aguas, Energizantes y más</div>
+      </div>
+    </div>
+    <div style="color:#C9A84C;font-size:20px;opacity:.7">→</div>
+  </div>
+</a>
+<div class="grid" id="grid"></div>
 </section>
 
 <div class="banner">
@@ -983,7 +995,7 @@ async function pagarConMP() {
   });
 
   try {
-    const resp = await fetch('/api/crear-pago', {
+    const resp = await fetch('/.netlify/functions/crear-pago', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items }),

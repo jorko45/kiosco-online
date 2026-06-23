@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bebidas — Kiosco Online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--negro:#0f0f0f;--dorado:#C9A84C;--dorado2:#e8c86a;--blanco:#fff;--gris:#f5f5f5;--gris2:#e0e0e0}
+body{font-family:'Montserrat',sans-serif;background:#0f0f0f;color:#fff;min-height:100vh}
+
+/* NAV */
+nav{background:#0f0f0f;border-bottom:1.5px solid rgba(201,168,76,.3);padding:0 1.5rem;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo{font-size:18px;font-weight:900;color:var(--dorado);letter-spacing:2px;text-decoration:none;text-transform:uppercase}
+.nav-logo span{color:rgba(255,255,255,.4);font-weight:400}
+.nav-back{color:rgba(255,255,255,.6);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.nav-back:hover{color:var(--dorado)}
+.cart-btn{background:var(--dorado);color:#111;border:none;padding:7px 16px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;border-radius:6px}
+.cart-count{background:#111;color:var(--dorado);border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
+
+/* HEADER */
+.page-header{padding:2rem 1.5rem 1rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.page-header h1{font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--dorado)}
+.page-header p{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
+
+/* MARCAS TABS */
+.marcas-wrap{padding:1.2rem 1.5rem 0}
+.marcas-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.marcas-scroll::-webkit-scrollbar{height:3px}
+.marcas-scroll::-webkit-scrollbar-thumb{background:rgba(201,168,76,.3);border-radius:2px}
+.marca-btn{flex-shrink:0;padding:8px 18px;border:1.5px solid rgba(255,255,255,.12);border-radius:30px;background:transparent;color:rgba(255,255,255,.6);font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .15s;white-space:nowrap}
+.marca-btn:hover{border-color:var(--dorado);color:var(--dorado)}
+.marca-btn.active{background:var(--dorado);color:#111;border-color:var(--dorado)}
+
+/* GRILLA PRODUCTOS */
+.productos-wrap{padding:1.2rem 1.5rem 6rem}
+.marca-titulo{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--dorado);opacity:.7;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.card{background:#1a1a1a;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--dorado);transform:translateY(-3px)}
+.card-img{width:100%;aspect-ratio:1;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
+.card-img img{width:100%;height:100%;object-fit:contain}
+.card-img .emoji{font-size:2.5rem}
+.card-body{padding:10px 12px}
+.card-nombre{font-size:12px;font-weight:700;color:#fff;line-height:1.3;text-transform:uppercase;margin-bottom:2px}
+.card-desc{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:8px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-precio{font-size:16px;font-weight:900;color:var(--dorado)}
+.add-btn{background:var(--dorado);color:#111;border:none;width:28px;height:28px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;transition:background .15s;flex-shrink:0}
+.add-btn:hover{background:var(--dorado2)}
+.add-btn.ok{background:#2e7d32;color:#fff}
+
+/* CARRITO FLOTANTE */
+.cart-float{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;border-top:1.5px solid rgba(201,168,76,.3);padding:12px 1.5rem;display:none;align-items:center;justify-content:space-between;z-index:200}
+.cart-float.on{display:flex}
+.cart-float-info{font-size:12px;color:rgba(255,255,255,.5)}
+.cart-float-total{font-size:18px;font-weight:900;color:var(--dorado)}
+.cart-float-btn{background:var(--dorado);color:#111;border:none;padding:12px 24px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:8px}
+
+/* MODAL PRODUCTO */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#1a1a1a;border:1px solid rgba(201,168,76,.25);border-radius:16px;width:100%;max-width:360px;overflow:hidden}
+.modal-img{width:100%;height:200px;background:#111;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-img img{width:100%;height:100%;object-fit:contain}
+.modal-body{padding:18px 20px 22px}
+.modal-nombre{font-size:16px;font-weight:700;text-transform:uppercase;color:#fff;margin-bottom:4px}
+.modal-desc{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:14px}
+.modal-precio{font-size:26px;font-weight:900;color:var(--dorado);margin-bottom:18px}
+.modal-qty{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.modal-qty-label{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px}
+.qty-ctrl{display:flex;align-items:center;border:1px solid rgba(255,255,255,.15);border-radius:8px;overflow:hidden}
+.qty-ctrl button{background:rgba(255,255,255,.07);border:none;color:#fff;width:34px;height:34px;font-size:18px;cursor:pointer;transition:background .15s}
+.qty-ctrl button:hover{background:rgba(201,168,76,.2)}
+.qty-ctrl span{min-width:34px;text-align:center;font-size:14px;font-weight:700;color:#fff}
+.modal-add{width:100%;padding:13px;background:var(--dorado);color:#111;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .15s}
+.modal-add:hover{background:var(--dorado2)}
+.modal-add.ok{background:#2e7d32;color:#fff}
+.modal-close{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;z-index:1}
+.modal-wrapper{position:relative}
+
+@media(max-width:480px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="index.html">← Volver</a>
+  <a class="nav-logo" href="index.html">Kiosco<span> Online</span></a>
+  <button class="cart-btn" onclick="verCarrito()">
+    🛒 Carrito
+    <span class="cart-count" id="cart-count">0</span>
+  </button>
+</nav>
+
+<div class="page-header">
+  <h1>🥤 Bebidas</h1>
+  <p>Seleccioná una marca o navegá todos los productos</p>
+</div>
+
+<div class="marcas-wrap">
+  <div class="marcas-scroll" id="marcas-scroll"></div>
+</div>
+
+<div class="productos-wrap">
+  <div class="marca-titulo" id="marca-titulo"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-wrapper">
+    <button class="modal-close" onclick="cerrarModal()">✕</button>
+    <div class="modal">
+      <div class="modal-img"><img id="modal-img" src="" alt=""/></div>
+      <div class="modal-body">
+        <div class="modal-nombre" id="modal-nombre"></div>
+        <div class="modal-desc" id="modal-desc"></div>
+        <div class="modal-precio" id="modal-precio"></div>
+        <div class="modal-qty">
+          <span class="modal-qty-label">Cantidad</span>
+          <div class="qty-ctrl">
+            <button onclick="chQty(-1)">−</button>
+            <span id="modal-qty">1</span>
+            <button onclick="chQty(1)">+</button>
+          </div>
+        </div>
+        <button class="modal-add" id="modal-add" onclick="addFromModal()">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CARRITO FLOTANTE -->
+<div class="cart-float" id="cart-float">
+  <div>
+    <div class="cart-float-info" id="cart-float-info"></div>
+    <div class="cart-float-total" id="cart-float-total"></div>
+  </div>
+  <button class="cart-float-btn" onclick="verCarrito()">Ver pedido →</button>
+</div>
+
+<script>
+const WA = '5493515479266';
+
+const PRODUCTOS = [
+  // COCA-COLA
+  {id:1,  marca:'Coca-Cola', n:'Coca-Cola 500ml',    d:'Descartable',       p:1700, img:'https://delparquebebidas.com.ar/wp-content/uploads/2025/04/Gaseosa-CocaCola-500mL-x1-scaled.jpg'},
+  {id:2,  marca:'Coca-Cola', n:'Coca-Cola 1L',        d:'Descartable',       p:2300, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080013_f.jpg'},
+  {id:3,  marca:'Coca-Cola', n:'Coca-Cola 1,25L',     d:'Retornable',        p:2000, img:'https://atencion24.ar/wp-content/uploads/2022/11/2b53f55e-5057-4548-90fa-cae1a589fe12.jpg'},
+  {id:4,  marca:'Coca-Cola', n:'Coca-Cola 1,5L',      d:'Descartable',       p:3700, img:'https://atencion24.ar/wp-content/uploads/2022/03/28f51ca7-d44b-4d25-b137-9077ecbc5400.jpg'},
+  {id:5,  marca:'Coca-Cola', n:'Coca-Cola 2L',        d:'Retornable',        p:3900, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080077_f.jpg'},
+  {id:6,  marca:'Coca-Cola', n:'Coca-Cola 2,25L',     d:'Descartable',       p:4900, img:'https://www.casa-segal.com/wp-content/uploads/2020/03/coca-cola-225L-almacen-gaseosas-casa-segal-mendoza.jpg'},
+  {id:7,  marca:'Coca-Cola', n:'Coca-Cola 2,5L',      d:'Descartable',       p:5500, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080288_f.jpg'},
+  {id:8,  marca:'Coca-Cola', n:'Coca-Cola 2,5L ret.', d:'Retornable',        p:4100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080167_f.jpg'},
+  // SPRITE
+  {id:9,  marca:'Sprite',    n:'Sprite 500ml',        d:'Descartable',       p:1700, img:'https://jumboargentina.vtexassets.com/arquivos/ids/791799-800-auto?v=638291793659030000&width=800&height=auto&aspect=true'},
+  {id:10, marca:'Sprite',    n:'Sprite 1,5L',         d:'Descartable',       p:3800, img:'https://arcordiezb2c.vteximg.com.br/arquivos/ids/185732/Gaseosa-Sprite-1-5-Lt-1-42.jpg?v=638654889697900000'},
+  {id:11, marca:'Sprite',    n:'Sprite 2L',           d:'Retornable',        p:3900, img:'https://delparquebebidas.com.ar/wp-content/uploads/2025/04/Gaseosa-Sprite-Retornable-2L-x1-scaled.jpg'},
+  {id:12, marca:'Sprite',    n:'Sprite 2,25L',        d:'Descartable',       p:4900, img:'https://http2.mlstatic.com/D_NQ_NP_2X_768434-MLA99395510832_112025-F.webp'},
+  // FANTA
+  {id:13, marca:'Fanta',     n:'Fanta 500ml',         d:'Descartable',       p:1700, img:'https://acdn-us.mitiendanube.com/stores/001/147/879/products/48-4d01c9dfb58cd1351217381889102077-1024-1024.webp'},
+  {id:14, marca:'Fanta',     n:'Fanta 1,5L',          d:'Descartable',       p:3800, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080017_f.jpg'},
+  {id:15, marca:'Fanta',     n:'Fanta 2L',            d:'Retornable',        p:3900, img:'https://delparquebebidas.com.ar/wp-content/uploads/2025/04/Gaseosa-Fanta-Retornable-2L-x1-scaled.jpg'},
+  {id:16, marca:'Fanta',     n:'Fanta 2,25L',         d:'Descartable',       p:4900, img:'https://arcordiezb2c.vteximg.com.br/arquivos/ids/156628/GASEOSA-FANTA-NARANJA-PET-1-1203.jpg?v=637432166280100000'},
+  // AGUAS
+  {id:17, marca:'Aguas',     n:'Bonaqua 500ml',       d:'Sin gas',           p:1500, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040341_f.jpg'},
+  {id:18, marca:'Aguas',     n:'Bonaqua 1,5L',        d:'Sin gas',           p:2200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040339_f.jpg'},
+  {id:19, marca:'Aguas',     n:'Bonaqua 2L',          d:'Sin gas',           p:2800, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040393_f.jpg'},
+  // ENERGIZANTES
+  {id:20, marca:'Energizantes', n:'Red Bull 250ml',   d:'Energy drink',      p:2420, img:'https://aremsaprod.vtexassets.com/arquivos/ids/1029464-800-auto?v=638962315762000000&width=800&height=auto&aspect=true'},
+  {id:21, marca:'Energizantes', n:'Gatorade 500ml',   d:'Isotónica',         p:1320, img:'https://kioscovanvan.com/wp-content/uploads/2023/12/WhatsApp-Image-2024-01-08-at-18.05.22-2-scaled.jpeg'},
+  {id:22, marca:'Energizantes', n:'Powerade 500ml',   d:'Mountain Blast',    p:1210, img:'https://www.rimoldimayorista.com.ar/datos/uploads/mod_catalogo/31308/powerade-500ml-6463cbad6cd20_thumbnail.png?t=1684261805'},
+  // JUGOS
+  {id:23, marca:'Jugos',     n:'Cepita 1L',           d:'Naranja / durazno', p:1490, img:'https://i.imgur.com/EzjIC4G.png'},
+];
+
+const MARCAS = ['Todas', ...new Set(PRODUCTOS.map(p=>p.marca))];
+let marcaActiva = 'Todas';
+let cart = {};
+let modalProd = null, modalQty = 1;
+
+function fmt(n){ return '$'+n.toLocaleString('es-AR'); }
+
+function renderMarcas(){
+  document.getElementById('marcas-scroll').innerHTML = MARCAS.map(m=>
+    `<button class="marca-btn${m===marcaActiva?' active':''}" onclick="selMarca('${m}')">${m}</button>`
+  ).join('');
+}
+
+function selMarca(m){
+  marcaActiva = m;
+  renderMarcas();
+  renderGrid();
+}
+
+function renderGrid(){
+  const lista = marcaActiva==='Todas' ? PRODUCTOS : PRODUCTOS.filter(p=>p.marca===marcaActiva);
+  document.getElementById('marca-titulo').textContent = marcaActiva==='Todas' ? `${lista.length} productos` : `${marcaActiva} — ${lista.length} productos`;
+  document.getElementById('grid').innerHTML = lista.map(p=>`
+    <div class="card" onclick="abrirModal(${p.id})">
+      <div class="card-img">
+        ${p.img ? `<img src="${p.img}" alt="${p.n}" onerror="this.parentNode.innerHTML='<span class=emoji>🥤</span>'"/>` : `<span class="emoji">🥤</span>`}
+      </div>
+      <div class="card-body">
+        <div class="card-nombre">${p.n}</div>
+        <div class="card-desc">${p.d}</div>
+        <div class="card-footer">
+          <span class="card-precio">${fmt(p.p)}</span>
+          <button class="add-btn" id="add-${p.id}" onclick="event.stopPropagation();addCart(${p.id},this)">+</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function addCart(id, btn){
+  const p = PRODUCTOS.find(x=>x.id===id);
+  if(!p) return;
+  cart[id] = (cart[id]||0) + 1;
+  if(btn){ btn.textContent='✓'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent='+';btn.classList.remove('ok');},1000); }
+  updateCartUI();
+}
+
+function updateCartUI(){
+  const qty = Object.values(cart).reduce((a,b)=>a+b,0);
+  const total = Object.keys(cart).reduce((s,k)=>{
+    const p=PRODUCTOS.find(x=>x.id===Number(k)); return p?s+p.p*cart[k]:s;
+  },0);
+  document.getElementById('cart-count').textContent = qty;
+  const fl = document.getElementById('cart-float');
+  if(qty){
+    fl.classList.add('on');
+    document.getElementById('cart-float-info').textContent = qty+(qty===1?' producto':' productos');
+    document.getElementById('cart-float-total').textContent = fmt(total);
+  } else fl.classList.remove('on');
+}
+
+function abrirModal(id){
+  const p = PRODUCTOS.find(x=>x.id===id);
+  if(!p) return;
+  modalProd = p; modalQty = 1;
+  document.getElementById('modal-img').src = p.img||'';
+  document.getElementById('modal-nombre').textContent = p.n;
+  document.getElementById('modal-desc').textContent = p.d;
+  document.getElementById('modal-precio').textContent = fmt(p.p);
+  document.getElementById('modal-qty').textContent = 1;
+  const btn = document.getElementById('modal-add');
+  btn.textContent = 'Agregar al carrito';
+  btn.classList.remove('ok');
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function chQty(d){ modalQty=Math.max(1,modalQty+d); document.getElementById('modal-qty').textContent=modalQty; }
+
+function addFromModal(){
+  if(!modalProd) return;
+  for(let i=0;i<modalQty;i++) cart[modalProd.id]=(cart[modalProd.id]||0)+1;
+  updateCartUI();
+  const btn=document.getElementById('modal-add');
+  btn.textContent='✓ Agregado';
+  btn.classList.add('ok');
+  setTimeout(cerrarModal, 900);
+}
+
+function verCarrito(){
+  const items = Object.keys(cart).map(k=>{
+    const p=PRODUCTOS.find(x=>x.id===Number(k));
+    return `• ${p.n} x${cart[k]} — ${fmt(p.p*cart[k])}`;
+  });
+  const total = Object.keys(cart).reduce((s,k)=>{
+    const p=PRODUCTOS.find(x=>x.id===Number(k)); return p?s+p.p*cart[k]:s;
+  },0);
+  const msg = encodeURIComponent(`🛒 *PEDIDO — Kiosco Online*\n\n${items.join('\n')}\n\n💰 *TOTAL: ${fmt(total)}*\n\n_Quiero coordinar el envío_`);
+  window.open(`https://wa.me/${WA}?text=${msg}`, '_blank');
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') cerrarModal(); });
+
+renderMarcas();
+renderGrid();
+</script>
+</body>
+</html>
