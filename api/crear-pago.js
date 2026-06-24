@@ -1,31 +1,39 @@
 // api/crear-pago.js — Vercel Serverless Function
 
 export default async function handler(req, res) {
-  // Solo POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' });
-  }
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   try {
-    const { items } = req.body;
+    // Vercel a veces pasa el body como string
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const { items } = body;
 
     if (!items || !items.length) {
       return res.status(400).json({ error: 'No hay productos en el pedido' });
     }
 
     const mpItems = items.map((it) => ({
-      title: it.nombre,
-      quantity: it.cantidad,
+      title: String(it.nombre),
+      quantity: Number(it.cantidad) || 1,
       unit_price: Number(it.precio),
       currency_id: 'ARS',
     }));
 
     const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
-    const siteUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'https://fluffy-tartufo-81a96a.netlify.app';
 
-    const body = {
+    if (!ACCESS_TOKEN) {
+      return res.status(500).json({ error: 'Token de Mercado Pago no configurado' });
+    }
+
+    const siteUrl = 'https://kiosco-online.vercel.app';
+
+    const preference = {
       items: mpItems,
       back_urls: {
         success: `${siteUrl}/?pago=exitoso`,
@@ -41,7 +49,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${ACCESS_TOKEN}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(preference),
     });
 
     const data = await resp.json();
