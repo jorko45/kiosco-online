@@ -1019,7 +1019,7 @@ async function pagarConMP() {
   });
 
   try {
-    const resp = await fetch('/.netlify/functions/crear-pago', {
+    const resp = await fetch('/api/crear-pago', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items }),
