@@ -64,8 +64,8 @@ nav{background:#0f0f0f;border-bottom:1.5px solid rgba(201,168,76,.3);padding:0 1
 </nav>
 
 <div class="page-header">
-  <h1>🥤 Pritty & Doble Cola</h1>
-  <p>Hacé clic en cualquier producto para verlo y agregarlo al carrito</p>
+  <h1>🥤 Pritty Limón & Doble Cola</h1>
+  <p>Pritty Limón + Doble Cola en todos sus sabores — 500ml, 2.25L y 3L</p>
 </div>
 
 <div class="fridge-section">
@@ -118,6 +118,7 @@ const WA = '5493515479266';
 const SABORES = {
   'Cola':      {color:'#c8001e', lc:'#fff', lbl:'COLA'},
   'Naranja':   {color:'#ff6b00', lc:'#fff', lbl:'NRNJ'},
+  'Limón':     {color:'#ddcc00', lc:'#333', lbl:'LMN'},
   'Lima Limón':{color:'#88bb00', lc:'#fff', lbl:'LIMA'},
   'Pomelo':    {color:'#e8c020', lc:'#333', lbl:'PMLO'},
 };
@@ -130,38 +131,29 @@ const MARCAS_COLOR = {
 
 const PRODS = [
   // ── 500ml ──
-  {id:101, marca:'Pritty',     sabor:'Cola',       n:'Pritty Cola 500ml',       d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
-  {id:102, marca:'Pritty',     sabor:'Naranja',     n:'Pritty Naranja 500ml',    d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
-  {id:103, marca:'Pritty',     sabor:'Lima Limón',  n:'Pritty Lima Limón 500ml', d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
-  {id:104, marca:'Pritty',     sabor:'Pomelo',      n:'Pritty Pomelo 500ml',     d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
-  {id:105, marca:'Doble Cola', sabor:'Cola',        n:'Doble Cola 500ml',        d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
-  {id:106, marca:'Doble Cola', sabor:'Naranja',     n:'Doble Cola Naranja 500ml',d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
-  {id:107, marca:'Doble Cola', sabor:'Lima Limón',  n:'Doble Cola Lima Limón 500ml',d:'Botella 500ml',p:900,img:'',tipo:'botella',   h:68, w:17},
-  {id:108, marca:'Doble Cola', sabor:'Pomelo',      n:'Doble Cola Pomelo 500ml', d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
+  {id:101, marca:'Pritty',     sabor:'Limón',      n:'Pritty Limón 500ml',       d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
+  {id:102, marca:'Doble Cola', sabor:'Cola',        n:'Doble Cola 500ml',         d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
+  {id:103, marca:'Doble Cola', sabor:'Naranja',     n:'Doble Cola Naranja 500ml', d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
+  {id:104, marca:'Doble Cola', sabor:'Lima Limón',  n:'Doble Cola Lima Limón 500ml',d:'Botella 500ml',p:900, img:'', tipo:'botella',   h:68, w:17},
+  {id:105, marca:'Doble Cola', sabor:'Pomelo',      n:'Doble Cola Pomelo 500ml',  d:'Botella 500ml', p:900,  img:'', tipo:'botella',   h:68, w:17},
   // ── 2.25L ──
-  {id:201, marca:'Pritty',     sabor:'Cola',        n:'Pritty Cola 2.25L',       d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
-  {id:202, marca:'Pritty',     sabor:'Naranja',     n:'Pritty Naranja 2.25L',    d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
-  {id:203, marca:'Pritty',     sabor:'Lima Limón',  n:'Pritty Lima Limón 2.25L', d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
-  {id:204, marca:'Pritty',     sabor:'Pomelo',      n:'Pritty Pomelo 2.25L',     d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
-  {id:205, marca:'Doble Cola', sabor:'Cola',        n:'Doble Cola 2.25L',        d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
-  {id:206, marca:'Doble Cola', sabor:'Naranja',     n:'Doble Cola Naranja 2.25L',d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
-  {id:207, marca:'Doble Cola', sabor:'Lima Limón',  n:'Doble Cola Lima Limón 2.25L',d:'Botella 2.25L',p:2800,img:'',tipo:'botella_g',h:96, w:20},
-  {id:208, marca:'Doble Cola', sabor:'Pomelo',      n:'Doble Cola Pomelo 2.25L', d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
+  {id:201, marca:'Pritty',     sabor:'Limón',      n:'Pritty Limón 2.25L',       d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
+  {id:202, marca:'Doble Cola', sabor:'Cola',        n:'Doble Cola 2.25L',         d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
+  {id:203, marca:'Doble Cola', sabor:'Naranja',     n:'Doble Cola Naranja 2.25L', d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
+  {id:204, marca:'Doble Cola', sabor:'Lima Limón',  n:'Doble Cola Lima Limón 2.25L',d:'Botella 2.25L',p:2800,img:'',tipo:'botella_g', h:96, w:20},
+  {id:205, marca:'Doble Cola', sabor:'Pomelo',      n:'Doble Cola Pomelo 2.25L',  d:'Botella 2.25L', p:2800, img:'', tipo:'botella_g', h:96, w:20},
   // ── 3L ──
-  {id:301, marca:'Pritty',     sabor:'Cola',        n:'Pritty Cola 3L',          d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:302, marca:'Pritty',     sabor:'Naranja',     n:'Pritty Naranja 3L',       d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:303, marca:'Pritty',     sabor:'Lima Limón',  n:'Pritty Lima Limón 3L',    d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:304, marca:'Pritty',     sabor:'Pomelo',      n:'Pritty Pomelo 3L',        d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:305, marca:'Doble Cola', sabor:'Cola',        n:'Doble Cola 3L',           d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:306, marca:'Doble Cola', sabor:'Naranja',     n:'Doble Cola Naranja 3L',   d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:307, marca:'Doble Cola', sabor:'Lima Limón',  n:'Doble Cola Lima Limón 3L',d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
-  {id:308, marca:'Doble Cola', sabor:'Pomelo',      n:'Doble Cola Pomelo 3L',    d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
+  {id:301, marca:'Pritty',     sabor:'Limón',      n:'Pritty Limón 3L',          d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
+  {id:302, marca:'Doble Cola', sabor:'Cola',        n:'Doble Cola 3L',            d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
+  {id:303, marca:'Doble Cola', sabor:'Naranja',     n:'Doble Cola Naranja 3L',    d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
+  {id:304, marca:'Doble Cola', sabor:'Lima Limón',  n:'Doble Cola Lima Limón 3L', d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
+  {id:305, marca:'Doble Cola', sabor:'Pomelo',      n:'Doble Cola Pomelo 3L',     d:'Botella 3L',    p:3500, img:'', tipo:'botella_g', h:108, w:22},
 ];
 
 const ESTANTES = [
-  {label:'Botellas 500ml',   ids:[101,101,102,102,103,103,104,104,105,105,106,106,107,107,108,108]},
-  {label:'Botellas 2.25L',   ids:[201,201,202,202,203,203,204,204,205,205,206,206,207,207,208,208]},
-  {label:'Botellas 3L',      ids:[301,301,302,302,303,303,304,304,305,305,306,306,307,307,308,308]},
+  {label:'Botellas 500ml',   ids:[101,101,101,102,102,103,103,104,104,105,105]},
+  {label:'Botellas 2.25L',   ids:[201,201,201,202,202,203,203,204,204,205,205]},
+  {label:'Botellas 3L',      ids:[301,301,301,302,302,303,303,304,304,305,305]},
 ];
 
 const FX=70, FW=380, gY=50, gH=640;
@@ -250,8 +242,8 @@ function drawFridge(){
     // Estante metálico
     s+=`<rect x="${FX}" y="${shelfY}" width="${FW}" height="5" rx="2" fill="#4a6878"/>`;
     s+=`<rect x="${FX}" y="${shelfY}" width="${FW}" height="1.5" fill="#7aaabb"/>`;
-    s+=`<text x="${FX+6}" y="${shelfY-5}" fill="rgba(255,255,255,.35)" font-size="7.5">Pritty</text>`;
-    s+=`<text x="${FX+FW/2+6}" y="${shelfY-5}" fill="rgba(255,255,255,.35)" font-size="7.5">Doble Cola</text>`;
+    s+=`<text x="${FX+6}" y="${shelfY-5}" fill="rgba(255,255,255,.35)" font-size="7.5">← Pritty</text>`;
+    s+=`<text x="${FX+80}" y="${shelfY-5}" fill="rgba(255,255,255,.35)" font-size="7.5">Doble Cola →</text>`;
     s+=`<text x="${FX+FW-6}" y="${shelfY-5}" text-anchor="end" fill="#6a9aaa" font-size="8" opacity="0.7">${est.label}</text>`;
   });
   s+=`</g>`;
