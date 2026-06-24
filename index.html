@@ -103,7 +103,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.95);backdrop-fil
 .sec-eyebrow{font-size:.72rem;color:var(--oro);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
 .sec-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:32px}
 .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
-.cat-btn{padding:8px 18px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);
+.cat-btn{display:none;padding:8px 18px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);
          background:transparent;color:var(--gris);cursor:pointer;font-size:.82rem;
          font-weight:500;transition:all .15s;font-family:'Inter',sans-serif}
 .cat-btn:hover,.cat-btn.active{background:var(--oro);color:#111;border-color:var(--oro);font-weight:700}
@@ -473,49 +473,55 @@ footer span{color:var(--oro)}
 <section class="seccion" id="catalogo">
   <div class="sec-eyebrow">Catálogo minorista</div>
   <div class="sec-title">¿Qué te mandamos hoy?</div>
-  <div class="cats">
-    <button class="cat-btn active" onclick="filtrar('todo',this)">Todo</button>
-    <button class="cat-btn" onclick="filtrar('bebidas',this)">🥤 Bebidas</button>
-    <button class="cat-btn" onclick="filtrar('botellas',this)">🍾 Botellas</button>
-    <button class="cat-btn" onclick="filtrar('promos',this)">🎁 Promos</button>
-  </div>
-  <div style="margin-bottom:20px">
-    <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(201,168,76,.7);margin-bottom:12px">🧊 Heladeras</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+
+  <!-- HELADERAS -->
+  <div style="margin-bottom:40px">
+    <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(201,168,76,.7);margin-bottom:14px">🧊 Heladeras de Bebidas</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
 
       <!-- Heladera Coca-Cola -->
       <a href="bebidas.html" style="text-decoration:none">
-        <div style="background:linear-gradient(135deg,#1a0a0a,#2a0a0a);border:1.5px solid rgba(200,0,30,.3);border-radius:14px;padding:16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px" onmouseover="this.style.borderColor='#c8001e';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(200,0,30,.3)';this.style.transform='none'">
-          <div style="width:48px;height:80px;background:linear-gradient(180deg,#c8001e,#880010);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)">
-            <div style="font-size:1.2rem">🥤</div>
-            <div style="font-size:7px;color:#fff;font-weight:700;letter-spacing:.5px;margin-top:4px">COCA</div>
+        <div class="hel-card" style="background:linear-gradient(135deg,#1a0808,#2a1010);border:1.5px solid rgba(200,0,30,.25);border-radius:16px;padding:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px" onmouseover="this.style.borderColor='#c8001e';this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(200,0,30,.2)'" onmouseout="this.style.borderColor='rgba(200,0,30,.25)';this.style.transform='none';this.style.boxShadow='none'">
+          <div style="width:52px;height:90px;background:linear-gradient(180deg,#c8001e 0%,#6a0010 100%);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 4px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.15)">
+            <div style="font-size:1.4rem;margin-bottom:4px">🥤</div>
+            <div style="font-size:7px;color:rgba(255,255,255,.9);font-weight:700;letter-spacing:.5px">COCA</div>
+            <div style="width:30px;height:1px;background:rgba(255,255,255,.2);margin:4px 0"></div>
+            <div style="font-size:6px;color:rgba(255,255,255,.5);font-weight:500">COLD</div>
           </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px">Coca-Cola</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;line-height:1.4">Original, Zero, Sprite,<br>Fanta, Schweppes y más</div>
-            <div style="color:#c8001e;font-size:11px;font-weight:600;margin-top:6px">Ver heladera →</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Coca-Cola</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:8px">Original, Zero, Sprite,<br>Fanta, Schweppes y más</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;color:#c8001e;font-size:11px;font-weight:700">Ver heladera <span style="font-size:14px">→</span></div>
           </div>
         </div>
       </a>
 
       <!-- Heladera Pritty -->
       <a href="heladera-pritty.html" style="text-decoration:none">
-        <div style="background:linear-gradient(135deg,#1a0a1a,#2a0a2a);border:1.5px solid rgba(200,0,150,.3);border-radius:14px;padding:16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px" onmouseover="this.style.borderColor='#cc0088';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(200,0,150,.3)';this.style.transform='none'">
-          <div style="width:48px;height:80px;background:linear-gradient(180deg,#cc0000,#660066);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)">
-            <div style="font-size:1.2rem">🥤</div>
-            <div style="font-size:6px;color:#fff;font-weight:700;letter-spacing:.5px;margin-top:4px;text-align:center">PRITTY</div>
+        <div class="hel-card" style="background:linear-gradient(135deg,#1a0818,#2a1028);border:1.5px solid rgba(200,0,150,.25);border-radius:16px;padding:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px" onmouseover="this.style.borderColor='#cc0088';this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(200,0,150,.2)'" onmouseout="this.style.borderColor='rgba(200,0,150,.25)';this.style.transform='none';this.style.boxShadow='none'">
+          <div style="width:52px;height:90px;background:linear-gradient(180deg,#cc0000 0%,#660066 100%);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 4px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.15)">
+            <div style="font-size:1.4rem;margin-bottom:4px">🍋</div>
+            <div style="font-size:6px;color:rgba(255,255,255,.9);font-weight:700;letter-spacing:.5px;text-align:center">PRITTY</div>
+            <div style="width:30px;height:1px;background:rgba(255,255,255,.2);margin:4px 0"></div>
+            <div style="font-size:5px;color:rgba(255,255,255,.5);font-weight:500;text-align:center">D. COLA</div>
           </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px">Pritty & Doble Cola</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;line-height:1.4">Cola, Naranja, Lima Limón<br>y Pomelo — 500ml a 3L</div>
-            <div style="color:#cc0088;font-size:11px;font-weight:600;margin-top:6px">Ver heladera →</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Pritty & Doble Cola</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:8px">Limón, Naranja, Lima Limón<br>y Pomelo — 500ml a 3L</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;color:#cc0088;font-size:11px;font-weight:700">Ver heladera <span style="font-size:14px">→</span></div>
           </div>
         </div>
       </a>
 
     </div>
   </div>
-<div class="grid" id="grid"></div>
+
+  <!-- PROMOS -->
+  <div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(201,168,76,.7);margin-bottom:14px">🎁 Promociones</div>
+    <div class="grid" id="grid"></div>
+  </div>
+
 </section>
 
 <div class="banner">
@@ -744,6 +750,31 @@ const productosMay = [
 
 // ── CARRITO MINORISTA ─────────────────────────────────────────────────────
 let carrito={};
+
+// Cargar productos agregados desde las heladeras
+function cargarDesdeHeladeras(){
+  try {
+    const saved = JSON.parse(localStorage.getItem('k24_cart') || '{}');
+    Object.values(saved).forEach(item => {
+      if (!item || !item.id) return;
+      carrito[item.id] = item.qty || 1;
+      // Agregar a la lista de productos si no existe
+      if (!productos.find(p => p.id === item.id)) {
+        productos.push({
+          id: item.id,
+          n: item.n,
+          p: item.p,
+          cat: item.cat || 'bebidas',
+          img: '',
+          e: '🥤',
+          d: '',
+          visible: 'si'
+        });
+      }
+    });
+    if (Object.keys(carrito).length) actualizarPanel();
+  } catch(e) {}
+}
 function agregar(id){
   carrito[id]=(carrito[id]||0)+1; actualizarUI();
   const p=productos.find(x=>x.id===id);
@@ -784,6 +815,9 @@ function actualizarUI(){
   pi.innerHTML=html;
   document.getElementById('total-amt').textContent=`$${tot.toLocaleString('es-AR')}`;
   document.getElementById('wa-link').href=`https://wa.me/${WA}?text=${msg}`;
+  document.getElementById('wa-link').onclick = () => { 
+    try { localStorage.removeItem('k24_cart'); } catch(e) {} 
+  };
   document.getElementById('mp-btn').disabled = false;
 }
 
@@ -935,7 +969,8 @@ function toast(msg,esMay=false){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
-filtrar('todo',document.querySelector('.cat-btn'));
+filtrar('promos',null);
+cargarDesdeHeladeras();
 
 // ── MODAL DETALLE PRODUCTO ───────────────────────────────────────────────
 let _pmId  = null;
@@ -1019,7 +1054,7 @@ async function pagarConMP() {
   });
 
   try {
-    const resp = await fetch('/api/crear-pago', {
+    const resp = await fetch('/.netlify/functions/crear-pago', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items }),

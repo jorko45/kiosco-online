@@ -58,9 +58,9 @@ nav{background:#0f0f0f;border-bottom:1.5px solid rgba(201,168,76,.3);padding:0 1
 <nav>
   <a class="nav-back" href="index.html">← Volver</a>
   <a class="nav-logo" href="index.html">Kiosco<span> Online</span></a>
-  <button class="cart-btn" onclick="verCarrito()">
-    🛒 Carrito <span class="cart-count" id="cart-count">0</span>
-  </button>
+  <a href="index.html" class="cart-btn" style="text-decoration:none">
+    🛒 <span id="cart-count">0</span> en carrito
+  </a>
 </nav>
 
 <div class="page-header">
@@ -108,7 +108,7 @@ nav{background:#0f0f0f;border-bottom:1.5px solid rgba(201,168,76,.3);padding:0 1
     <div class="cart-float-info" id="cart-float-info"></div>
     <div class="cart-float-total" id="cart-float-total"></div>
   </div>
-  <button class="cart-float-btn" onclick="verCarrito()">Ver pedido →</button>
+  <a class="cart-float-btn" href="index.html" style="text-decoration:none">✓ Volver con productos →</a>
 </div>
 
 <script>
@@ -317,6 +317,33 @@ function updateCartUI(){
   const fl=document.getElementById('cart-float');
   if(qty){ fl.classList.add('on'); document.getElementById('cart-float-info').textContent=qty+(qty===1?' producto':' productos'); document.getElementById('cart-float-total').textContent=fmt(total); }
   else fl.classList.remove('on');
+  // Guardar en localStorage para el carrito principal
+  guardarEnCarritoPrincipal();
+}
+
+function guardarEnCarritoPrincipal(){
+  try {
+    // Leer carrito existente del index
+    const existing = JSON.parse(localStorage.getItem('k24_cart') || '{}');
+    // Armar items de esta heladera con nombre completo
+    Object.keys(cart).forEach(k => {
+      const p = PRODS.find(x => x.id === Number(k));
+      if (!p) return;
+      const key = 'hel_' + k;
+      if (cart[k] > 0) {
+        existing[key] = {
+          id: key,
+          n: p.n,
+          p: p.p,
+          qty: cart[k],
+          cat: 'bebidas'
+        };
+      } else {
+        delete existing[key];
+      }
+    });
+    localStorage.setItem('k24_cart', JSON.stringify(existing));
+  } catch(e) {}
 }
 
 function verCarrito(){
