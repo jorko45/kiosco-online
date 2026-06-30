@@ -583,19 +583,21 @@
     .cat-card:not(.cat-soon):hover .cat-bg { transform:scale(1.05); }
     .cat-dark-ov { position:absolute; inset:0; background:rgba(0,0,0,.42); }
     .cat-grad { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.1) 65%,transparent 100%); }
-    .cat-products {
-      position:absolute; right:8px; bottom:0; top:0;
-      display:flex; align-items:flex-end; gap:4px; padding-bottom:56px;
+    .cat-deco {
+      position:absolute; right:-8px; top:50%;
+      transform:translateY(-55%);
+      font-size:90px; line-height:1;
+      opacity:.22; pointer-events:none; user-select:none;
+      filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));
+      transition:opacity .3s, transform .3s;
     }
-    .cat-products img {
-      object-fit:contain;
-      mix-blend-mode:multiply;
-      filter:drop-shadow(0 6px 14px rgba(0,0,0,.5)) brightness(1.15) contrast(1.1);
-      transition:transform .3s;
+    .cat-featured .cat-deco { font-size:130px; right:10px; }
+    .cat-card:hover .cat-deco { opacity:.35; transform:translateY(-58%) scale(1.06); }
+    .cat-shine {
+      position:absolute; top:0; left:0; right:0; height:55%;
+      background:linear-gradient(160deg,rgba(255,255,255,.1) 0%,transparent 100%);
+      pointer-events:none;
     }
-    .cat-card:hover .cat-products img:nth-child(1){transform:translateY(-8px) rotate(-4deg);}
-    .cat-card:hover .cat-products img:nth-child(2){transform:translateY(-14px);}
-    .cat-card:hover .cat-products img:nth-child(3){transform:translateY(-6px) rotate(3deg);}
     .cat-info { position:absolute; bottom:0; left:0; right:0; padding:16px 18px 14px; }
     .cat-tag {
       font-family:'Rajdhani',sans-serif; font-weight:700; font-size:9px;
@@ -665,15 +667,12 @@
     <div class="cat-grid">
 
       <!-- ══ HELADERAS (featured) ══ -->
-      <div class="cat-card cat-featured" onclick="enterSection('heladeras')" style="background:linear-gradient(140deg,#06101a 0%,#102040 60%,#0a1830 100%);">
-        <div class="cat-products">
-          <img src="https://http2.mlstatic.com/D_NQ_NP_2X_743200-MLA104682985133_012026-F.webp" alt="Powerade" style="height:175px"/>
-          <img src="https://http2.mlstatic.com/D_NQ_NP_2X_829930-MLA110666791465_042026-F.webp" alt="Coca-Cola" style="height:215px"/>
-          <img src="https://http2.mlstatic.com/D_NQ_NP_2X_969755-MLA83497177596_042025-F.webp" alt="Red Bull" style="height:165px"/>
-        </div>
+      <div class="cat-card cat-featured" onclick="enterSection('heladeras')" style="background:linear-gradient(135deg,#003399 0%,#0066dd 55%,#00aaff 100%);">
+        <div class="cat-shine"></div>
+        <div class="cat-deco">❄️</div>
         <div class="cat-grad"></div>
         <div class="cat-info">
-          <span class="cat-tag">❄ Bebidas frías</span>
+          <span class="cat-tag">Bebidas frías</span>
           <div class="cat-name">Heladeras</div>
           <div class="cat-sub">Gaseosas · Cervezas · Energizantes · Aguas · Pritty</div>
         </div>
@@ -684,14 +683,12 @@
       <div class="cat-right-col">
 
         <!-- BOTELLAS -->
-        <div class="cat-card" onclick="enterSection('botellas')" style="background:linear-gradient(140deg,#1a0a00 0%,#2d1500 60%,#1a0a00 100%);">
-          <div class="cat-products" style="gap:6px;">
-            <img src="https://http2.mlstatic.com/D_NQ_NP_2X_611836-MLA71643626820_092023-F.webp" alt="Fernet" style="height:115px"/>
-            <img src="https://http2.mlstatic.com/D_NQ_NP_2X_903306-MLA82293452901_022025-F.webp" alt="Vodka" style="height:105px"/>
-          </div>
+        <div class="cat-card" onclick="enterSection('botellas')" style="background:linear-gradient(135deg,#1a0500 0%,#7a2000 60%,#cc3300 100%);">
+          <div class="cat-shine"></div>
+          <div class="cat-deco">🍾</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
-            <span class="cat-tag">🍾 Alcohol</span>
+            <span class="cat-tag">Alcohol</span>
             <div class="cat-name">Botellas</div>
             <div class="cat-sub">Vodka · Fernet · Gin · Vinos</div>
           </div>
@@ -699,12 +696,12 @@
         </div>
 
         <!-- PROMOS -->
-        <div class="cat-card" onclick="enterSection('promos')">
-          <img class="cat-bg" src="https://i.imgur.com/U2nlrBN.png" alt="Promos"/>
-          <div class="cat-dark-ov" style="background:rgba(0,0,0,.55);"></div>
+        <div class="cat-card" onclick="enterSection('promos')" style="background:linear-gradient(135deg,#880000 0%,#cc2200 55%,#ff4400 100%);">
+          <div class="cat-shine"></div>
+          <div class="cat-deco">🔥</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
-            <span class="cat-tag">🔥 Ofertas</span>
+            <span class="cat-tag">Ofertas</span>
             <div class="cat-name">Promos</div>
             <div class="cat-sub">Combos especiales</div>
           </div>
@@ -717,9 +714,9 @@
       <div class="cat-row2">
 
         <!-- GÓNDOLA -->
-        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#1a0e04,#241408);">
+        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#1a1000,#3d2800);">
           <div class="cat-prox">Próximamente</div>
-          <div class="cat-icon-big">🛒</div>
+          <div class="cat-deco">🛒</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
             <span class="cat-tag">Snacks · Limpieza</span>
@@ -729,9 +726,9 @@
         </div>
 
         <!-- GOLOSINAS -->
-        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#160020,#240038);">
+        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#2d0055,#660099);">
           <div class="cat-prox">Próximamente</div>
-          <div class="cat-icon-big">🍬</div>
+          <div class="cat-deco">🍬</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
             <span class="cat-tag">Dulces</span>
@@ -741,9 +738,9 @@
         </div>
 
         <!-- CIGARRERÍA -->
-        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#0a0a0a,#181818);">
+        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#0a0a0a,#2a2a2a);">
           <div class="cat-prox">Próximamente</div>
-          <div class="cat-icon-big">🚬</div>
+          <div class="cat-deco">🚬</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
             <span class="cat-tag">Tabaco</span>
