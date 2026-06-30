@@ -1466,17 +1466,46 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
-function pagarMP() {
-  const items = Object.values(cart);
-  if (!items.length) return;
-  const { costo: envio, gratis, subtotal } = getDeliveryInfo();
-  const total = subtotal + envio;
-  showToast('💳 Alias: k24online — envianos el comprobante por WhatsApp');
-  const lineas = items.map(i => `• ${i.qty}x ${i.name} ${i.size} — $${(i.price*i.qty).toLocaleString('es-AR')}`).join('\n');
-  const envioLinea = gratis ? `Envío: GRATIS 🎉` : `Envío: $${envio.toLocaleString('es-AR')}`;
-  const wsp = `💳 *Pedido K24 — Pago MP*\n\n${lineas}\n\nSubtotal: $${subtotal.toLocaleString('es-AR')}\n${envioLinea}\n*Total: $${total.toLocaleString('es-AR')}*\n\nAlias MP: *k24online*\nTe envío el comprobante ahora.`;
-  recordarCompra();
-  window.open(`https://wa.me/5493515479266?text=${encodeURIComponent(wsp)}`, '_blank');
+async function pagarMP() {
+  const cartItems = Object.values(cart);
+  if (!cartItems.length) return;
+
+  const btnMP = document.getElementById('btnMP');
+  btnMP.disabled = true;
+  btnMP.textContent = '⏳ Procesando...';
+
+  const { costo: envio, gratis } = getDeliveryInfo();
+
+  const items = cartItems.map(i => ({
+    nombre:   `${i.name} ${i.size}`,
+    cantidad: i.qty,
+    precio:   i.price,
+  }));
+
+  if (!gratis && envio > 0) {
+    items.push({ nombre: 'Envío a domicilio', cantidad: 1, precio: envio });
+  }
+
+  try {
+    const resp = await fetch('/api/crear-pago', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || !data.init_point) {
+      throw new Error(data.error || 'Error al crear el pago');
+    }
+
+    recordarCompra();
+    window.location.href = data.init_point;
+
+  } catch (err) {
+    showToast('❌ ' + err.message);
+    btnMP.disabled = false;
+    btnMP.textContent = '💳 Pagar con MercadoPago';
+  }
 }
 
 // ── SPOTLIGHT CURSOR ─────────────────────────────────────────────────────
