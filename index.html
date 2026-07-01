@@ -112,7 +112,36 @@
       border-radius:1px;
     }
     .shelf-label { font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:600; letter-spacing:3px; color:rgba(200,232,245,.32); text-transform:uppercase; margin-bottom:10px; padding-left:2px; position:relative; z-index:2; }
-    .shelf-products { display:flex; gap:6px; align-items:flex-end; padding-bottom:4px; min-height:148px; position:relative; z-index:2; }
+    .shelf-products { display:flex; gap:6px; align-items:flex-end; padding-bottom:8px; min-height:148px; position:relative; z-index:2; overflow-x:auto; }
+    .shelf-products::-webkit-scrollbar { height:7px; }
+    .shelf-products::-webkit-scrollbar-track { background:rgba(255,255,255,.07); border-radius:4px; margin:0 4px; }
+    .shelf-products::-webkit-scrollbar-thumb { background:rgba(140,200,255,.45); border-radius:4px; }
+    .shelf-products::-webkit-scrollbar-thumb:hover { background:rgba(140,200,255,.72); }
+
+    /* ── PANEL DE VARIANTES (se expande debajo del estante) ── */
+    .variant-panel {
+      display:none; gap:8px; overflow-x:auto;
+      padding:10px 2px 8px; margin-top:8px;
+      border-top:1px solid rgba(200,235,255,.08);
+    }
+    .variant-panel.open { display:flex; }
+    .variant-panel::-webkit-scrollbar { height:7px; }
+    .variant-panel::-webkit-scrollbar-track { background:rgba(255,255,255,.07); border-radius:4px; }
+    .variant-panel::-webkit-scrollbar-thumb { background:rgba(140,200,255,.45); border-radius:4px; }
+    .variant-panel::-webkit-scrollbar-thumb:hover { background:rgba(140,200,255,.72); }
+
+    .vp-card {
+      display:flex; flex-direction:column; align-items:center; gap:4px;
+      padding:8px 7px 10px; border-radius:12px; cursor:pointer; flex-shrink:0;
+      width:82px; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1); transition:all .15s;
+    }
+    .vp-card:hover { background:rgba(255,255,255,.14); border-color:rgba(200,230,255,.38); transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.4); }
+    .vp-card.vp-selected { border-color:rgba(77,208,255,.7); background:rgba(77,208,255,.12); box-shadow:0 0 0 2px rgba(77,208,255,.25); }
+    .vp-img { width:56px; height:72px; object-fit:contain; }
+    .vp-size { font-size:9px; color:rgba(255,255,255,.72); text-align:center; font-weight:600; line-height:1.2; }
+    .vp-price { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; color:var(--red); }
+    .vp-tag { font-size:8px; background:rgba(0,180,0,.22); color:#7dff7d; padding:1px 5px; border-radius:8px; font-weight:600; }
 
     /* tarjeta de marca en heladera */
     .drink-card {
@@ -131,6 +160,7 @@
       filter: brightness(1.12);
     }
     .drink-card:active { transform: translateY(-3px) scale(1.01); }
+    .drink-card.brand-selected { background:rgba(200,230,255,.14); border-color:rgba(200,230,255,.45); transform:translateY(-8px) scale(1.04); box-shadow:0 14px 34px rgba(0,0,0,.55), 0 0 0 2px rgba(200,230,255,.35), 0 0 18px rgba(190,228,255,.18); }
 
     /* logo cuadrado de la marca */
     .brand-logo {
@@ -953,11 +983,11 @@
       <span class="fridge-label">K24 · Bebidas frías</span>
       <span class="fridge-temp">🌡 4°C</span>
     </div>
-    <div class="shelf"><div class="shelf-label">Gaseosas</div><div class="shelf-products" id="shelf-gaseosas"></div></div>
-    <div class="shelf"><div class="shelf-label">Aguas &amp; Jugos</div><div class="shelf-products" id="shelf-aguas"></div></div>
-    <div class="shelf"><div class="shelf-label">Cervezas</div><div class="shelf-products" id="shelf-cervezas"></div></div>
-    <div class="shelf"><div class="shelf-label">Energizantes &amp; Isotónicos</div><div class="shelf-products" id="shelf-energizantes"></div></div>
-    <div class="shelf"><div class="shelf-label">Pritty &amp; Económicas</div><div class="shelf-products" id="shelf-pritty"></div></div>
+    <div class="shelf"><div class="shelf-label">Gaseosas</div><div class="shelf-products" id="shelf-gaseosas"></div><div class="variant-panel" id="panel-gaseosas"></div></div>
+    <div class="shelf"><div class="shelf-label">Aguas &amp; Jugos</div><div class="shelf-products" id="shelf-aguas"></div><div class="variant-panel" id="panel-aguas"></div></div>
+    <div class="shelf"><div class="shelf-label">Cervezas</div><div class="shelf-products" id="shelf-cervezas"></div><div class="variant-panel" id="panel-cervezas"></div></div>
+    <div class="shelf"><div class="shelf-label">Energizantes &amp; Isotónicos</div><div class="shelf-products" id="shelf-energizantes"></div><div class="variant-panel" id="panel-energizantes"></div></div>
+    <div class="shelf"><div class="shelf-label">Pritty &amp; Económicas</div><div class="shelf-products" id="shelf-pritty"></div><div class="variant-panel" id="panel-pritty"></div></div>
   </div>
 </main>
 
@@ -1115,17 +1145,13 @@ const catalog = {
         {vid:4, size:'500ml c/gas',  price:1500, img:'/img/productos/35d5ca7f_3040342_f.jpg'},
         {vid:5, size:'1.5L c/gas',   price:2200, img:'/img/productos/5151e921_155818-1200-1200.jpg'},
       ]},
-    { id:'cepita-naranja', name:'Cepita Naranja', color:'#ff7722', textColor:'#fff',
+    { id:'cepita', name:'Cepita', color:'#ff7722', textColor:'#fff',
       logo:'/img/logos/089a8042_thumb_64038_default_medium.jpeg',
       variants:[
-        {vid:1, size:'200ml', price:700,  img:'/img/productos/dd33dd8e_5859733-1200-auto.jpg'},
-        {vid:2, size:'1L',    price:1490, img:'/img/productos/3658fe8a_EzjIC4G.png'},
-      ]},
-    { id:'cepita-durazno', name:'Cepita Durazno', color:'#ffaa44', textColor:'#3a1a00',
-      logo:'/img/logos/089a8042_thumb_64038_default_medium.jpeg',
-      variants:[
-        {vid:1, size:'200ml', price:700,  img:'/img/productos/6aa086ad_3050771_f.jpg'},
-        {vid:2, size:'1L',    price:1490, img:'/img/productos/fe7c351e_9e519490-dda8-4717-a65e-814080beacb.jpg'},
+        {vid:1, size:'Naranja 200ml', price:700,  img:'/img/productos/dd33dd8e_5859733-1200-auto.jpg'},
+        {vid:2, size:'Naranja 1L',    price:1490, img:'/img/productos/3658fe8a_EzjIC4G.png'},
+        {vid:3, size:'Durazno 200ml', price:700,  img:'/img/productos/6aa086ad_3050771_f.jpg'},
+        {vid:4, size:'Durazno 1L',    price:1490, img:'/img/productos/fe7c351e_9e519490-dda8-4717-a65e-814080beacb.jpg'},
       ]},
     { id:'cunnington', name:'Cunnington', color:'#cc0000', textColor:'#fff',
       logo:'/img/logos/cunnington-logo.png',
@@ -1390,14 +1416,69 @@ Object.entries(shelfMap).forEach(([shelfId, brands]) => {
   shelf.innerHTML = brands.map(brand => {
     const minPrice = Math.min(...brand.variants.map(v => v.price));
     const nv = brand.variants.length;
-    return `<div class="drink-card" onclick="openModal('${brand.id}','${shelfId.replace('shelf-','')}')" title="${brand.name}">
+    return `<div class="drink-card" id="card-${brand.id}" onclick="selectBrand('${brand.id}','${shelfId}')" title="${brand.name}">
       ${brandLogoCard(brand)}
       <div class="drink-name">${brand.name}</div>
-      ${nv > 1 ? `<div class="drink-opts">${nv} opciones</div>` : ''}
+      ${nv > 1 ? `<div class="drink-opts">${nv} tamaños</div>` : ''}
       <div class="drink-price">desde $${minPrice.toLocaleString('es-AR')}</div>
     </div>`;
   }).join('');
 });
+
+// ── SELECCIÓN DE MARCA EN HELADERA ────────────────────────────────────────
+
+let activeBrandId = null;
+let activeShelfId = null;
+
+function selectBrand(brandId, shelfId) {
+  const shelfKey = shelfId.replace('shelf-', '');
+  const panelId  = 'panel-' + shelfKey;
+  const panel    = document.getElementById(panelId);
+  const brand    = (catalog[shelfKey] || []).find(b => b.id === brandId);
+  if (!brand || !panel) return;
+
+  // Deselect anterior
+  if (activeBrandId) {
+    const prevCard = document.getElementById('card-' + activeBrandId);
+    if (prevCard) prevCard.classList.remove('brand-selected');
+  }
+
+  // Si clic en la misma marca → cerrar panel
+  if (activeBrandId === brandId && activeShelfId === shelfId) {
+    panel.classList.remove('open');
+    panel.innerHTML = '';
+    activeBrandId = null;
+    activeShelfId = null;
+    return;
+  }
+
+  // Cerrar panel anterior si era otro estante
+  if (activeShelfId && activeShelfId !== shelfId) {
+    const prevPanel = document.getElementById('panel-' + activeShelfId.replace('shelf-',''));
+    if (prevPanel) { prevPanel.classList.remove('open'); prevPanel.innerHTML = ''; }
+  }
+
+  activeBrandId = brandId;
+  activeShelfId = shelfId;
+
+  // Seleccionar card
+  const card = document.getElementById('card-' + brandId);
+  if (card) card.classList.add('brand-selected');
+
+  // Renderizar variantes en el panel
+  panel.innerHTML = brand.variants.map(v => `
+    <div class="vp-card" onclick="openModal('${brandId}','${shelfKey}',${v.vid})" title="${v.size}">
+      <img class="vp-img" src="${v.img}" alt="${v.size}" onerror="this.style.display='none'">
+      <div class="vp-size">${v.size}</div>
+      <div class="vp-price">$${v.price.toLocaleString('es-AR')}</div>
+      ${v.tag ? `<div class="vp-tag">♻ ${v.tag}</div>` : ''}
+    </div>
+  `).join('');
+  panel.classList.add('open');
+
+  // Scroll suave al panel
+  setTimeout(() => panel.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+}
 
 // ── MODAL ─────────────────────────────────────────────────────────────────
 
@@ -1406,13 +1487,13 @@ let currentShelfKey = null;
 let selectedVid = null;
 let modalQty = 1;
 
-function openModal(brandId, shelfKey) {
+function openModal(brandId, shelfKey, preVid) {
   const shelf = catalog[shelfKey];
   if (!shelf) return;
   currentBrand    = shelf.find(b => b.id === brandId);
   currentShelfKey = shelfKey;
   if (!currentBrand) return;
-  selectedVid = currentBrand.variants[0].vid;
+  selectedVid = preVid || currentBrand.variants[0].vid;
   modalQty    = 1;
   renderModal();
   document.getElementById('modal').classList.add('open');
@@ -1825,6 +1906,17 @@ function backToLanding() {
 }
 
 function volverInicio() {
+  // Cerrar panel de variantes si estaba abierto
+  if (activeBrandId) {
+    const c = document.getElementById('card-' + activeBrandId);
+    if (c) c.classList.remove('brand-selected');
+    activeBrandId = null;
+  }
+  if (activeShelfId) {
+    const p = document.getElementById('panel-' + activeShelfId.replace('shelf-',''));
+    if (p) { p.classList.remove('open'); p.innerHTML = ''; }
+    activeShelfId = null;
+  }
   const el = document.getElementById('landing');
   hideSectionViews();
   showTicker(true);
