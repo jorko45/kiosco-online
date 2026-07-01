@@ -1591,6 +1591,14 @@ async function pagarMP() {
   const cartItems = Object.values(cart);
   if (!cartItems.length) return;
 
+  // Si no tiene perfil, pedirlo primero
+  if (!userProfile) {
+    _pendingAction = pagarMP;
+    showToast('📝 Completá tu perfil para continuar');
+    abrirPerfil();
+    return;
+  }
+
   const btnMP = document.getElementById('btnMP');
   btnMP.disabled = true;
   btnMP.textContent = '⏳ Procesando...';
@@ -1668,7 +1676,9 @@ function cerrarPerfil() {
   document.getElementById('perfilOverlay').classList.remove('open');
 }
 
-function guardarPerfil() {
+let _pendingAction = null; // acción pendiente después de registrarse
+
+async function guardarPerfil() {
   const nombre    = document.getElementById('pNombre').value.trim();
   const telefono  = document.getElementById('pTelefono').value.trim();
   const direccion = document.getElementById('pDireccion').value.trim();
@@ -1676,6 +1686,7 @@ function guardarPerfil() {
     showToast('⚠️ Nombre, teléfono y dirección son obligatorios');
     return;
   }
+  const esNuevo = !userProfile;
   userProfile = {
     nombre,
     telefono,
@@ -1688,7 +1699,22 @@ function guardarPerfil() {
   localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
   cargarPerfil();
   cerrarPerfil();
-  showToast('✅ Perfil guardado');
+
+  // Guardar en Google Sheets si es un registro nuevo
+  if (esNuevo) {
+    fetch('/api/registrar-usuario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userProfile),
+    }).catch(() => {}); // silencioso
+  }
+
+  // Continuar con la acción que disparó el registro
+  if (_pendingAction) {
+    const action = _pendingAction;
+    _pendingAction = null;
+    setTimeout(action, 200);
+  }
 }
 
 function obtenerUbicacion() {
@@ -1715,10 +1741,7 @@ function obtenerUbicacion() {
 // Al cargar la página
 window.addEventListener('DOMContentLoaded', () => {
   cargarPerfil();
-  // Primera vez: mostrar perfil automáticamente
-  if (!userProfile) {
-    setTimeout(abrirPerfil, 800);
-  }
+  // El perfil se pide durante el checkout, no al entrar
 });
 
 // ── SPOTLIGHT CURSOR ─────────────────────────────────────────────────────
@@ -1884,8 +1907,9 @@ function pedirWSP() {
   const items = Object.values(cart);
   if (!items.length) return;
 
-  // Si no tiene perfil, pedirlo primero
+  // Si no tiene perfil, pedirlo primero y guardar la acción pendiente
   if (!userProfile) {
+    _pendingAction = pedirWSP;
     showToast('📝 Completá tu perfil para continuar');
     abrirPerfil();
     return;
@@ -1914,8 +1938,8 @@ function pedirWSP() {
 <!-- PERFIL DE USUARIO -->
 <div class="perfil-overlay" id="perfilOverlay">
   <div class="perfil-modal">
-    <h2>👤 Tu perfil de entrega</h2>
-    <p class="perfil-sub">Lo guardamos en tu dispositivo para no pedírtelo cada vez.</p>
+    <h2>📦 ¿A dónde te lo llevamos?</h2>
+    <p class="perfil-sub">Solo la primera vez. Quedará guardado para futuros pedidos.</p>
 
     <div class="perfil-field">
       <label>Nombre y apellido *</label>
