@@ -636,6 +636,126 @@
       .cat-row2 .cat-card:last-child { grid-column:1/-1; }
       .cat-featured { height:240px; }
     }
+
+    /* ── PERFIL DE USUARIO ────────────────────────────────────────────── */
+    .btn-perfil {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: background .2s;
+      white-space: nowrap;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-perfil:hover { background: rgba(255,255,255,.18); }
+
+    .perfil-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .perfil-overlay.open { opacity: 1; pointer-events: all; }
+
+    .perfil-modal {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px;
+      padding: 28px 24px 24px;
+      width: 92%; max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      transform: translateY(20px);
+      transition: transform .25s;
+    }
+    .perfil-overlay.open .perfil-modal { transform: translateY(0); }
+
+    .perfil-modal h2 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: #fff; margin-bottom: 6px;
+    }
+    .perfil-modal p.perfil-sub {
+      color: rgba(255,255,255,.5);
+      font-size: 13px; margin-bottom: 20px;
+    }
+
+    .perfil-field {
+      margin-bottom: 14px;
+    }
+    .perfil-field label {
+      display: block;
+      font-size: 12px; font-weight: 600;
+      color: rgba(255,255,255,.55);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .perfil-field input {
+      width: 100%;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .perfil-field input:focus { border-color: rgba(0,158,227,.6); }
+    .perfil-field input::placeholder { color: rgba(255,255,255,.25); }
+
+    .perfil-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .btn-ubicacion {
+      width: 100%;
+      background: rgba(255,255,255,.07);
+      border: 1px dashed rgba(255,255,255,.25);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: rgba(255,255,255,.6);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all .2s;
+      margin-bottom: 14px;
+    }
+    .btn-ubicacion:hover { background: rgba(255,255,255,.12); color:#fff; }
+    .btn-ubicacion.ok { border-color: #00cc77; color: #00cc77; background: rgba(0,204,119,.08); }
+
+    .perfil-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-guardar-perfil {
+      flex: 1;
+      background: #cc0000;
+      border: none; border-radius: 12px;
+      padding: 13px;
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 16px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-guardar-perfil:hover { background: #ee0000; }
+    .btn-cancelar-perfil {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px;
+      padding: 13px 18px;
+      color: rgba(255,255,255,.6);
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -808,6 +928,7 @@
     <div class="header-right">
       <button class="btn-inicio" onclick="volverInicio()">← Inicio</button>
       <span class="badge-open">● Abierto</span>
+      <button class="btn-perfil" id="btnPerfil" onclick="abrirPerfil()">👤 <span id="headerNombre">Mi cuenta</span></button>
       <button class="cart-btn" onclick="toggleCart()">
         🛒 Carrito <span class="cart-count" id="cartCount">0</span>
       </button>
@@ -1508,6 +1629,98 @@ async function pagarMP() {
   }
 }
 
+
+// ── PERFIL DE USUARIO ────────────────────────────────────────────────────
+let userProfile = JSON.parse(localStorage.getItem('k24_perfil') || 'null');
+let coordsCapturadas = null;
+
+function cargarPerfil() {
+  if (userProfile) {
+    const primerNombre = userProfile.nombre.split(' ')[0];
+    document.getElementById('headerNombre').textContent = primerNombre;
+  }
+}
+
+function abrirPerfil() {
+  const o = document.getElementById('perfilOverlay');
+  // Pre-cargar campos si ya hay datos
+  if (userProfile) {
+    document.getElementById('pNombre').value     = userProfile.nombre     || '';
+    document.getElementById('pTelefono').value   = userProfile.telefono   || '';
+    document.getElementById('pDireccion').value  = userProfile.direccion  || '';
+    document.getElementById('pPiso').value       = userProfile.piso       || '';
+    document.getElementById('pBarrio').value     = userProfile.barrio     || '';
+    document.getElementById('pReferencia').value = userProfile.referencia || '';
+    if (userProfile.coords) {
+      coordsCapturadas = userProfile.coords;
+      const btn = document.getElementById('btnUbicacion');
+      btn.textContent = '✅ Ubicación guardada';
+      btn.classList.add('ok');
+    }
+    document.getElementById('btnCancelarPerfil').style.display = 'block';
+  } else {
+    document.getElementById('btnCancelarPerfil').style.display = 'none';
+  }
+  o.classList.add('open');
+}
+
+function cerrarPerfil() {
+  document.getElementById('perfilOverlay').classList.remove('open');
+}
+
+function guardarPerfil() {
+  const nombre    = document.getElementById('pNombre').value.trim();
+  const telefono  = document.getElementById('pTelefono').value.trim();
+  const direccion = document.getElementById('pDireccion').value.trim();
+  if (!nombre || !telefono || !direccion) {
+    showToast('⚠️ Nombre, teléfono y dirección son obligatorios');
+    return;
+  }
+  userProfile = {
+    nombre,
+    telefono,
+    direccion,
+    piso:       document.getElementById('pPiso').value.trim(),
+    barrio:     document.getElementById('pBarrio').value.trim(),
+    referencia: document.getElementById('pReferencia').value.trim(),
+    coords:     coordsCapturadas,
+  };
+  localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
+  cargarPerfil();
+  cerrarPerfil();
+  showToast('✅ Perfil guardado');
+}
+
+function obtenerUbicacion() {
+  const btn = document.getElementById('btnUbicacion');
+  if (!navigator.geolocation) {
+    showToast('❌ Tu navegador no soporta geolocalización');
+    return;
+  }
+  btn.textContent = '⏳ Obteniendo ubicación...';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      coordsCapturadas = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      btn.textContent = '✅ Ubicación capturada';
+      btn.classList.add('ok');
+    },
+    () => {
+      btn.textContent = '📍 Usar mi ubicación actual';
+      btn.classList.remove('ok');
+      showToast('❌ No se pudo obtener la ubicación');
+    }
+  );
+}
+
+// Al cargar la página
+window.addEventListener('DOMContentLoaded', () => {
+  cargarPerfil();
+  // Primera vez: mostrar perfil automáticamente
+  if (!userProfile) {
+    setTimeout(abrirPerfil, 800);
+  }
+});
+
 // ── SPOTLIGHT CURSOR ─────────────────────────────────────────────────────
 
 (function() {
@@ -1670,15 +1883,83 @@ document.body.style.overflow = 'hidden';
 function pedirWSP() {
   const items = Object.values(cart);
   if (!items.length) return;
+
+  // Si no tiene perfil, pedirlo primero
+  if (!userProfile) {
+    showToast('📝 Completá tu perfil para continuar');
+    abrirPerfil();
+    return;
+  }
+
   const { costo: envio, gratis, subtotal } = getDeliveryInfo();
   const total  = subtotal + envio;
   const lineas = items.map(i => `• ${i.qty}x ${i.name} ${i.size} — $${(i.price*i.qty).toLocaleString('es-AR')}`).join('\n');
   const envioLinea = gratis ? `Envío: GRATIS 🎉` : `Envío: $${envio.toLocaleString('es-AR')}`;
-  const msg = `🛒 *Pedido K24*\n\n${lineas}\n\nSubtotal: $${subtotal.toLocaleString('es-AR')}\n${envioLinea}\n*Total: $${total.toLocaleString('es-AR')}*\n\n¡Hola! Quiero hacer este pedido con delivery.`;
+
+  // Datos de entrega
+  let dirCompleta = userProfile.direccion;
+  if (userProfile.piso)   dirCompleta += `, ${userProfile.piso}`;
+  if (userProfile.barrio) dirCompleta += ` — ${userProfile.barrio}`;
+  let mapaLinea = '';
+  if (userProfile.coords) {
+    mapaLinea = `\n📌 https://maps.google.com/?q=${userProfile.coords.lat},${userProfile.coords.lng}`;
+  }
+  const refLinea = userProfile.referencia ? `\n🏠 Ref: ${userProfile.referencia}` : '';
+
+  const msg = `🛒 *Pedido K24*\n\n${lineas}\n\nSubtotal: $${subtotal.toLocaleString('es-AR')}\n${envioLinea}\n*Total: $${total.toLocaleString('es-AR')}*\n\n👤 ${userProfile.nombre}\n📱 ${userProfile.telefono}\n📍 ${dirCompleta}${refLinea}${mapaLinea}`;
   recordarCompra();
   window.open(`https://wa.me/5493515479266?text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
+<!-- PERFIL DE USUARIO -->
+<div class="perfil-overlay" id="perfilOverlay">
+  <div class="perfil-modal">
+    <h2>👤 Tu perfil de entrega</h2>
+    <p class="perfil-sub">Lo guardamos en tu dispositivo para no pedírtelo cada vez.</p>
+
+    <div class="perfil-field">
+      <label>Nombre y apellido *</label>
+      <input type="text" id="pNombre" placeholder="Ej: Jorge Montagna" autocomplete="name"/>
+    </div>
+
+    <div class="perfil-field">
+      <label>Teléfono (WhatsApp) *</label>
+      <input type="tel" id="pTelefono" placeholder="Ej: 351 547 9266" autocomplete="tel"/>
+    </div>
+
+    <div class="perfil-field">
+      <label>Dirección *</label>
+      <input type="text" id="pDireccion" placeholder="Ej: Av. Colón 1234" autocomplete="street-address"/>
+    </div>
+
+    <div class="perfil-row2">
+      <div class="perfil-field">
+        <label>Piso / Depto</label>
+        <input type="text" id="pPiso" placeholder="Ej: 3° B"/>
+      </div>
+      <div class="perfil-field">
+        <label>Barrio</label>
+        <input type="text" id="pBarrio" placeholder="Ej: Nueva Córdoba"/>
+      </div>
+    </div>
+
+    <div class="perfil-field">
+      <label>Referencia</label>
+      <input type="text" id="pReferencia" placeholder="Ej: Portón verde, esquina con Bv. San Juan"/>
+    </div>
+
+    <button class="btn-ubicacion" id="btnUbicacion" onclick="obtenerUbicacion()">
+      📍 Usar mi ubicación actual
+    </button>
+
+    <div class="perfil-actions">
+      <button class="btn-cancelar-perfil" id="btnCancelarPerfil" onclick="cerrarPerfil()">Cancelar</button>
+      <button class="btn-guardar-perfil" onclick="guardarPerfil()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
