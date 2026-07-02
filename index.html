@@ -225,9 +225,11 @@
     .modal-subtitle { font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:600; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-bottom:14px; }
 
     /* fila de variantes */
-    .variants-row { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; margin-bottom:20px; }
-    .variants-row::-webkit-scrollbar { height:3px; }
-    .variants-row::-webkit-scrollbar-thumb { background:#ddd; border-radius:2px; }
+    .variants-row { display:flex; gap:10px; overflow-x:auto; padding-bottom:12px; margin-bottom:20px; }
+    .variants-row::-webkit-scrollbar { height:8px; }
+    .variants-row::-webkit-scrollbar-track { background:#f0f0f0; border-radius:4px; }
+    .variants-row::-webkit-scrollbar-thumb { background:#bbb; border-radius:4px; }
+    .variants-row::-webkit-scrollbar-thumb:hover { background:#999; }
 
     .variant-card {
       display:flex; flex-direction:column; align-items:center; gap:6px;
@@ -240,6 +242,7 @@
     .variant-card.selected { border-color:var(--red); background:#fff0f0; box-shadow:0 0 0 3px rgba(204,0,0,.08); }
 
     .variant-img-wrap { width:80px; height:100px; display:flex; align-items:center; justify-content:center; position:relative; }
+    .variant-size  { font-size:11px; color:#555; font-weight:600; text-align:center; line-height:1.2; }
     .variant-tag   { font-size:9px; background:#e8f5e9; color:#2e7d32; padding:2px 7px; border-radius:10px; font-weight:700; }
     .variant-price { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; color:var(--red); }
 
@@ -1767,6 +1770,7 @@ function renderModal() {
     const isSelected = v.vid === selectedVid;
     return `<div class="variant-card ${isSelected ? 'selected' : ''}" onclick="selectVariant(${v.vid})">
       <div class="variant-img-wrap">${variantLogoCard(currentBrand, v)}</div>
+      <div class="variant-size">${v.size}</div>
       ${v.tag ? `<div class="variant-tag">♻ ${v.tag}</div>` : ''}
       <div class="variant-price">$${v.price.toLocaleString('es-AR')}</div>
     </div>`;
