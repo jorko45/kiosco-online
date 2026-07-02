@@ -667,7 +667,12 @@
       .cat-right-col { flex-direction:row; }
       .cat-row2 { grid-template-columns:1fr 1fr; }
       .cat-row2 .cat-card:last-child { grid-column:1/-1; }
-      .cat-featured { height:240px; }
+      .cat-featured { height:200px; }
+      /* hero compacto en mobile para que cat-grid quede visible sin scroll */
+      .landing-hero { flex: 0 0 auto; padding: 18px 16px 12px; }
+      .landing-k, .landing-24 { font-size: 56px; }
+      .landing-tagline { margin-bottom: 14px; }
+      .landing-question { margin-bottom: 10px; }
     }
 
     /* ── PERFIL DE USUARIO ────────────────────────────────────────────── */
@@ -1270,7 +1275,7 @@ const catalog = {
         {vid:3, size:'1L ret.',     price:3400, img:'/img/productos/763d8efa_3100783_f.jpg', tag:'retornable'},
       ]},
     { id:'brahma', name:'Brahma', color:'#cc7700', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100711_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/2/1/brahma-logo-png_seeklogo-21957.png',
       variants:[
         {vid:1, size:'354ml lata', price:1490, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100025_f.jpg'},
         {vid:2, size:'473ml lata', price:1650, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100711_f.jpg'},
@@ -1278,19 +1283,19 @@ const catalog = {
         {vid:4, size:'340ml bot.', price:1050, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100548_f.jpg', tag:'retornable'},
       ]},
     { id:'patagonia', name:'Patagonia', color:'#1a3a00', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100688_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/35/1/patagonia-cerveza-logo-png_seeklogo-354005.png',
       variants:[
         {vid:1, size:'730ml IPA',         price:4000, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100688_f.jpg'},
         {vid:2, size:'730ml Amber Lager', price:4000, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100689_f.jpg'},
       ]},
     { id:'budweiser', name:'Budweiser', color:'#cc0000', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100712_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/2/1/budweiser-logo-png_seeklogo-23306.png',
       variants:[
         {vid:1, size:'473ml lata', price:1656, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100712_f.jpg'},
         {vid:2, size:'710ml lata', price:2133, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100981_f.jpg'},
       ]},
     { id:'schneider', name:'Schneider', color:'#c8a400', textColor:'#222',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100930_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/2/1/cerveza-schneider-logo-png_seeklogo-28623.png',
       variants:[
         {vid:1, size:'473ml lata',        price:1439, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100930_f.jpg'},
         {vid:2, size:'710ml lata',        price:2295, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100652_f.jpg'},
@@ -1298,7 +1303,7 @@ const catalog = {
         {vid:4, size:'1L retornable',     price:2835, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100555_f.jpg', tag:'retornable'},
       ]},
     { id:'amstel', name:'Amstel', color:'#cc3300', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100784_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/0/1/amstel-beer-logo-png_seeklogo-8499.png',
       variants:[
         {vid:1, size:'473ml lata', price:1710, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100784_f.jpg'},
         {vid:2, size:'710ml lata', price:2655, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100911_f.jpg'},
@@ -1310,7 +1315,7 @@ const catalog = {
         {vid:2, size:'1L botella', price:2564, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100656_f.jpg'},
       ]},
     { id:'miller', name:'Miller', color:'#cc8800', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100595_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/9/1/miller-logo-png_seeklogo-92757.png',
       variants:[
         {vid:1, size:'473ml lata', price:2474, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100595_f.jpg'},
         {vid:2, size:'710ml lata', price:3465, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3100845_f.jpg'},
@@ -1343,14 +1348,14 @@ const catalog = {
         {vid:3, size:'500ml mora',    price:2050, img:'/img/productos/3a09c64c_3051869_f.jpg', color:'#aa1166', textColor:'#fff'},
       ]},
     { id:'speed', name:'Speed', color:'#1a1a1a', textColor:'#ffcc00',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050629_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/13/1/speed-unlimited-logo-png_seeklogo-130255.png',
       variants:[
         {vid:1, size:'269ml lata',      price:1400, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3052106_f.jpg'},
         {vid:2, size:'473ml lata',      price:2200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050629_f.jpg'},
         {vid:3, size:'473ml Zero lata', price:2200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3052107_f.jpg'},
       ]},
     { id:'rockstar', name:'Rockstar', color:'#111111', textColor:'#ffdd00',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051866_f.jpg',
+      logo:'https://images.seeklogo.com/logo-png/28/1/rockstar-energy-drink-logo-png_seeklogo-284892.png',
       variants:[
         {vid:1, size:'500ml', price:1750, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051866_f.jpg'},
       ]},
