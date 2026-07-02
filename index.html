@@ -794,6 +794,83 @@
       font-size: 14px;
       cursor: pointer;
     }
+
+    /* ── Gondola / Golosinas tabs ── */
+    .gon-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 16px 0;
+    }
+    .gon-tab {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.07);
+      color: rgba(255,255,255,.6);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    .gon-tab.active {
+      background: rgba(255,255,255,.18);
+      border-color: rgba(255,255,255,.4);
+      color: #fff;
+    }
+    .gon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      padding: 14px 16px 24px;
+    }
+    .gon-card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .18s, box-shadow .18s;
+    }
+    .gon-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    .gon-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: contain;
+      background: #fff;
+      display: block;
+    }
+    .gon-card-body {
+      padding: 8px 10px 10px;
+    }
+    .gon-card-name {
+      font-size: 11px;
+      color: rgba(255,255,255,.85);
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .gon-card-brand {
+      font-size: 10px;
+      color: rgba(255,255,255,.4);
+      font-family: 'Rajdhani', sans-serif;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .gon-card-price {
+      font-size: 13px;
+      font-weight: 700;
+      color: #4dff88;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    @media(max-width:600px) {
+      .gon-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:10px; padding:10px 12px 20px; }
+    }
   </style>
 </head>
 <body>
@@ -872,27 +949,27 @@
       <div class="cat-row2">
 
         <!-- GÓNDOLA -->
-        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#1a1000,#3d2800);">
-          <div class="cat-prox">Próximamente</div>
+        <div class="cat-card" onclick="enterSection('gondola')" style="background:linear-gradient(135deg,#1a1000,#3d2800);">
           <div class="cat-deco">🛒</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
-            <span class="cat-tag">Snacks · Limpieza</span>
+            <span class="cat-tag">Almacén</span>
             <div class="cat-name">Góndola</div>
-            <div class="cat-sub">Galletitas · Papas · Limpieza</div>
+            <div class="cat-sub">Aceites · Pastas · Especias</div>
           </div>
+          <span class="cat-arrow">→</span>
         </div>
 
         <!-- GOLOSINAS -->
-        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#2d0055,#660099);">
-          <div class="cat-prox">Próximamente</div>
+        <div class="cat-card" onclick="enterSection('golosinas')" style="background:linear-gradient(135deg,#2d0055,#660099);">
           <div class="cat-deco">🍬</div>
           <div class="cat-grad"></div>
           <div class="cat-info">
             <span class="cat-tag">Dulces</span>
             <div class="cat-name">Golosinas</div>
-            <div class="cat-sub">Alfajores · Caramelos · Chicles</div>
+            <div class="cat-sub">Chocolates · Snacks · Papas</div>
           </div>
+          <span class="cat-arrow">→</span>
         </div>
 
         <!-- CIGARRERÍA -->
@@ -941,6 +1018,32 @@
     <div class="item-grid" id="promo-grid"></div>
   </div>
 
+
+  <!-- ── GÓNDOLA ── -->
+  <div id="landing-gondola" class="section-view">
+    <div class="section-view-header">
+      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
+      <h2>🛒 Góndola</h2>
+      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
+        🛒 <span id="cartCountGondola" class="cart-count">0</span>
+      </button>
+    </div>
+    <div class="gon-tabs" id="gondola-tabs"></div>
+    <div class="gon-grid" id="gondola-grid"></div>
+  </div>
+
+  <!-- ── GOLOSINAS ── -->
+  <div id="landing-golosinas" class="section-view">
+    <div class="section-view-header">
+      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
+      <h2>🍬 Golosinas</h2>
+      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
+        🛒 <span id="cartCountGolosinas" class="cart-count">0</span>
+      </button>
+    </div>
+    <div class="gon-tabs" id="golosinas-tabs"></div>
+    <div class="gon-grid" id="golosinas-grid"></div>
+  </div>
   <!-- ── BOTELLAS ── -->
   <div id="landing-botellas" class="section-view">
     <div class="section-view-header">
@@ -1860,7 +1963,7 @@ function renderCart() {
   const total = subtotal + envio;
 
   document.getElementById('cartCount').textContent = totalQty;
-  ['cartCountPromos','cartCountBotellas'].forEach(id => {
+  ['cartCountPromos','cartCountBotellas','cartCountGondola','cartCountGolosinas'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = totalQty;
   });
@@ -2116,8 +2219,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ── LANDING NAVIGATION ────────────────────────────────────────────────────
 
 const sectionMeta = {
-  caramelera: { name: 'Caramelera', icon: '🍬' },
-  gondola:    { name: 'Góndola',    icon: '🛒' },
+  caramelera: { name: 'Caramelera', icon: '🍭' },
   cigarreria: { name: 'Cigarrería', icon: '🚬' },
 };
 
@@ -2125,6 +2227,8 @@ function hideSectionViews() {
   document.getElementById('landing-pronto').style.display = 'none';
   document.getElementById('landing-promos').classList.remove('active');
   document.getElementById('landing-botellas').classList.remove('active');
+  document.getElementById('landing-gondola').classList.remove('active');
+  document.getElementById('landing-golosinas').classList.remove('active');
 }
 
 function showTicker(visible) {
@@ -2150,6 +2254,20 @@ function enterSection(section) {
     showTicker(false);
     document.getElementById('landing-botellas').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
+  } else if (section === 'gondola') {
+    document.getElementById('landing-picker').style.display = 'none';
+    hideSectionViews();
+    showTicker(false);
+    document.getElementById('landing-gondola').classList.add('active');
+    document.getElementById('landing').scrollTo(0, 0);
+    renderGondola();
+  } else if (section === 'golosinas') {
+    document.getElementById('landing-picker').style.display = 'none';
+    hideSectionViews();
+    showTicker(false);
+    document.getElementById('landing-golosinas').classList.add('active');
+    document.getElementById('landing').scrollTo(0, 0);
+    renderGolosinas();
   } else {
     const meta = sectionMeta[section];
     document.getElementById('landing-picker').style.display = 'none';
@@ -2256,6 +2374,526 @@ function itemCard(item, sectionKey) {
   }
   el.innerHTML = html;
 })();
+
+
+// ── CATÁLOGO GÓNDOLA & GOLOSINAS ─────────────────────────────────────────────
+const catalogGondola = {
+  aceites_vinagres: [
+    {id:'prod2320444',name:'Aceite de Soja y Girasol Siglo de Oro x 900 Ml.',brand:'SIGLO DE ORO',cat:'Aceites',price:2499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320444_f.jpg'},
+    {id:'prod2320026',name:'Aceite de Girasol Cañuelas x 1.5 Lt.',brand:'CAÑUELAS',cat:'Aceites',price:4949,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320026_f.jpg'},
+    {id:'prod2320212',name:'Aceite de Girasol Legitimo x 900 Ml.',brand:'LEGITIMO',cat:'Aceites',price:2999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320212_f.jpg'},
+    {id:'prod2320213',name:'Aceite de Girasol Legitimo x 1.5 Lt.',brand:'LEGITIMO',cat:'Aceites',price:5099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320213_f.jpg'},
+    {id:'prod2320025',name:'Aceite de Girasol Cañuelas x 900 Ml.',brand:'CAÑUELAS',cat:'Aceites',price:3199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320025_f.jpg'},
+    {id:'prod2320559',name:'Aceite de Girasol Legitimo x 3 Lt.',brand:'LEGITIMO',cat:'Aceites',price:10690,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320559_f.jpg'},
+    {id:'prod2320031',name:'Aceite de Girasol Natura x 1.5 Lt.',brand:'NATURA',cat:'Aceites',price:5699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320031_f.jpg'},
+    {id:'prod2320032',name:'Aceite de Girasol Natura x 3 Lt.',brand:'NATURA',cat:'Aceites',price:11990,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320032_f.jpg'},
+    {id:'prod2320030',name:'Aceite de Girasol Natura x 900 Ml.',brand:'NATURA',cat:'Aceites',price:3619,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320030_f.jpg'},
+    {id:'prod2320564',name:'Aderezo Cocinero Clasico x 500 Ml.',brand:'COCINERO',cat:'Aceites',price:2199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320564_f.jpg'},
+    {id:'prod2320563',name:'Aderezo Cocinero Aceto y Oliva x 500 Ml.',brand:'COCINERO',cat:'Aceites',price:2649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320563_f.jpg'},
+    {id:'prod2320552',name:'Aceite de Maiz Arcor x 900 Ml.',brand:'ARCOR',cat:'Aceites',price:6269,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2320552_f.jpg'},
+    {id:'prod2310221',name:'Vinagre de Alcohol Favinco sin Tacc x 1 Lt.',brand:'FAVINCO',cat:'Vinagres y Acetos',price:1049,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310221_f.jpg'},
+    {id:'prod2310104',name:'Vinagre de Alcohol Casalta x 1000 Cc.',brand:'CASALTA',cat:'Vinagres y Acetos',price:1165,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310104_f.jpg'},
+    {id:'prod2310111',name:'Vinagre de Vino Casalta x 1 Lt.',brand:'CASALTA',cat:'Vinagres y Acetos',price:1349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310111_f.jpg'},
+    {id:'prod2310154',name:'Vinagre de Alcohol Favinco x 5 Lt.',brand:'FAVINCO',cat:'Vinagres y Acetos',price:7125,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310154_f.jpg'},
+    {id:'prod2310071',name:'Vinagre de Alcohol Dos Anclas x 1 Lt.',brand:'DOS ANCLAS',cat:'Vinagres y Acetos',price:1475,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310071_f.jpg'},
+    {id:'prod2310198',name:'Vinagre de Alcohol Dos Anclas x 3 Lt.',brand:'DOS ANCLAS',cat:'Vinagres y Acetos',price:4499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310198_f.jpg'},
+    {id:'prod2310103',name:'Vinagre de Alcohol Casalta x 500 Ml.',brand:'CASALTA',cat:'Vinagres y Acetos',price:775,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310103_f.jpg'},
+    {id:'prod2310153',name:'Vinagre de Alcohol Favinco x 500 Ml.',brand:'FAVINCO',cat:'Vinagres y Acetos',price:935,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310153_f.jpg'},
+    {id:'prod2310110',name:'Vinagre de Vino Casalta x 500 Ml.',brand:'CASALTA',cat:'Vinagres y Acetos',price:999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310110_f.jpg'},
+    {id:'prod2310139',name:'Vinagre de Alcohol Dos Anclas x 500 Ml.',brand:'DOS ANCLAS',cat:'Vinagres y Acetos',price:1025,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310139_f.jpg'},
+    {id:'prod2310222',name:'Vinagre de Vino Favinco sin Tacc x 1 Lt.',brand:'FAVINCO',cat:'Vinagres y Acetos',price:2299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310222_f.jpg'},
+    {id:'prod2310072',name:'Vinagre de Vino Dos Anclas x 1 Lt.',brand:'DOS ANCLAS',cat:'Vinagres y Acetos',price:2449,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2310072_f.jpg'},
+  ],
+  aderezos: [
+    {id:'prod2440945',name:'Ketchup Danica Sachet x 50 Gr.',brand:'DANICA',cat:'Kétchup',price:449,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440945_f.jpg'},
+    {id:'prod2440957',name:'Ketchup Hellmanns Doy Pack x 250 Gr.',brand:'HELLMANNS',cat:'Kétchup',price:2079,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440957_f.jpg'},
+    {id:'prod2440733',name:'Ketchup Hellmanns Doy Pack x 500 Gr.',brand:'HELLMANNS',cat:'Kétchup',price:3669,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440733_f.jpg'},
+    {id:'prod2441085',name:'Ketchup Fanacoa Doy Pack x 250 Gr.',brand:'FANACOA',cat:'Kétchup',price:1229,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441085_f.jpg'},
+    {id:'prod2440946',name:'Ketchup Danica Sachet x 3 Kg.',brand:'DANICA',cat:'Kétchup',price:9499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440946_f.jpg'},
+    {id:'prod2440767',name:'Ketchup la Campagnola Picante Doy Pack x 250 Gr.',brand:'LA CAMPAGNOLA',cat:'Kétchup',price:1699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440767_f.jpg'},
+    {id:'prod2440942',name:'Ketchup Danica Doy Pack x 220 Gr.',brand:'DANICA',cat:'Kétchup',price:1149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440942_f.jpg'},
+    {id:'prod2441031',name:'Ketchup Hellmanns Sachet x 60 Gr.',brand:'HELLMANNS',cat:'Kétchup',price:839,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441031_f.jpg'},
+    {id:'prod2440766',name:'Ketchup la Campagnola Doy Pack x 250 Gr.',brand:'LA CAMPAGNOLA',cat:'Kétchup',price:1699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440766_f.jpg'},
+    {id:'prod2441074',name:'Ketchup la Campagnola Estilo Americano x 250 Gr.',brand:'LA CAMPAGNOLA',cat:'Kétchup',price:1699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441074_f.jpg'},
+    {id:'prod2440467',name:'Mayonesa Bc la Campagnola Doy Pack x 500 Gr.',brand:'BC',cat:'Mayonesa',price:2429,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440467_f.jpg'},
+    {id:'prod2441042',name:'Mayonesa Hellmanns Liviana Doy Pack x 475 Gr.',brand:'HELLMANNS',cat:'Mayonesa',price:2595,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441042_f.jpg'},
+    {id:'prod2440852',name:'Mayonesa Hellmanns Tipo Casera Doy Pack x 232 Gr.',brand:'HELLMANNS',cat:'Mayonesa',price:2365,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440852_f.jpg'},
+    {id:'prod2440663',name:'Mayonesa Danica Fiesta Doy Pack x 237 Gr.',brand:'DANICA FIESTA',cat:'Mayonesa',price:699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440663_f.jpg'},
+    {id:'prod2440967',name:'Mayonesa Tau Picante x 300 Gr.',brand:'TAU DELTA',cat:'Mayonesa',price:3549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440967_f.jpg'},
+    {id:'prod2440466',name:'Mayonesa Bc la Campagnola Doy Pack x 250 Gr.',brand:'BC',cat:'Mayonesa',price:1315,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440466_f.jpg'},
+    {id:'prod2440664',name:'Mayonesa Danica Fiesta Doy Pack x 475 Gr.',brand:'DANICA FIESTA',cat:'Mayonesa',price:1349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440664_f.jpg'},
+    {id:'prod2441040',name:'Mayonesa Hellmanns Liviana Doy Pack x 950 Gr.',brand:'HELLMANNS',cat:'Mayonesa',price:5199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441040_f.jpg'},
+    {id:'prod2440999',name:'Mayonesa Hellmanns Sachet x 118 Gr.',brand:'HELLMANNS',cat:'Mayonesa',price:735,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440999_f.jpg'},
+    {id:'prod2441002',name:'Mayonesa Hellmanns Doy Pack x 950 Gr.',brand:'HELLMANNS',cat:'Mayonesa',price:4725,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441002_f.jpg'},
+    {id:'prod2441071',name:'Salsa Tau Mayonesa con Oliva x 290 Gr.',brand:'TAU DELTA',cat:'Mayonesa',price:3999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441071_f.jpg'},
+    {id:'prod2441041',name:'Mayonesa Hellmanns Liviana Doy Pack x 237 Gr.',brand:'HELLMANNS',cat:'Mayonesa',price:1405,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441041_f.jpg'},
+    {id:'prod2441035',name:'Mostaza Savora Doy Pack x 500 Gr.',brand:'SAVORA',cat:'Mostaza',price:2395,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441035_f.jpg'},
+    {id:'prod2440962',name:'Mostaza Savora Sachet x 60 Cc.',brand:'SAVORA',cat:'Mostaza',price:735,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440962_f.jpg'},
+    {id:'prod2440940',name:'Mostaza Danica Sachet x 3 Kg.',brand:'DANICA',cat:'Mostaza',price:7149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440940_f.jpg'},
+    {id:'prod2441086',name:'Mostaza Fanacoa Doy Pack x 250 Gr.',brand:'FANACOA',cat:'Mostaza',price:849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441086_f.jpg'},
+    {id:'prod2440939',name:'Mostaza Danica Doy Pack x 220 Gr.',brand:'DANICA',cat:'Mostaza',price:755,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440939_f.jpg'},
+    {id:'prod2440944',name:'Mostaza Danica Sachet x 60 Gr.',brand:'DANICA',cat:'Mostaza',price:375,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440944_f.jpg'},
+    {id:'prod2441036',name:'Mostaza Savora Original Squeze x 200 Gr.',brand:'SAVORA',cat:'Mostaza',price:2259,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441036_f.jpg'},
+    {id:'prod2441034',name:'Mostaza Savora Doy Pack x 250 Gr.',brand:'SAVORA',cat:'Mostaza',price:1315,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441034_f.jpg'},
+    {id:'prod2440723',name:'Mostaza Natura Doy Pack x 250 Gr.',brand:'NATURA',cat:'Mostaza',price:1099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440723_f.jpg'},
+    {id:'prod2340296',name:'Salsa Pomarola Arcor x 340 Gr.',brand:'ARCOR',cat:'Otras Salsas',price:1225,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2340296_f.jpg'},
+    {id:'prod2441004',name:'Salsa Cesar Dos Anclas x 350 Gr.',brand:'DOS ANCLAS',cat:'Otras Salsas',price:4099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441004_f.jpg'},
+    {id:'prod2441084',name:'Salsa Caesar Dos Anclas x 200 Gr.',brand:'DOS ANCLAS',cat:'Otras Salsas',price:2625,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441084_f.jpg'},
+    {id:'prod2340328',name:'Salsa Filetto Rina Matarazzo x 340 Gr.',brand:'MATARAZZO',cat:'Otras Salsas',price:3799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2340328_f.jpg'},
+    {id:'prod2340343',name:'Salsa Pomarola Balance Knorr x 340 Gr.',brand:'KNORR',cat:'Otras Salsas',price:1479,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2340343_f.jpg'},
+    {id:'prod2440184',name:'Salsa Tabasco Rojo Original x 60 Ml.',brand:'TABASCO',cat:'Otras Salsas',price:10500,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440184_f.jpg'},
+    {id:'prod2440966',name:'Salsa Caesar Tau x 330 Gr.',brand:'TAU DELTA',cat:'Otras Salsas',price:4099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440966_f.jpg'},
+    {id:'prod2440969',name:'Salsa Caesar Light Tau x 310 Gr.',brand:'TAU DELTA',cat:'Otras Salsas',price:3999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440969_f.jpg'},
+    {id:'prod2440985',name:'Salsa Barbacoa Hellmanns Doy Pack x 250 Gr.',brand:'HELLMANNS',cat:'Otras Salsas',price:2445,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440985_f.jpg'},
+    {id:'prod2340342',name:'Salsa Pomodoro con Zapallo Knorr x 340 Gr.',brand:'KNORR',cat:'Otras Salsas',price:1485,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2340342_f.jpg'},
+    {id:'prod2441029',name:'Salsa Cheddar Tau Ahuamada x 300 Gr.',brand:'TAU DELTA',cat:'Otras Salsas',price:4099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441029_f.jpg'},
+    {id:'prod2440644',name:'Salsa de Mostaza y Miel Dos Anclas x 400 Gr.',brand:'DOS ANCLAS',cat:'Otras Salsas',price:4685,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440644_f.jpg'},
+    {id:'prod2441101',name:'Salsa de Soja Velez x 1 L.',brand:'VELEZ',cat:'Salsa de Soja',price:3449,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441101_f.jpg'},
+    {id:'prod2441100',name:'Salsa de Soja Velez x 350 Ml.',brand:'VELEZ',cat:'Salsa de Soja',price:1499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441100_f.jpg'},
+    {id:'prod2441055',name:'Salsa de Soja Vanoli x 500 Cc.',brand:'VANOLI',cat:'Salsa de Soja',price:2095,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441055_f.jpg'},
+    {id:'prod2440936',name:'Salsa de Soja Vanoli x 1 Lt.',brand:'VANOLI',cat:'Salsa de Soja',price:3409,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440936_f.jpg'},
+    {id:'prod2440373',name:'Salsa de Soja Lee Kum Kee Premium x 500 Ml.',brand:'LEE KUM KEE',cat:'Salsa de Soja',price:10700,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440373_f.jpg'},
+    {id:'prod2440749',name:'Salsa Kum Kee Soja Hongos x 500 Ml.',brand:'LEE KUM KEE',cat:'Salsa de Soja',price:10700,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440749_f.jpg'},
+    {id:'prod2441032',name:'Salsa Golf Hellmanns Doy Pack x 250 Gr.',brand:'HELLMANNS',cat:'Salsa Golf',price:2519,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2441032_f.jpg'},
+    {id:'prod2440937',name:'Salsa Golf Danica Doy Pack x 209 Gr.',brand:'DANICA',cat:'Salsa Golf',price:1165,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2440937_f.jpg'},
+  ],
+  arroz_pastas: [
+    {id:'prod2290251',name:'Arroz Lucchetti Integral x 1 Kg.',brand:'LUCCHETTI',cat:'Arroz',price:1649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290251_f.jpg'},
+    {id:'prod2290212',name:'Arroz Gallo Parboil Estuche x 1 Kg.',brand:'GALLO',cat:'Arroz',price:2799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290212_f.jpg'},
+    {id:'prod2290271',name:'Risotto Mole al Pesto x 200 Gr.',brand:'MOLE',cat:'Arroz',price:3785,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290271_f.jpg'},
+    {id:'prod2290296',name:'Arroz Gallo Preparado Verdeo x 240 Gr.',brand:'GALLO',cat:'Arroz',price:1949,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290296_f.jpg'},
+    {id:'prod2290298',name:'Arroz Gallo Risotto Primavera x 240 Gr.',brand:'GALLO',cat:'Arroz',price:2899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290298_f.jpg'},
+    {id:'prod2290210',name:'Arroz Lucchetti Parboil x 1 Kg.',brand:'LUCCHETTI',cat:'Arroz',price:1749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290210_f.jpg'},
+    {id:'prod2290213',name:'Arroz Gallo Doble Carolina Estuche x 1 Kg.',brand:'GALLO',cat:'Arroz',price:3899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290213_f.jpg'},
+    {id:'prod2290009',name:'Arroz Mandisovi Doble Carolina x 1 Kg.',brand:'MANDISOVI',cat:'Arroz',price:1999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290009_f.jpg'},
+    {id:'prod2290203',name:'Arroz Lucchetti Largo Fino x 1 Kg.',brand:'LUCCHETTI',cat:'Arroz',price:1449,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290203_f.jpg'},
+    {id:'prod2290328',name:'Arroz con Remolacha Mole x 120 Gr.',brand:'MOLE',cat:'Arroz',price:3509,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290328_f.jpg'},
+    {id:'prod2290241',name:'Arroz Dos Hermanos Yamani Estuche x 500 Gr.',brand:'DOS HERMANOS',cat:'Arroz',price:2599,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290241_f.jpg'},
+    {id:'prod2290350',name:'Arroz Gallo Doble Carolina x 500 Gr',brand:'GALLO',cat:'Arroz',price:1999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2290350_f.jpg'},
+    {id:'prod2540971',name:'Fideos Matarazzo Tirabuzón Libre de Gluten x 500 Gr.',brand:'MATARAZZO',cat:'Pastas Secas',price:3199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540971_f.jpg'},
+    {id:'prod2540822',name:'Fideos la Providencia Moños x 500 Gr.',brand:'LA PROVIDENCIA',cat:'Pastas Secas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540822_f.jpg'},
+    {id:'prod2540901',name:'Fideos Favorita Tirabuzon x 500 Gr.',brand:'FAVORITA',cat:'Pastas Secas',price:749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540901_f.jpg'},
+    {id:'prod2540682',name:'Fideos Lucchetti Codito x 500 Gr.',brand:'LUCCHETTI',cat:'Pastas Secas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540682_f.jpg'},
+    {id:'prod2540786',name:'Fideos Matarazzo Spaghetti Libre de Gluten x 500 Gr.',brand:'MATARAZZO',cat:'Pastas Secas',price:3199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540786_f.jpg'},
+    {id:'prod2540076',name:'Fideos Don Felipe Tirabuzon x 500 Gr.',brand:'DON FELIPE',cat:'Pastas Secas',price:2099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540076_f.jpg'},
+    {id:'prod2540836',name:'Fideos la Providencia Tagliatelle x 500 Gr.',brand:'LA PROVIDENCIA',cat:'Pastas Secas',price:879,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540836_f.jpg'},
+    {id:'prod2540968',name:'Ñoquis de Papa de Cecco x 500 Gr.',brand:'DE CECCO',cat:'Pastas Secas',price:9499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540968_f.jpg'},
+    {id:'prod2540706',name:'Fideos San Agustin Codito x 500 Gr.',brand:'SAN AGUSTIN',cat:'Pastas Secas',price:649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540706_f.jpg'},
+    {id:'prod2540558',name:'Fideos Terrabusi Mostachol x 500 Gr.',brand:'TERRABUSI',cat:'Pastas Secas',price:999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540558_f.jpg'},
+    {id:'prod2540878',name:'Fideos Rina Matarazzo Spaghetti Morron x 500 Gr.',brand:'MATARAZZO',cat:'Pastas Secas',price:2649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540878_f.jpg'},
+    {id:'prod2540956',name:'Fideos de Cecco Fettuccine al Huevo x 500 Gr.',brand:'DE CECCO',cat:'Pastas Secas',price:17899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2540956_f.jpg'},
+  ],
+  dulces: [
+    {id:'prod2080803',name:'Dulce de Batata Dulcor con Chocolate Cajon x 5 Kg.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:14500,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080803_f.jpg'},
+    {id:'prod2080802',name:'Dulce de Batata Dulcor Cajon x 5 Kg.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:14500,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080802_f.jpg'},
+    {id:'prod2080808',name:'Dulce de Batata Dulcor con Chocolate Cajon x 2 Kg.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:6799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080808_f.jpg'},
+    {id:'prod2080807',name:'Dulce de Batata Dulcor Cajon x 2 Kg.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:6799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080807_f.jpg'},
+    {id:'prod2081032',name:'Dulce de Batata Emeth Sachet x 500 Gr.',brand:'EMETH',cat:'Dulce de Batata, Membrillo y Otros',price:1749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081032_f.jpg'},
+    {id:'prod2081031',name:'Dulce de Batata Emeth con Chocolate Sachet x 500 Gr.',brand:'EMETH',cat:'Dulce de Batata, Membrillo y Otros',price:1799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081031_f.jpg'},
+    {id:'prod2080805',name:'Dulce de Membrillo Dulcor Cajon x 5 Kg.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:19900,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080805_f.jpg'},
+    {id:'prod2080823',name:'Dulce de Batata Dulcor Sachet x 500 Gr.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:1999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080823_f.jpg'},
+    {id:'prod2080824',name:'Dulce de Batata Dulcor con Chocolate Sachet x 500 Gr.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:1999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080824_f.jpg'},
+    {id:'prod2080030',name:'Dulce de Batata Arcor con Chocolate Estuche x 500 Gr.',brand:'ARCOR',cat:'Dulce de Batata, Membrillo y Otros',price:2275,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080030_f.jpg'},
+    {id:'prod2080029',name:'Dulce de Batata Arcor Estuche x 500 Gr.',brand:'ARCOR',cat:'Dulce de Batata, Membrillo y Otros',price:2275,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080029_f.jpg'},
+    {id:'prod2080809',name:'Dulce de Membrillo Dulcor Cajon x 2 Kg.',brand:'DULCOR',cat:'Dulce de Batata, Membrillo y Otros',price:9379,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080809_f.jpg'},
+    {id:'prod2081181',name:'Dulce de Leche Quebrachal x 400 Gr.',brand:'SIN MARCA',cat:'Dulce de Leche',price:1390,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081181_f.jpg'},
+    {id:'prod2081182',name:'Dulce de Leche Quebrachito x 400 Gr.',brand:'SIN MARCA',cat:'Dulce de Leche',price:1590,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081182_f.jpg'},
+    {id:'prod2081178',name:'Dulce de Leche Arrodul Familiar Pote x 400 Grs',brand:'SIN MARCA',cat:'Dulce de Leche',price:1590,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081178_f.jpg'},
+    {id:'prod2080838',name:'Dulce de Leche Granja Orox1kg',brand:'MANFREY',cat:'Dulce de Leche',price:5189,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080838_f.jpg'},
+    {id:'prod2080268',name:'Dulce de Leche Granja de Oro x 400 Gr.',brand:'MANFREY',cat:'Dulce de Leche',price:2099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080268_f.jpg'},
+    {id:'prod2080303',name:'Dulce de Leche Ilolay x 400 Gr.',brand:'ILOLAY',cat:'Dulce de Leche',price:2490,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080303_f.jpg'},
+    {id:'prod2080375',name:'Dulce de Leche Manfrey Familiar x 400 Gr.',brand:'MANFREY',cat:'Dulce de Leche',price:2490,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080375_f.jpg'},
+    {id:'prod2080890',name:'Dulce de Leche la Serenisima x 400 Gr.',brand:'LA SERENISIMA',cat:'Dulce de Leche',price:2799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080890_f.jpg'},
+    {id:'prod2080374',name:'Dulce de Leche la Paulina Familiar x 400 Gr.',brand:'LA PAULINA',cat:'Dulce de Leche',price:2800,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080374_f.jpg'},
+    {id:'prod2081172',name:'Dulce de Leche Milkaut de Campo x 395 Grs',brand:'MILKAUT',cat:'Dulce de Leche',price:2790,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081172_f.jpg'},
+    {id:'prod2080957',name:'Dulce de Leche Manfrey Clasico x 3 Kg.',brand:'MANFREY',cat:'Dulce de Leche',price:21235,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080957_f.jpg'},
+    {id:'prod2080398',name:'Dulce Leche Ilolay x 1 Kg.',brand:'ILOLAY',cat:'Dulce de Leche',price:7349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080398_f.jpg'},
+    {id:'prod2081021',name:'Mermelada Emeth Ciruela Light Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081021_f.jpg'},
+    {id:'prod2081030',name:'Mermelada Emeth Naranja Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081030_f.jpg'},
+    {id:'prod2081023',name:'Mermelada Emeth Damasco Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081023_f.jpg'},
+    {id:'prod2081024',name:'Mermelada Emeth Durazno Light Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081024_f.jpg'},
+    {id:'prod2081029',name:'Mermelada Emeth Naranja Light Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081029_f.jpg'},
+    {id:'prod2081022',name:'Mermelada Emeth Ciruela Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081022_f.jpg'},
+    {id:'prod2081025',name:'Mermelada Emeth Durazno Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081025_f.jpg'},
+    {id:'prod2080782',name:'Mermelada Dulcor Ciruela Pote x 500 Gr.',brand:'DULCOR',cat:'Mermeladas y Jaleas',price:1645,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080782_f.jpg'},
+    {id:'prod2080778',name:'Mermelada Dulcor Naranja Pote x 500 Gr.',brand:'DULCOR',cat:'Mermeladas y Jaleas',price:1645,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080778_f.jpg'},
+    {id:'prod2080776',name:'Mermelada Dulcor Durazno Pote x 500 Gr.',brand:'DULCOR',cat:'Mermeladas y Jaleas',price:1645,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080776_f.jpg'},
+    {id:'prod2080777',name:'Mermelada Dulcor Zapallo Pote x 500 Gr.',brand:'DULCOR',cat:'Mermeladas y Jaleas',price:1645,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2080777_f.jpg'},
+    {id:'prod2081027',name:'Mermelada Emeth Frutilla Light Pote x 420 Gr.',brand:'EMETH',cat:'Mermeladas y Jaleas',price:1399,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2081027_f.jpg'},
+    {id:'prod2160816',name:'Salsa de Pico Dulce Lheritier x 200 Gr.',brand:'LHERITIER',cat:'Salsas Dulces',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160816_f.jpg'},
+    {id:'prod2160811',name:'Salsa de Chocolate Lheritier x 200 Gr.',brand:'LHERITIER',cat:'Salsas Dulces',price:2149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160811_f.jpg'},
+    {id:'prod2160813',name:'Salsa de Dulce de Leche Lheritier x 200 Gr.',brand:'LHERITIER',cat:'Salsas Dulces',price:2149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160813_f.jpg'},
+    {id:'prod2160814',name:'Salsa de Frutilla Lheritier x 200 Gr.',brand:'LHERITIER',cat:'Salsas Dulces',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160814_f.jpg'},
+    {id:'prod2160812',name:'Salsa de Caramelo Lheritier x 200 Gr.',brand:'LHERITIER',cat:'Salsas Dulces',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160812_f.jpg'},
+    {id:'prod2160815',name:'Salsa de Frutos Rojos Lheritier x 200 Gr.',brand:'LHERITIER',cat:'Salsas Dulces',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160815_f.jpg'},
+  ],
+  endulzantes: [
+    {id:'prod2000033',name:'Azucar Hileret Light x 500 Gr.',brand:'HILERET',cat:'Azúcar',price:2799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000033_f.jpg'},
+    {id:'prod2000060',name:'Azucar Ledesma x 1 Kg.',brand:'LEDESMA',cat:'Azúcar',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000060_f.jpg'},
+    {id:'prod2000044',name:'Azucar Yuspe Impalpable x 250 Gr.',brand:'YUSPE',cat:'Azúcar',price:1619,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000044_f.jpg'},
+    {id:'prod2000027',name:'Azucar Bella Vista x 1 Kg.',brand:'BELLA VISTA',cat:'Azúcar',price:1099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000027_f.jpg'},
+    {id:'prod2000075',name:'Azucar Santa Otilia x 1 Kg.',brand:'SANTA OTILIA',cat:'Azúcar',price:1099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000075_f.jpg'},
+    {id:'prod2000101',name:'Azucar la Perla x 1 Kg.',brand:'LA PERLA',cat:'Azúcar',price:1149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000101_f.jpg'},
+    {id:'prod2000098',name:'Azucar Ledesma x 1000 Un.',brand:'LEDESMA',cat:'Azúcar',price:18490,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000098_f.jpg'},
+    {id:'prod2000091',name:'Azucar Ledesma Light x 500 Gr.',brand:'LEDESMA',cat:'Azúcar',price:1855,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000091_f.jpg'},
+    {id:'prod2000086',name:'Azucar Velez x 800 Un.',brand:'VELEZ',cat:'Azúcar',price:17800,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000086_f.jpg'},
+    {id:'prod2000092',name:'Azúcar Ledesma Mascabo x 800 Gr.',brand:'LEDESMA',cat:'Azúcar',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000092_f.jpg'},
+    {id:'prod2000096',name:'Azucar Fronterita x 1 Kg.',brand:'FRONTERITA',cat:'Azúcar',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2000096_f.jpg'},
+    {id:'prod2170125',name:'Azucar Velez Impalpable x 1 Kg.',brand:'VELEZ',cat:'Azúcar',price:3105,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170125_f.jpg'},
+    {id:'prod2170189',name:'Edulcorante Ledesma Sucralosa x 400 Un.',brand:'LEDESMA',cat:'Edulcorantes',price:6799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170189_f.jpg'},
+    {id:'prod2170171',name:'Edulcorante Ledesma Sucralosa x 200 Un.',brand:'LEDESMA',cat:'Edulcorantes',price:3659,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170171_f.jpg'},
+    {id:'prod2170170',name:'Edulcorante Ledesma Sucralosa x 100 Un.',brand:'LEDESMA',cat:'Edulcorantes',price:1985,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170170_f.jpg'},
+    {id:'prod2170254',name:'Edulcorante Ledesma Stevia x 400 Un.',brand:'LEDESMA',cat:'Edulcorantes',price:9299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170254_f.jpg'},
+    {id:'prod2170251',name:'Edulcorante Ledesma Stevia x 200 Un.',brand:'LEDESMA',cat:'Edulcorantes',price:4725,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170251_f.jpg'},
+    {id:'prod2170124',name:'Edulcorante Equalsweet Clasico x 400 Un.',brand:'EQUALSWEET',cat:'Edulcorantes',price:9649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170124_f.jpg'},
+    {id:'prod2170275',name:'Edulcorante Hileret Clasico x 400 Un.',brand:'HILERET',cat:'Edulcorantes',price:9899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170275_f.jpg'},
+    {id:'prod2170235',name:'Edulcorante Tuy Clasico x 50 Un.',brand:'TUY',cat:'Edulcorantes',price:1285,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170235_f.jpg'},
+    {id:'prod2170229',name:'Edulcorante Tuy Sweet x 50 Un.',brand:'TUY',cat:'Edulcorantes',price:1425,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170229_f.jpg'},
+    {id:'prod2170182',name:'Edulcorante Equalsweet Stevia x 400 Un.',brand:'EQUALSWEET',cat:'Edulcorantes',price:11699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170182_f.jpg'},
+    {id:'prod2170206',name:'Edulcorante Hileret Sucralosa x 400 Un.',brand:'HILERET',cat:'Edulcorantes',price:11899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170206_f.jpg'},
+    {id:'prod2170231',name:'Edulcorante Tuy Sucralosa x 50 Un.',brand:'TUY',cat:'Edulcorantes',price:1575,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2170231_f.jpg'},
+  ],
+  harinas: [
+    {id:'prod3230043',name:'Harina de Maiz Egran x 1 Kg.',brand:'EGRAN',cat:'Harina Maíz (Polenta)',price:1729,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230043_f.jpg'},
+    {id:'prod3230466',name:'Harina Pan Maiz Blanco x 1 Kg.',brand:'PAN',cat:'Harina Maíz (Polenta)',price:3749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230466_f.jpg'},
+    {id:'prod3230494',name:'Harina de Maiz Prestopronta Vegetales x 250 Gr.',brand:'PRESTOPRONTA',cat:'Harina Maíz (Polenta)',price:1549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230494_f.jpg'},
+    {id:'prod3230005',name:'Harina de Maiz Egran Coccion Rapida x 500 Gr.',brand:'EGRAN',cat:'Harina Maíz (Polenta)',price:899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230005_f.jpg'},
+    {id:'prod3230004',name:'Harina de Maiz Egran x 500 Gr.',brand:'EGRAN',cat:'Harina Maíz (Polenta)',price:899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230004_f.jpg'},
+    {id:'prod3230492',name:'Harina Cumana P.a.n de Maiz Amarilla x 1 Kg.',brand:'CUMANA',cat:'Harina Maíz (Polenta)',price:3269,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230492_f.jpg'},
+    {id:'prod3230022',name:'Harina de Maiz Prestopronta x 490 Gr.',brand:'PRESTOPRONTA',cat:'Harina Maíz (Polenta)',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230022_f.jpg'},
+    {id:'prod3230495',name:'Harina de Maiz Prestopronta 4 Quesos x 250 Gr.',brand:'PRESTOPRONTA',cat:'Harina Maíz (Polenta)',price:1549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230495_f.jpg'},
+    {id:'prod3230327',name:'Harina de Maiz Prestopronta Panceta y Queso x 250 Gr.',brand:'PRESTOPRONTA',cat:'Harina Maíz (Polenta)',price:1549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230327_f.jpg'},
+    {id:'prod3230452',name:'Harina de Maiz Verizzia Instantanea x 500 Gr.',brand:'VERIZZIA',cat:'Harina Maíz (Polenta)',price:649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230452_f.jpg'},
+    {id:'prod3230399',name:'Harina de Maiz Prestopronta Para Arepas x 1 Kg',brand:'PRESTOPRONTA',cat:'Harina Maíz (Polenta)',price:3835,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230399_f.jpg'},
+    {id:'prod3230326',name:'Harina de Maiz Prestopronta Crema de Espinaca x 250 Gr.',brand:'PRESTOPRONTA',cat:'Harina Maíz (Polenta)',price:1549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230326_f.jpg'},
+    {id:'prod3230215',name:'Premezcla Lucchetti Torta Frita x 500 Gr.',brand:'LUCCHETTI',cat:'Harina Premezcla',price:2199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230215_f.jpg'},
+    {id:'prod3230487',name:'Premezcla Mama Cocina Pan Dulce x 400 Gr.',brand:'MAMA COCINA',cat:'Harina Premezcla',price:1999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230487_f.jpg'},
+    {id:'prod3230470',name:'Premezcla Kapac Para Pan sin Tacc x 500 Gr.',brand:'KAPAC',cat:'Harina Premezcla',price:4899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230470_f.jpg'},
+    {id:'prod3230338',name:'Premezcla Para Pizza Arcor x 500 Gr.',brand:'ARCOR',cat:'Harina Premezcla',price:5299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230338_f.jpg'},
+    {id:'prod3230488',name:'Premezcla Pureza Chipa Libre de Gluten x 250 Gr.',brand:'PUREZA',cat:'Harina Premezcla',price:2699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230488_f.jpg'},
+    {id:'prod3230365',name:'Premezcla Lucchetti Ñoquis x 500 Gr.',brand:'LUCCHETTI',cat:'Harina Premezcla',price:4199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230365_f.jpg'},
+    {id:'prod3230491',name:'Premezcla Musli Pizza y Panes x 500 Gr.',brand:'MUSLI',cat:'Harina Premezcla',price:2625,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230491_f.jpg'},
+    {id:'prod3230445',name:'Rebozador Natural Mole x 300 Gr.',brand:'MOLE',cat:'Harina Premezcla',price:4639,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230445_f.jpg'},
+    {id:'prod3230471',name:'Premezcla Kapac Para Pizza sin Tacc x 500 Gr.',brand:'KAPAC',cat:'Harina Premezcla',price:4899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230471_f.jpg'},
+    {id:'prod3230339',name:'Premezcla Para Ñoquis Arcor x 400 Gr.',brand:'ARCOR',cat:'Harina Premezcla',price:5969,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230339_f.jpg'},
+    {id:'prod3230473',name:'Harina de Arroz Kapac sin Tacc x 500 Gr.',brand:'KAPAC',cat:'Harina Premezcla',price:2549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230473_f.jpg'},
+    {id:'prod3230394',name:'Premezcla Maizena Pan Pizza x 500 Gr.',brand:'MAIZENA',cat:'Harina Premezcla',price:4255,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230394_f.jpg'},
+    {id:'prod3230104',name:'Harina Graciela Real Integral x 1 Kg.',brand:'GRACIELA REAL',cat:'Harina Trigo',price:999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230104_f.jpg'},
+    {id:'prod3230218',name:'Harina Pureza Pizza x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:1499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230218_f.jpg'},
+    {id:'prod3230002',name:'Harina Corona de Trigo Leudante x 1 Kg.',brand:'CORONA DE TRIGO',cat:'Harina Trigo',price:1199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230002_f.jpg'},
+    {id:'prod3230367',name:'Harina Pureza Leudante x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:1349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230367_f.jpg'},
+    {id:'prod3230383',name:'Harina Cañuelas 000 x 1 Kg.',brand:'CAÑUELAS',cat:'Harina Trigo',price:799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230383_f.jpg'},
+    {id:'prod3230489',name:'Harina Pureza Multicereal con Masa Madre y Levadura x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:3249,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230489_f.jpg'},
+    {id:'prod3230448',name:'Harina Pureza Masa Madre x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:1999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230448_f.jpg'},
+    {id:'prod3230003',name:'Harina Graciela Real 0000 x 1 Kg.',brand:'GRACIELA REAL',cat:'Harina Trigo',price:1069,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230003_f.jpg'},
+    {id:'prod3230001',name:'Harina Graciela Real 000 x 1 Kg.',brand:'GRACIELA REAL',cat:'Harina Trigo',price:789,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230001_f.jpg'},
+    {id:'prod3230396',name:'Harina Pureza Integral Leudante x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:1849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230396_f.jpg'},
+    {id:'prod3230228',name:'Harina Pureza 0000 x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:1079,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230228_f.jpg'},
+    {id:'prod3230397',name:'Harina Pureza Integral Pizza x 1 Kg.',brand:'PUREZA',cat:'Harina Trigo',price:1849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230397_f.jpg'},
+    {id:'prod2450079',name:'Fecula de Maiz Maizena sin Tacc x 500 Gr.',brand:'MAIZENA',cat:'Otras Harinas',price:3639,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2450079_f.jpg'},
+    {id:'prod2450001',name:'Fecula de Maiz Egran x 500 Gr.',brand:'EGRAN',cat:'Otras Harinas',price:2299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2450001_f.jpg'},
+    {id:'prod3230205',name:'Semola Vitina Clasica x 250 Gr.',brand:'VITINA',cat:'Otras Harinas',price:1599,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230205_f.jpg'},
+    {id:'prod2450078',name:'Fecula de Maiz Maizena sin Tacc x 220 Gr.',brand:'MAIZENA',cat:'Otras Harinas',price:2135,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2450078_f.jpg'},
+    {id:'prod3230204',name:'Semola Vitina Clasica x 500 Gr.',brand:'VITINA',cat:'Otras Harinas',price:2799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230204_f.jpg'},
+    {id:'prod2450062',name:'Almidon de Maiz Yuspe x 500 Gr.',brand:'YUSPE',cat:'Otras Harinas',price:1865,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2450062_f.jpg'},
+    {id:'prod3230469',name:'Semola Pureza Trigo Candeal x 500 Gr.',brand:'PUREZA',cat:'Otras Harinas',price:1349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230469_f.jpg'},
+    {id:'prod3230220',name:'Semola Vitina Espinaca x 250 Gr.',brand:'VITINA',cat:'Otras Harinas',price:1799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230220_f.jpg'},
+    {id:'prod3230308',name:'Harina de Arroz Dos Hermanos x 500 Gr.',brand:'DOS HERMANOS',cat:'Otras Harinas',price:1849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230308_f.jpg'},
+    {id:'prod3230219',name:'Semola Vitina Vegetales x 250 Gr.',brand:'VITINA',cat:'Otras Harinas',price:1799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230219_f.jpg'},
+    {id:'prod3230410',name:'Harina Cumana de Almendras Doy Pack x 200 Gr.',brand:'CUMANA',cat:'Otras Harinas',price:8599,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230410_f.jpg'},
+    {id:'prod2450013',name:'Fecula de Maiz Egran x 200 Gr.',brand:'EGRAN',cat:'Otras Harinas',price:949,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2450013_f.jpg'},
+  ],
+  panaderia: [
+    {id:'prod3420882',name:'Pan Hamburguesa Bimbo Artesano x 240 Gr',brand:'BIMBO',cat:'Pan de Hamburguesa',price:4289,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420882_f.jpg'},
+    {id:'prod3421013',name:'Pan Para Hamburguesa Lactal 4u 210g',brand:'LACTAL',cat:'Pan de Hamburguesa',price:2635,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3421013_f.jpg'},
+    {id:'prod3420394',name:'Pan Para Hamburguesa Lopez x 1 Kg. x 18 Un.',brand:'LOPEZ',cat:'Pan de Hamburguesa',price:4350,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420394_f.jpg'},
+    {id:'prod3420502',name:'Pan Para Hamburguesa Lopez x 150 Gr. x 4 Un.',brand:'LOPEZ',cat:'Pan de Hamburguesa',price:1199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420502_f.jpg'},
+    {id:'prod3420440',name:'Pan Para Hamburguesa Lopez x 700 Gr. x 16 Un.',brand:'LOPEZ',cat:'Pan de Hamburguesa',price:3390,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420440_f.jpg'},
+    {id:'prod3420420',name:'Pan Para Hamburguesa San Alfonso x 200 Gr. x 4 Un.',brand:'SAN ALFONSO',cat:'Pan de Hamburguesa',price:1795,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420420_f.jpg'},
+    {id:'prod3420070',name:'Pan Para Hamburguesa Veneziana con Sesamo x 210 Gr. x 4 Un.',brand:'VENEZIANA',cat:'Pan de Hamburguesa',price:2049,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420070_f.jpg'},
+    {id:'prod3420077',name:'Pan Para Hamburguesa Veneziana x 210 Gr. x 4 Un.',brand:'VENEZIANA',cat:'Pan de Hamburguesa',price:1749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420077_f.jpg'},
+    {id:'prod3421012',name:'Pan de Pancho Lactal 6u 210g',brand:'LACTAL',cat:'Pan de Viena',price:2635,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3421012_f.jpg'},
+    {id:'prod3420407',name:'Pan de Viena Lopez x 1 Kg. Flow Pack x 24 Un.',brand:'LOPEZ',cat:'Pan de Viena',price:4350,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420407_f.jpg'},
+    {id:'prod3420884',name:'Pan Pancho Artesano Bimbo 240 Gr',brand:'BIMBO',cat:'Pan de Viena',price:4289,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420884_f.jpg'},
+    {id:'prod3420900',name:'Pan Pancho Bimbo x 210 Gr',brand:'BIMBO',cat:'Pan de Viena',price:3569,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420900_f.jpg'},
+    {id:'prod3420398',name:'Pan Para Pancho Lopez Superpancho x 800 Gr. x 12 Un.',brand:'LOPEZ',cat:'Pan de Viena',price:4029,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420398_f.jpg'},
+    {id:'prod3420397',name:'Pan Para Pancho Lopez x 180 Gr. x 6 Un.',brand:'LOPEZ',cat:'Pan de Viena',price:1199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420397_f.jpg'},
+    {id:'prod3420396',name:'Pan Para Pancho Lopez x 800 Gr. x 24 Un.',brand:'LOPEZ',cat:'Pan de Viena',price:4029,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420396_f.jpg'},
+    {id:'prod3420416',name:'Pan Para Pancho San Alfonso x 240 Gr. x 6 Un.',brand:'SAN ALFONSO',cat:'Pan de Viena',price:1700,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420416_f.jpg'},
+    {id:'prod3420071',name:'Pan Para Pancho Veneziana x 210 Gr. x 6 Un.',brand:'BIMBO',cat:'Pan de Viena',price:1749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420071_f.jpg'},
+    {id:'prod3420907',name:'Pan Super Pancho Fargo x 390 Gr',brand:'FARGO',cat:'Pan de Viena',price:5469,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420907_f.jpg'},
+    {id:'prod3420063',name:'Pan Veneziana Blanco Lacteado Familiar x 600 Gr.',brand:'VENEZIANA',cat:'Pan Lactal',price:3649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420063_f.jpg'},
+    {id:'prod3420066',name:'Pan Veneziana Trisalvado Light x 360 Gr.',brand:'VENEZIANA',cat:'Pan Lactal',price:2749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420066_f.jpg'},
+    {id:'prod3420968',name:'Pan Blanco Bimbo Artesano Masa Madre x 500 Gr.',brand:'BIMBO',cat:'Pan Lactal',price:7750,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420968_f.jpg'},
+    {id:'prod3420977',name:'Pan Blanco Fargo Rodaja Finas x 370 Gr.',brand:'FARGO',cat:'Pan Lactal',price:4825,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420977_f.jpg'},
+    {id:'prod3420667',name:'Pan de Campo Veneziana x 400 Gr.',brand:'VENEZIANA',cat:'Pan Lactal',price:3049,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420667_f.jpg'},
+    {id:'prod3420969',name:'Pan Integral Bimbo Artesano Masa Madre x 500 Gr.',brand:'BIMBO',cat:'Pan Lactal',price:8455,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420969_f.jpg'},
+    {id:'prod3420972',name:'Pan Integral Bimbo x 420 Gr.',brand:'BIMBO',cat:'Pan Lactal',price:5765,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420972_f.jpg'},
+    {id:'prod3420976',name:'Pan Integral Fargo Grano Entero x 390 Gr.',brand:'FARGO',cat:'Pan Lactal',price:5365,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420976_f.jpg'},
+    {id:'prod3420970',name:'Pan Lactal Blanco Bimbo x 400 Gr.',brand:'BIMBO',cat:'Pan Lactal',price:5239,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420970_f.jpg'},
+    {id:'prod3420650',name:'Pan Lactal de Mesa x 315 Gr.',brand:'FARGO',cat:'Pan Lactal',price:2889,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420650_f.jpg'},
+    {id:'prod3420516',name:'Pan Lactal de Mesa x 460 Gr.',brand:'LACTAL',cat:'Pan Lactal',price:4199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420516_f.jpg'},
+    {id:'prod3420765',name:'Pan Lactal Salvado San Alfonso x 540 Gr',brand:'SAN ALFONSO',cat:'Pan Lactal',price:3020,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420765_f.jpg'},
+    {id:'prod3230341',name:'Pan Rallado Favorita x 450 Gr.',brand:'FAVORITA',cat:'Pan Rallado',price:1049,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230341_f.jpg'},
+    {id:'prod3230465',name:'Pan Rallado Favorita x 900 Gr.',brand:'FAVORITA',cat:'Pan Rallado',price:2099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230465_f.jpg'},
+    {id:'prod3230476',name:'Pan Rallado Mama Cocina Ajo y Perejil x 500 Gr.',brand:'MAMA COCINA',cat:'Pan Rallado',price:1559,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230476_f.jpg'},
+    {id:'prod3230481',name:'Pan Rallado Mama Cocina Libre de Gluten x 350 Gr.',brand:'MAMA COCINA',cat:'Pan Rallado',price:3149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230481_f.jpg'},
+    {id:'prod3230246',name:'Pan Rallado Mama Cocina x 500 Gr.',brand:'MAMA COCINA',cat:'Pan Rallado',price:1145,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230246_f.jpg'},
+    {id:'prod3230478',name:'Pan Rallado Preferido Libre de Gluten x 350 Gr.',brand:'PREFERIDO',cat:'Pan Rallado',price:3199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230478_f.jpg'},
+    {id:'prod3230255',name:'Pan Rallado Preferido x 1 Kg.',brand:'PREFERIDO',cat:'Pan Rallado',price:3199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230255_f.jpg'},
+    {id:'prod3230254',name:'Pan Rallado Preferido x 500 Gr.',brand:'PREFERIDO',cat:'Pan Rallado',price:1649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230254_f.jpg'},
+    {id:'prod3230364',name:'Pan Rallado Pureza Integral x 350 Gr.',brand:'PUREZA',cat:'Pan Rallado',price:1355,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230364_f.jpg'},
+    {id:'prod3230444',name:'Pan Rallado Smams sin Tacc x 350 Gr.',brand:'SMAMS',cat:'Pan Rallado',price:3319,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230444_f.jpg'},
+    {id:'prod3230446',name:'Premezcla Mole Hummus de Garbanzo x 150 Gr.',brand:'MOLE',cat:'Pan Rallado',price:3169,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230446_f.jpg'},
+    {id:'prod3230395',name:'Rebozador Maizena x 350 Gr.',brand:'MAIZENA',cat:'Pan Rallado',price:4295,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3230395_f.jpg'},
+    {id:'prod3420934',name:'Chalitas Albahaca Croccanto x 150 Gr',brand:'CROCCANTO',cat:'Panaderia',price:1900,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420934_f.jpg'},
+    {id:'prod3420933',name:'Chalitas Clasicas Croccanto x 150 Gr',brand:'CROCCANTO',cat:'Panaderia',price:1900,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420933_f.jpg'},
+    {id:'prod3420930',name:'Chalitas Integral Croccanto x 150 Gr',brand:'CROCCANTO',cat:'Panaderia',price:1900,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420930_f.jpg'},
+    {id:'prod3420931',name:'Chalitas Multicereal Croccanto x 150 Gr',brand:'CROCCANTO',cat:'Panaderia',price:1900,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420931_f.jpg'},
+    {id:'prod3420932',name:'Chalitas Romero y Oliva Croccanto x 150 Gr',brand:'CROCCANTO',cat:'Panaderia',price:1900,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3420932_f.jpg'},
+    {id:'prod3411694',name:'Chipaca Pugliese x Kg.',brand:'PUGLIESE',cat:'Panaderia',price:8800,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411694_f.jpg'},
+    {id:'prod3411699',name:'Criollo Comun Pugliese x Kg.',brand:'PUGLIESE',cat:'Panaderia',price:8200,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411699_f.jpg'},
+    {id:'prod3411701',name:'Criollo Hojaldre Dulce Pugliese x Kg.',brand:'PUGLIESE',cat:'Panaderia',price:9800,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411701_f.jpg'},
+    {id:'prod3411702',name:'Criollo Hojaldre Salado Pugliese x Kg.',brand:'PUGLIESE',cat:'Panaderia',price:9000,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411702_f.jpg'},
+    {id:'prod3411705',name:'Facturas Surtidas Pugliese x 12 Un.',brand:'PUGLIESE',cat:'Panaderia',price:11000,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411705_f.jpg'},
+    {id:'prod3411706',name:'Facturas Surtidas Pugliese x 6 Un.',brand:'PUGLIESE',cat:'Panaderia',price:5700,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411706_f.jpg'},
+    {id:'prod3411707',name:'Facturas Surtidas Pugliese x Un.',brand:'PUGLIESE',cat:'Panaderia',price:1000,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3411707_f.jpg'},
+  ],
+  sal_especias: [
+    {id:'prod2480464',name:'Tomillo Alicante x 10 Gr.',brand:'ALICANTE',cat:'Especies',price:839,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480464_f.jpg'},
+    {id:'prod2480256',name:'Chimichurri Yuspe x 50 Gr.',brand:'YUSPE',cat:'Especies',price:1525,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480256_f.jpg'},
+    {id:'prod2480882',name:'Cebolla Deshidratada Yuspe en Escamas x 50 Gr.',brand:'YUSPE',cat:'Especies',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480882_f.jpg'},
+    {id:'prod2480257',name:'Ajo Triturado Yuspe x 50 Gr.',brand:'YUSPE',cat:'Especies',price:1475,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480257_f.jpg'},
+    {id:'prod2480538',name:'Nuez Moscada Velez x 25 Gr.',brand:'VELEZ',cat:'Especies',price:1725,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480538_f.jpg'},
+    {id:'prod2480244',name:'Bicarbonato de Sodio Yuspe x 50 Gr.',brand:'YUSPE',cat:'Especies',price:539,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480244_f.jpg'},
+    {id:'prod2480541',name:'Pimenton Velez x 25 Gr.',brand:'VELEZ',cat:'Especies',price:625,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480541_f.jpg'},
+    {id:'prod2480717',name:'Condimento Para Pizza Alicante x 50 Gr.',brand:'ALICANTE',cat:'Especies',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480717_f.jpg'},
+    {id:'prod2480734',name:'Ajo Triturado Alicante x 50 Gr.',brand:'ALICANTE',cat:'Especies',price:1549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480734_f.jpg'},
+    {id:'prod2480830',name:'Condimento Alicante Mix Finas Hierbas x 20 Gr.',brand:'ALICANTE',cat:'Especies',price:1325,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480830_f.jpg'},
+    {id:'prod2480823',name:'Aji Molido la Campagnola x 23 Gr.',brand:'LA CAMPAGNOLA',cat:'Especies',price:1275,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480823_f.jpg'},
+    {id:'prod2480032',name:'Nuez Moscada Entera Alicante x 20 Gr.',brand:'ALICANTE',cat:'Especies',price:2099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480032_f.jpg'},
+    {id:'prod2480544',name:'Pimienta Velez Blanca Molida x 25 Gr.',brand:'VELEZ',cat:'Pimienta',price:1399,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480544_f.jpg'},
+    {id:'prod2480546',name:'Pimienta Velez Negra Molida x 25 Gr.',brand:'VELEZ',cat:'Pimienta',price:939,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480546_f.jpg'},
+    {id:'prod2480247',name:'Pimienta Yuspe Blanca Molida x 50 Gr.',brand:'YUSPE',cat:'Pimienta',price:2569,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480247_f.jpg'},
+    {id:'prod2480543',name:'Pimienta Velez Blanca en Grano x 25 Gr.',brand:'VELEZ',cat:'Pimienta',price:1399,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480543_f.jpg'},
+    {id:'prod2480826',name:'Pimienta Blanca Molida la Campagnola x 23 Gr.',brand:'LA CAMPAGNOLA',cat:'Pimienta',price:2249,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480826_f.jpg'},
+    {id:'prod2480824',name:'Pimienta Negra Molida la Campagnola x 23 Gr.',brand:'LA CAMPAGNOLA',cat:'Pimienta',price:1679,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480824_f.jpg'},
+    {id:'prod2480776',name:'Pimienta Alicante Blanca Grano x 25 Gr.',brand:'ALICANTE',cat:'Pimienta',price:1779,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480776_f.jpg'},
+    {id:'prod2480779',name:'Pimienta Alicante Blanca Molida x 50 Gr.',brand:'ALICANTE',cat:'Pimienta',price:3499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480779_f.jpg'},
+    {id:'prod2480825',name:'Pimienta Negra Grano la Campagnola x 23 Gr.',brand:'LA CAMPAGNOLA',cat:'Pimienta',price:1629,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480825_f.jpg'},
+    {id:'prod2480784',name:'Pimienta Alicante Negra Grano Molinillo x 45 Gr.',brand:'ALICANTE',cat:'Pimienta',price:6499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480784_f.jpg'},
+    {id:'prod2480783',name:'Pimienta Alicante Blanca Grano Molinillo x 45 Gr.',brand:'ALICANTE',cat:'Pimienta',price:6999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2480783_f.jpg'},
+    {id:'prod2300025',name:'Sal Fina Dos Anclas Salero x 500 Gr.',brand:'DOS ANCLAS',cat:'Sal',price:2999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300025_f.jpg'},
+    {id:'prod2300022',name:'Sal Fina Dos Anclas Estuche x 500 Gr.',brand:'DOS ANCLAS',cat:'Sal',price:1299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300022_f.jpg'},
+    {id:'prod2300019',name:'Sal Fina Celusal Light Salero x 235 Gr.',brand:'CELUSAL',cat:'Sal',price:5299,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300019_f.jpg'},
+    {id:'prod2300151',name:'Sal de Campo Marina con Especias sin Tacc x 250 Gr',brand:'SAL DE CAMPO',cat:'Sal',price:3769,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300151_f.jpg'},
+    {id:'prod2300003',name:'Sal Fina Celusal Salero x 100 Gr.',brand:'CELUSAL',cat:'Sal',price:1849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300003_f.jpg'},
+    {id:'prod2300136',name:'Sal Fina Dona Sal x 500 Gr.',brand:'DONA SAL',cat:'Sal',price:515,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300136_f.jpg'},
+    {id:'prod2300150',name:'Sal de Campo Marina sin Tacc x 250 Gr.',brand:'SAL DE CAMPO',cat:'Sal',price:2849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300150_f.jpg'},
+    {id:'prod2300026',name:'Sal Parrillera Dos Anclas Salero x 500 Gr.',brand:'DOS ANCLAS',cat:'Sal',price:2999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300026_f.jpg'},
+    {id:'prod2300007',name:'Sal Parrillera Celusal Salero x 1 Kg.',brand:'CELUSAL',cat:'Sal',price:5349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300007_f.jpg'},
+    {id:'prod2300105',name:'Sal Fina Dos Estrellas Bolsa x 500 Gr.',brand:'DOS ESTRELLAS',cat:'Sal',price:625,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300105_f.jpg'},
+    {id:'prod2300009',name:'Sal Gruesa Celusal Salero x 1 Kg.',brand:'CELUSAL',cat:'Sal',price:4949,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300009_f.jpg'},
+    {id:'prod2300102',name:'Sal Gruesa Dos Anclas x 5 Kg.',brand:'DOS ANCLAS',cat:'Sal',price:5099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2300102_f.jpg'},
+  ],
+};
+
+const catalogGolosinas = {
+  golosinas: [
+    {id:'prod2183538',name:'Alfajor Toddy Mousse Blanco x 50 Gr.',brand:'TODDY',cat:'Alfajores',price:1275,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183538_f.jpg'},
+    {id:'prod2183733',name:'Alfajor Fantoche Pescado Raul Blanco x 50 Gr.',brand:'FANTOCHE',cat:'Alfajores',price:839,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183733_f.jpg'},
+    {id:'prod2182549',name:'Alfajor Terrabusi Clasico Triple x 70 Gr.',brand:'TERRABUSI',cat:'Alfajores',price:1675,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182549_f.jpg'},
+    {id:'prod2183710',name:'Alfajor Bon O Bon Triple Blanco x 60 Gr.',brand:'BON O BON',cat:'Alfajores',price:1625,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183710_f.jpg'},
+    {id:'prod2183346',name:'Alfajor Smams Dulce de Leche sin Tacc x 50 Gr.',brand:'SMAMS',cat:'Alfajores',price:1199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183346_f.jpg'},
+    {id:'prod2180648',name:'Alfajor Bon O Bon Leche x 40 Gr.',brand:'BON O BON',cat:'Alfajores',price:979,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180648_f.jpg'},
+    {id:'prod2181250',name:'Alfajor Shot Triple x 60 Gr.',brand:'SHOT',cat:'Alfajores',price:1675,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2181250_f.jpg'},
+    {id:'prod2182697',name:'Alfajor Nevares Blanco x 45 Gr.',brand:'NEVARES',cat:'Alfajores',price:355,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182697_f.jpg'},
+    {id:'prod2183390',name:'Alfajor Chammas Chocolate x 300 Gr.',brand:'CHAMMAS',cat:'Alfajores',price:3099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183390_f.jpg'},
+    {id:'prod2180649',name:'Alfajor Bon O Bon Blanco x 40 Gr.',brand:'BON O BON',cat:'Alfajores',price:979,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180649_f.jpg'},
+    {id:'prod2183182',name:'Alfajor Sol Serrano Chocolate x 40 Gr.',brand:'SOL SERRANO',cat:'Alfajores',price:329,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183182_f.jpg'},
+    {id:'prod2183723',name:'Minitorta Aguila Dark x 69 Gr.',brand:'AGUILA',cat:'Alfajores',price:1625,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183723_f.jpg'},
+    {id:'prod2183704',name:'Bombones Bon O Bon Avellanas Supreme x 144 Gr.',brand:'BON O BON',cat:'Chocolates',price:5511,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183704_f.jpg'},
+    {id:'prod2180084',name:'Bombones Arcor de Frutas x 500 Gr.',brand:'ARCOR',cat:'Chocolates',price:6311,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180084_f.jpg'},
+    {id:'prod2160227',name:'Chocolate Para Taza Aguila x 150 Gr.',brand:'AGUILA',cat:'Chocolates',price:7149,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160227_f.jpg'},
+    {id:'prod2183708',name:'Chocolate Aguila 80% Cacao con Naranja x 70 Gr.',brand:'AGUILA',cat:'Chocolates',price:3561,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183708_f.jpg'},
+    {id:'prod2180112',name:'Bombones Bon O Bon Surtido x 255 Gr.',brand:'BON O BON',cat:'Chocolates',price:7612,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180112_f.jpg'},
+    {id:'prod2182652',name:'Bombones Obli Bon Blanco Estuche x 180 Gr.',brand:'OBLI BOM',cat:'Chocolates',price:2501,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182652_f.jpg'},
+    {id:'prod2183663',name:'Bombon Cofler Block x 16 Gr.',brand:'COFLER',cat:'Chocolates',price:1099,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183663_f.jpg'},
+    {id:'prod2183571',name:'Bocaditos Cachafaz Marroc x 6 Un.',brand:'CACHAFAZ',cat:'Chocolates',price:4939,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183571_f.jpg'},
+    {id:'prod2182519',name:'Bombones Bon O Bon Leche x 270 Gr.',brand:'BON O BON',cat:'Chocolates',price:6974,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182519_f.jpg'},
+    {id:'prod2183594',name:'Oblea Cofler Chocolina Max x 60 Gr.',brand:'COFLER',cat:'Chocolates',price:1575,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183594_f.jpg'},
+    {id:'prod2182568',name:'Chocolate Milka Castañas con Caramelo x 155 Gr.',brand:'MILKA',cat:'Chocolates',price:7424,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182568_f.jpg'},
+    {id:'prod2160213',name:'Chocolate Para Taza Aguila Blanco x 100 Gr.',brand:'AGUILA',cat:'Chocolates',price:5649,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2160213_f.jpg'},
+    {id:'prod2183725',name:'Gomitas Mogul Twist Max Anana Mundial x 25 Gr.',brand:'MOGUL',cat:'Golosinas',price:579,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183725_f.jpg'},
+    {id:'prod2182375',name:'Caramelos Alka Menta x 800 Gr.',brand:'ALKA',cat:'Golosinas',price:10190,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182375_f.jpg'},
+    {id:'prod2180249',name:'Caramelos Flynn Paff Georgalos Masticables Tutti Frutti x 128 Gr.',brand:'FLYNN PAFF',cat:'Golosinas',price:2399,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180249_f.jpg'},
+    {id:'prod2183665',name:'Caramelos Confitados Mogul x 30 Gr.',brand:'MOGUL',cat:'Golosinas',price:1199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183665_f.jpg'},
+    {id:'prod2181419',name:'Caramelos Pico Dulce Duros x 150 Gr.',brand:'PICO DULCE',cat:'Golosinas',price:2199,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2181419_f.jpg'},
+    {id:'prod2183437',name:'Chicles Beldent Frutilla-lima Botella x 54 Gr.',brand:'BELDENT',cat:'Golosinas',price:6749,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183437_f.jpg'},
+    {id:'prod2182476',name:'Gomitas Mogul Dientes x 500 Gr.',brand:'MOGUL',cat:'Golosinas',price:7615,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182476_f.jpg'},
+    {id:'prod2180419',name:'Pastillas Tic Tac 100 Menta x Un.',brand:'TIC TAC',cat:'Golosinas',price:1839,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180419_f.jpg'},
+    {id:'prod2182873',name:'Chicles Top Line Seven Ultra Strawberry x 24 Gr.',brand:'TOP LINE',cat:'Golosinas',price:2259,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182873_f.jpg'},
+    {id:'prod2183504',name:'Chicle Topline 7 Ultra Doble x 24 Gr.',brand:'TOP LINE',cat:'Golosinas',price:2259,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183504_f.jpg'},
+    {id:'prod2182362',name:'Gomitas Misky Fantasia x 1 Kg.',brand:'MISKY',cat:'Golosinas',price:9499,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182362_f.jpg'},
+    {id:'prod2182378',name:'Caramelos Alka Strong x 800 Gr.',brand:'ALKA',cat:'Golosinas',price:10190,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182378_f.jpg'},
+    {id:'prod2182416',name:'Turron de Mani Fulbito x 25 Gr.',brand:'FULBITO',cat:'Obleas y Turrones',price:195,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182416_f.jpg'},
+    {id:'prod2183718',name:'Oblea Kinder Bueno Dark x 43 Gr.',brand:'KINDER',cat:'Obleas y Turrones',price:2129,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183718_f.jpg'},
+    {id:'prod2182715',name:'Oblea Milka Bis x 105,6 Gr.',brand:'MILKA',cat:'Obleas y Turrones',price:4135,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182715_f.jpg'},
+    {id:'prod2183188',name:'Oblea Cofler Graffiti Blanco x 45 Gr.',brand:'COFLER',cat:'Obleas y Turrones',price:1729,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183188_f.jpg'},
+    {id:'prod2180189',name:'Oblea Terrabusi Rhodesia con Baño de Chocolate x 88 Gr.',brand:'TERRABUSI',cat:'Obleas y Turrones',price:4045,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180189_f.jpg'},
+    {id:'prod2183429',name:'Oblea Nugaton Leche x 27 Gr.',brand:'NUGATON',cat:'Obleas y Turrones',price:849,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183429_f.jpg'},
+    {id:'prod2182651',name:'Cubanito Oblita Marroc Estuche x 165 Gr.',brand:'OBLITA',cat:'Obleas y Turrones',price:2969,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182651_f.jpg'},
+    {id:'prod2183266',name:'Chocolate Oreo Chocopause x 45 Gr.',brand:'OREO',cat:'Obleas y Turrones',price:2335,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183266_f.jpg'},
+    {id:'prod2182241',name:'Turron de Mani Misky x 27 Gr.',brand:'MISKY',cat:'Obleas y Turrones',price:215,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182241_f.jpg'},
+    {id:'prod2180191',name:'Oblea Terrabusi Mini Rhodesia con Baño de Chocolate x 60 Gr.',brand:'TERRABUSI',cat:'Obleas y Turrones',price:2675,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2180191_f.jpg'},
+    {id:'prod2183370',name:'Oblea Kit Kat Leite x 41.5 Gr.',brand:'KIT KAT',cat:'Obleas y Turrones',price:2119,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183370_f.jpg'},
+    {id:'prod2182756',name:'Oblea Kit Kat Finger White x 41,5 Gr.',brand:'KIT KAT',cat:'Obleas y Turrones',price:2119,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182756_f.jpg'},
+    {id:'prod2183485',name:'Postre de Mani Mantecol Coco x 111 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:2415,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183485_f.jpg'},
+    {id:'prod2183258',name:'Postre de Mani Mantecol x 111 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:2799,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183258_f.jpg'},
+    {id:'prod2183486',name:'Postre de Mani Mantecol Salted Caramel x 111 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:2415,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183486_f.jpg'},
+    {id:'prod2183242',name:'Postre de Mani Mantecol x 253 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:5399,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183242_f.jpg'},
+    {id:'prod2183265',name:'Postre de Mani Mantecol x 404 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:7269,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183265_f.jpg'},
+    {id:'prod2183484',name:'Postre de Mani Mantecol Café x 111 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:2415,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183484_f.jpg'},
+    {id:'prod2183588',name:'Postre de Mani Mantecol Lingote x 500 Gr.',brand:'MANTECOL',cat:'Postre de Maní',price:11700,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183588_f.jpg'},
+  ],
+  snack_dulces: [
+    {id:'prod3380933',name:'Mix Energizante Julieta con Mani Flow Pack x 300 Gr.',brand:'JULIETA',cat:'Snack Dulces',price:5869,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3380933_f.jpg'},
+    {id:'prod2183692',name:'Snack Nutella Avellanas B-ready x 132 Gr.',brand:'NUTELLA',cat:'Snack Dulces',price:8399,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183692_f.jpg'},
+    {id:'prod2183444',name:'Snack Chokobomb Mani x 50 Gr.',brand:'CHOKOBOMB',cat:'Snack Dulces',price:1349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2183444_f.jpg'},
+    {id:'prod2551234',name:'Maiz Inflado Tippys x 450 Gr.',brand:'TIPPYS',cat:'Snack Dulces',price:2999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551234_f.jpg'},
+    {id:'prod2181915',name:'Maiz Inflado Egran Mani y Miel x 80 Gr.',brand:'EGRAN',cat:'Snack Dulces',price:1025,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2181915_f.jpg'},
+    {id:'prod3380937',name:'Mix Energizante Julieta sin Pasas Flow Pack x 300 Gr.',brand:'JULIETA',cat:'Snack Dulces',price:6580,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3380937_f.jpg'},
+    {id:'prod3380889',name:'Granolas Crocanto Salty x 500gr',brand:'CROCCANTO',cat:'Snack Dulces',price:7449,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3380889_f.jpg'},
+    {id:'prod3380938',name:'Mix Energizante Julieta con Arandanos Flow Pack x 300 Gr.',brand:'JULIETA',cat:'Snack Dulces',price:6935,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3380938_f.jpg'},
+    {id:'prod2182710',name:'Barra de Arroz Gallo Yogubar Frutilla x Un.',brand:'GALLO',cat:'Snack Dulces',price:999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2182710_f.jpg'},
+    {id:'prod2550852',name:'Puflitos Tippys x 800 Gr.',brand:'TIPPYS',cat:'Snack Dulces',price:3795,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2550852_f.jpg'},
+    {id:'prod2551233',name:'Puflitos Tippys X500 Gr.',brand:'TIPPYS',cat:'Snack Dulces',price:2739,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551233_f.jpg'},
+    {id:'prod3380941',name:'Mani Julieta Pelado sin Sal Flow Pack x 300 Gr.',brand:'JULIETA',cat:'Snack Dulces',price:3645,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod3380941_f.jpg'},
+  ],
+  snack_salados: [
+    {id:'prod2142556',name:'Galletas Traviata Crack Kesitas Queso x 96 Gr.',brand:'TRAVIATA',cat:'Snack Salados',price:899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2142556_f.jpg'},
+    {id:'prod2142527',name:'Galletas Saladix Horneado Picante x 100 Gr.',brand:'SALADIX',cat:'Snack Salados',price:1549,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2142527_f.jpg'},
+    {id:'prod2551249',name:'Papas Fritas Lays Ketchup x 77 Gr.',brand:'LAYS',cat:'Snack Salados',price:2699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551249_f.jpg'},
+    {id:'prod2142557',name:'Galletas Traviata Crack Rex Original x 96 Gr.',brand:'TRAVIATA',cat:'Snack Salados',price:899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2142557_f.jpg'},
+    {id:'prod2142680',name:'Galletas Paseo Cracker Jamon x 250 Gr.',brand:'PASEO',cat:'Snack Salados',price:1349,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2142680_f.jpg'},
+    {id:'prod2551171',name:'Snacks Veggie Sabor Pizza x 90 Gr.',brand:'VEGGIE',cat:'Snack Salados',price:1909,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551171_f.jpg'},
+    {id:'prod2551169',name:'Papas Fritas Tippys x 400 Gr.',brand:'TIPPYS',cat:'Snack Salados',price:4999,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551169_f.jpg'},
+    {id:'prod2140359',name:'Galletas Rex Original x 75 Gr.',brand:'REX',cat:'Snack Salados',price:1229,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2140359_f.jpg'},
+    {id:'prod2551332',name:'Snacks Vegetanessa Original x 100 Gr.',brand:'VEGETANESSA',cat:'Snack Salados',price:1599,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551332_f.jpg'},
+    {id:'prod2551243',name:'Papas Fritas Lays Clasicas x 85 Gr.',brand:'LAYS',cat:'Snack Salados',price:2699,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551243_f.jpg'},
+    {id:'prod2551297',name:'Snack de Arroz Gallo Chips Pizza x 100 Gr.',brand:'GALLO',cat:'Snack Salados',price:1899,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2551297_f.jpg'},
+    {id:'prod2142512',name:'Galletas Saladix Duo x 80 Gr.',brand:'SALADIX',cat:'Snack Salados',price:1515,img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/prod2142512_f.jpg'},
+  ],
+};
+
+const gonLabels = {
+  aceites_vinagres: 'Aceites & Vinagres',
+  aderezos:         'Aderezos & Salsas',
+  arroz_pastas:     'Arroz & Pastas',
+  dulces:           'Dulces',
+  endulzantes:      'Endulzantes',
+  harinas:          'Harinas & Polenta',
+  panaderia:        'Panadería',
+  sal_especias:     'Sal & Especias',
+  golosinas:        'Golosinas',
+  snack_dulces:     'Snack Dulces',
+  snack_salados:    'Snack Salados',
+};
+
+function gonCard(item) {
+  return `<div class="gon-card" onclick="addGonToCart(this)" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" data-img="${item.img}">
+    <img src="${item.img}" alt="${item.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><rect width=\"100%\" height=\"100%\" fill=\"%23eee\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" fill=\"%23999\" font-size=\"11\">sin imagen</text></svg>'">
+    <div class="gon-card-body">
+      <div class="gon-card-brand">${item.brand}</div>
+      <div class="gon-card-name">${item.name}</div>
+      <div class="gon-card-price">$${{}}</div>
+    </div>
+  </div>`;
+}
+
+// Fix: use item.price inside template
+function gonCardHtml(item) {
+  const safeImg = item.img;
+  const fallback = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='10'%3Esin imagen%3C/text%3E%3C/svg%3E";
+  return `<div class="gon-card" onclick="addGonToCart(event,'${item.id}','${item.name.replace(/'/g,\"&apos;\")}',${item.price},'${safeImg}')" title="${item.name}">
+    <img src="${safeImg}" alt="${item.name}" loading="lazy" onerror="this.src='${fallback}'">
+    <div class="gon-card-body">
+      <div class="gon-card-brand">${item.brand}</div>
+      <div class="gon-card-name">${item.name}</div>
+      <div class="gon-card-price">$${{}}</div>
+    </div>
+  </div>`;
+}
+
+// simpler approach without nested templates
+function renderGonItems(items, gridEl) {
+  gridEl.innerHTML = '';
+  items.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'gon-card';
+    d.onclick = () => addGonToCart(item.id, item.name, item.price, item.img);
+    const fallback = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E";
+    d.innerHTML = `
+      <img src="${item.img}" alt="${item.name}" loading="lazy" onerror="this.src='${fallback}'">
+      <div class="gon-card-body">
+        <div class="gon-card-brand">${item.brand}</div>
+        <div class="gon-card-name">${item.name}</div>
+        <div class="gon-card-price">$${item.price.toLocaleString('es-AR')}</div>
+      </div>`;
+    gridEl.appendChild(d);
+  });
+}
+
+function renderTabSection(catalogObj, tabsEl, gridEl, defaultKey) {
+  const keys = Object.keys(catalogObj);
+  let activeKey = defaultKey || keys[0];
+  
+  function setTab(key) {
+    activeKey = key;
+    tabsEl.querySelectorAll('.gon-tab').forEach(t => t.classList.toggle('active', t.dataset.key === key));
+    renderGonItems(catalogObj[key], gridEl);
+  }
+  
+  tabsEl.innerHTML = keys.map(k =>
+    `<button class="gon-tab${k === activeKey ? ' active' : ''}" data-key="${k}" onclick="this.closest('.section-view').querySelector('.gon-tabs').tabFn('${k}')">${gonLabels[k] || k}</button>`
+  ).join('');
+  // Attach fn to tabs container for easy access
+  tabsEl.tabFn = setTab;
+  // Rewrite onclick to use the stored fn
+  tabsEl.querySelectorAll('.gon-tab').forEach(btn => {
+    btn.onclick = () => setTab(btn.dataset.key);
+  });
+  renderGonItems(catalogObj[activeKey], gridEl);
+}
+
+let _gondolaRendered = false;
+function renderGondola() {
+  if (_gondolaRendered) return;
+  _gondolaRendered = true;
+  renderTabSection(catalogGondola,
+    document.getElementById('gondola-tabs'),
+    document.getElementById('gondola-grid'));
+}
+
+let _golosinasRendered = false;
+function renderGolosinas() {
+  if (_golosinasRendered) return;
+  _golosinasRendered = true;
+  renderTabSection(catalogGolosinas,
+    document.getElementById('golosinas-tabs'),
+    document.getElementById('golosinas-grid'));
+}
+
+function addGonToCart(id, name, price, img) {
+  const key = 'gon_' + id;
+  if (cart[key]) {
+    cart[key].qty++;
+  } else {
+    cart[key] = { key, name, size: '', price, qty: 1, img, color:'#333', textColor:'#fff' };
+  }
+  renderCart();
+  showToast('✅ ' + name.split(' ').slice(0,3).join(' ') + ' agregado');
+}
 
 // Bloquear scroll del body mientras el landing está activo
 document.body.style.overflow = 'hidden';
