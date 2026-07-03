@@ -1929,20 +1929,6 @@ function renderSimpleShelf(items, shelfEl) {
     shelfEl.appendChild(d);
   });
 }
-renderSimpleShelf(
-  [...catalogJugos.naturales, ...catalogJugos.concentrados]
-    .filter(function(i){ return i.name.toLowerCase().indexOf('cepita') === -1; }),
-  document.getElementById('shelf-jugos-frio')
-);
-renderSimpleShelf(Object.values(catalogSaborizadas).flat(), document.getElementById('shelf-saborizadas-frio'));
-renderSimpleShelf(Object.values(catalogEspumantes).flat(), document.getElementById('shelf-espumantes-frio'));
-var _cervBrands=['quilmes','stella','heineken','corona','andes','imperial','brahma','patagonia','budweiser','amstel','schneider'];
-renderSimpleShelf(Object.values(catalogCervezas).flat().filter(function(i){var n=i.name.toLowerCase();return !_cervBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-cervezas-extra'));
-var _aguaBrands=['bon aqua','bonaqua','cepita','villavicencio','cunnington'];
-renderSimpleShelf(Object.values(catalogAguasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_aguaBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-aguas-extra'));
-var _gasBrands=['coca-cola','coca cola','pepsi','sprite','fanta','schweppes','7up','mirinda','paso de los toros','cunnington','manaos','doble cola','pritty'];
-renderSimpleShelf(Object.values(catalogGaseosasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_gasBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-gaseosas-extra'));
-
 // ── SELECCIÓN DE MARCA EN HELADERA ────────────────────────────────────────
 
 let activeBrandId = null;
@@ -4293,6 +4279,23 @@ const catalogGaseosasExtra = {
 };
 
 // Total: 1222 products across 30 categories
+
+// ── RENDER ESTANTES SIMPLES (después de definir catálogos) ──
+renderSimpleShelf(
+  [...catalogJugos.naturales, ...catalogJugos.concentrados]
+    .filter(function(i){ return i.name.toLowerCase().indexOf('cepita') === -1; }),
+  document.getElementById('shelf-jugos-frio')
+);
+renderSimpleShelf(Object.values(catalogSaborizadas).flat(), document.getElementById('shelf-saborizadas-frio'));
+renderSimpleShelf(Object.values(catalogEspumantes).flat(), document.getElementById('shelf-espumantes-frio'));
+var _cervBrands=['quilmes','stella','heineken','corona','andes','imperial','brahma','patagonia','budweiser','amstel','schneider'];
+renderSimpleShelf(Object.values(catalogCervezas).flat().filter(function(i){var n=i.name.toLowerCase();return !_cervBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-cervezas-extra'));
+var _aguaBrands=['bon aqua','bonaqua','cepita','villavicencio','cunnington'];
+renderSimpleShelf(Object.values(catalogAguasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_aguaBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-aguas-extra'));
+var _gasBrands=['coca-cola','coca cola','pepsi','sprite','fanta','schweppes','7up','mirinda','paso de los toros','cunnington','manaos','doble cola','pritty'];
+renderSimpleShelf(Object.values(catalogGaseosasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_gasBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-gaseosas-extra'));
+
+
 
 
 const gonLabels = {
