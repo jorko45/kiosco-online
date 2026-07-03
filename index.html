@@ -926,10 +926,10 @@
     <div class="search-wrap">
       <div class="search-bar-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Buscá un producto... (Coca Zero, Stella, Lay's...)" oninput="onSearch(this.value)" autocomplete="off"/>
-        <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+        <input type="text" class="search-input" placeholder="Buscá un producto... (Coca Zero, Stella, Lay's...)" oninput="onSearch(this.value,this)" autocomplete="off"/>
+        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
       </div>
-      <div class="search-results" id="searchResults" style="display:none"></div>
+      <div class="search-results" style="display:none"></div>
     </div>
 
     <div class="cat-grid">
@@ -1024,8 +1024,8 @@
     <!-- Feature icons -->
     <div class="landing-features">
       <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery en 20-30 min</span></div>
-      <div class="feat"><span class="feat-icon">🌙</span><span class="feat-text">Abierto toda la noche</span></div>
-      <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · Gratis +$50.000</span></div>
+      <div class="feat"><span class="feat-icon">🕗</span><span class="feat-text">Horario 8 a 21hs</span></div>
+      <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 gratis con pedidos +$50.000</span></div>
       <div class="feat"><span class="feat-icon">📲</span><span class="feat-text">Pedido por WhatsApp</span></div>
     </div>
   </div>
@@ -1048,6 +1048,14 @@
         🛒 <span id="cartCountPromos" class="cart-count">0</span>
       </button>
     </div>
+    <div class="search-wrap" style="padding:12px 16px 4px">
+      <div class="search-bar-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
+        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
+      </div>
+      <div class="search-results" style="display:none"></div>
+    </div>
     <div class="item-grid" id="promo-grid"></div>
   </div>
 
@@ -1060,6 +1068,14 @@
       <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
         🛒 <span id="cartCountGondola" class="cart-count">0</span>
       </button>
+    </div>
+    <div class="search-wrap" style="padding:12px 16px 4px">
+      <div class="search-bar-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
+        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
+      </div>
+      <div class="search-results" style="display:none"></div>
     </div>
     <div class="gon-tabs" id="gondola-tabs"></div>
     <div class="gon-grid" id="gondola-grid"></div>
@@ -1074,6 +1090,14 @@
         🛒 <span id="cartCountGolosinas" class="cart-count">0</span>
       </button>
     </div>
+    <div class="search-wrap" style="padding:12px 16px 4px">
+      <div class="search-bar-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
+        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
+      </div>
+      <div class="search-results" style="display:none"></div>
+    </div>
     <div class="gon-tabs" id="golosinas-tabs"></div>
     <div class="gon-grid" id="golosinas-grid"></div>
   </div>
@@ -1085,6 +1109,14 @@
       <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
         🛒 <span id="cartCountBotellas" class="cart-count">0</span>
       </button>
+    </div>
+    <div class="search-wrap" style="padding:12px 16px 4px">
+      <div class="search-bar-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
+        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
+      </div>
+      <div class="search-results" style="display:none"></div>
     </div>
     <div class="item-grid" id="botellas-grid"></div>
   </div>
@@ -1990,18 +2022,31 @@ function addFromModal() {
 // ── CARRITO ───────────────────────────────────────────────────────────────
 
 const DELIVERY_COSTO = 5000;
-const DELIVERY_PROMO_COMPRAS = 10;   // primeras N compras
-const DELIVERY_PROMO_MINIMO  = 50000; // monto mínimo para free delivery
+const DELIVERY_MINIMO_CREDITOS = 50000; // monto para ganar envíos gratis
 
 function getDeliveryInfo() {
-  const compras  = parseInt(localStorage.getItem('k24_compras') || '0');
+  const credits  = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
   const items    = Object.values(cart);
   const subtotal = items.reduce((a, b) => a + b.qty * b.price, 0);
-  const gratis   = compras < DELIVERY_PROMO_COMPRAS && subtotal >= DELIVERY_PROMO_MINIMO;
-  return { costo: gratis ? 0 : DELIVERY_COSTO, gratis, compras, subtotal };
+  const gratis   = credits > 0;
+  return { costo: gratis ? 0 : DELIVERY_COSTO, gratis, credits, subtotal };
 }
 
 function recordarCompra() {
+  // Usar crédito de envío gratis si corresponde
+  const { gratis, subtotal } = getDeliveryInfo();
+  if (gratis) {
+    const credits = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
+    localStorage.setItem('k24_envios_gratis', Math.max(0, credits - 1));
+  }
+  // Ganar 10 créditos si el pedido supera $50.000
+  if (subtotal >= DELIVERY_MINIMO_CREDITOS) {
+    const credits = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
+    localStorage.setItem('k24_envios_gratis', credits + 10);
+    setTimeout(() => showToast('🎉 ¡Ganaste 10 envíos gratis por tu compra!'), 800);
+  }
+  // Marcar como verificado (completó al menos una compra)
+  localStorage.setItem('k24_verificado', '1');
   const c = parseInt(localStorage.getItem('k24_compras') || '0');
   localStorage.setItem('k24_compras', c + 1);
 }
@@ -2018,7 +2063,7 @@ function changeCartQty(key, delta) {
 function renderCart() {
   const items    = Object.values(cart);
   const totalQty = items.reduce((a, b) => a + b.qty, 0);
-  const { costo: envio, gratis, compras, subtotal } = getDeliveryInfo();
+  const { costo: envio, gratis, credits, subtotal } = getDeliveryInfo();
   const total = subtotal + envio;
 
   document.getElementById('cartCount').textContent = totalQty;
@@ -2042,16 +2087,19 @@ function renderCart() {
     }
   }
   if (noteEl) {
-    const restantes = DELIVERY_PROMO_COMPRAS - compras;
     if (gratis) {
-      noteEl.textContent = `🎉 ¡Envío gratis! Te quedan ${restantes} compra${restantes !== 1 ? 's' : ''} con este beneficio.`;
-    } else if (compras < DELIVERY_PROMO_COMPRAS && subtotal > 0 && subtotal < DELIVERY_PROMO_MINIMO) {
-      const falta = (DELIVERY_PROMO_MINIMO - subtotal).toLocaleString('es-AR');
-      noteEl.textContent = `🛵 Agregá $${falta} más y el envío es gratis (${restantes} usos restantes)`;
-    } else if (compras >= DELIVERY_PROMO_COMPRAS) {
-      noteEl.textContent = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')}`;
+      noteEl.innerHTML = `🎉 ¡Envío gratis! Te quedan <strong>${credits}</strong> crédito${credits !== 1 ? 's' : ''} · Horario 8 a 21hs`;
+      noteEl.style.color = '#00aa00';
+    } else if (subtotal > 0 && subtotal < DELIVERY_MINIMO_CREDITOS) {
+      const falta = (DELIVERY_MINIMO_CREDITOS - subtotal).toLocaleString('es-AR');
+      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Agregá $${falta} más y ganás <strong>10 envíos gratis</strong>`;
+      noteEl.style.color = '';
+    } else if (subtotal >= DELIVERY_MINIMO_CREDITOS) {
+      noteEl.innerHTML = `🎉 Con este pedido ganás <strong>10 envíos gratis</strong> · Horario 8 a 21hs`;
+      noteEl.style.color = '#00aa00';
     } else {
-      noteEl.textContent = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Gratis en tus primeras ${DELIVERY_PROMO_COMPRAS} compras de $${DELIVERY_PROMO_MINIMO.toLocaleString('es-AR')}+`;
+      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Con pedidos +$${DELIVERY_MINIMO_CREDITOS.toLocaleString('es-AR')} ganás 10 gratis · 🕗 8 a 21hs`;
+      noteEl.style.color = '';
     }
   }
 
@@ -2096,6 +2144,7 @@ function showToast(msg) {
 async function pagarMP() {
   const cartItems = Object.values(cart);
   if (!cartItems.length) return;
+  if (!checkDeliveryHours()) return;
 
   // Si no tiene perfil, pedirlo primero
   if (!userProfile) {
@@ -2157,6 +2206,7 @@ function cargarPerfil() {
 
 function abrirPerfil() {
   const o = document.getElementById('perfilOverlay');
+  const verificado = localStorage.getItem('k24_verificado') === '1';
   // Pre-cargar campos si ya hay datos
   if (userProfile) {
     document.getElementById('pNombre').value     = userProfile.nombre     || '';
@@ -2172,8 +2222,12 @@ function abrirPerfil() {
       btn.classList.add('ok');
     }
     document.getElementById('btnCancelarPerfil').style.display = 'block';
+    document.getElementById('perfilSubVerif').style.display = verificado ? '' : 'none';
   } else {
     document.getElementById('btnCancelarPerfil').style.display = 'none';
+    document.getElementById('perfilSubVerif').style.display = 'none';
+    // Primera vez: auto-geolocalizar para pre-llenar la dirección
+    setTimeout(obtenerUbicacion, 400);
   }
   o.classList.add('open');
 }
@@ -2223,7 +2277,30 @@ async function guardarPerfil() {
   }
 }
 
-function obtenerUbicacion() {
+async function reverseGeocode(lat, lng) {
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      { headers: { 'Accept-Language': 'es' } }
+    );
+    const data = await resp.json();
+    const a = data.address || {};
+    const calle  = a.road || a.pedestrian || a.suburb || '';
+    const numero = a.house_number || '';
+    return calle + (numero ? ' ' + numero : '');
+  } catch { return ''; }
+}
+
+function checkDeliveryHours() {
+  const hora = new Date().getHours();
+  if (hora < 8 || hora >= 21) {
+    showToast('⚠️ Estamos cerrados. Delivery de 8 a 21hs');
+    return false;
+  }
+  return true;
+}
+
+async function obtenerUbicacion() {
   const btn = document.getElementById('btnUbicacion');
   if (!navigator.geolocation) {
     showToast('❌ Tu navegador no soporta geolocalización');
@@ -2231,8 +2308,14 @@ function obtenerUbicacion() {
   }
   btn.textContent = '⏳ Obteniendo ubicación...';
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    async (pos) => {
       coordsCapturadas = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      btn.textContent = '⏳ Geocodificando dirección...';
+      const addr = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+      if (addr) {
+        const campo = document.getElementById('pDireccion');
+        if (!campo.value) campo.value = addr;
+      }
       btn.textContent = '✅ Ubicación capturada';
       btn.classList.add('ok');
     },
@@ -2947,6 +3030,7 @@ document.body.style.overflow = 'hidden';
 function pedirWSP() {
   const items = Object.values(cart);
   if (!items.length) return;
+  if (!checkDeliveryHours()) return;
 
   // Si no tiene perfil, pedirlo primero y guardar la acción pendiente
   if (!userProfile) {
@@ -3046,10 +3130,10 @@ function getAllSearchableProducts() {
   return results;
 }
 
-function onSearch(q) {
-  const input = document.getElementById('searchInput');
-  const clearBtn = document.getElementById('searchClear');
-  const resultsEl = document.getElementById('searchResults');
+function onSearch(q, inputEl) {
+  const wrap = inputEl.closest('.search-wrap');
+  const clearBtn = wrap.querySelector('.search-clear');
+  const resultsEl = wrap.querySelector('.search-results');
   clearBtn.style.display = q.length > 0 ? '' : 'none';
   if (!q.trim()) { resultsEl.style.display = 'none'; return; }
   const terms = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/\s+/).filter(Boolean);
@@ -3111,10 +3195,11 @@ function searchAdd(p) {
   }
 }
 
-function clearSearch() {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchClear').style.display = 'none';
-  document.getElementById('searchResults').style.display = 'none';
+function clearSearch(btn) {
+  const wrap = btn.closest('.search-wrap');
+  wrap.querySelector('.search-input').value = '';
+  wrap.querySelector('.search-clear').style.display = 'none';
+  wrap.querySelector('.search-results').style.display = 'none';
 }
 
 function openBrandModal(brand, defaultVid) {
@@ -3132,7 +3217,8 @@ function openBrandModal(brand, defaultVid) {
   <div class="perfil-modal">
     <button onclick="cerrarPerfil()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;" title="Cerrar">✕</button>
     <h2>📦 ¿A dónde te lo llevamos?</h2>
-    <p class="perfil-sub">Solo la primera vez. Quedará guardado para futuros pedidos.</p>
+    <p class="perfil-sub">Tu primera entrega va a tu ubicación actual. Luego podés cambiar la dirección.</p>
+    <p class="perfil-sub" id="perfilSubVerif" style="display:none;color:#7dff7d">✅ Ya verificado — podés usar cualquier domicilio.</p>
 
     <div class="perfil-field">
       <label>Nombre y apellido *</label>
