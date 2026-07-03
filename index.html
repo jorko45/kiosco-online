@@ -2914,6 +2914,24 @@ function pedirWSP() {
 
   const msg = `🛒 *Pedido K24*\n\n${lineas}\n\nSubtotal: $${subtotal.toLocaleString('es-AR')}\n${envioLinea}\n*Total: $${total.toLocaleString('es-AR')}*\n\n👤 ${userProfile.nombre}\n📱 ${userProfile.telefono}\n📍 ${dirCompleta}${refLinea}${mapaLinea}`;
   recordarCompra();
+
+  // Guardar pedido automáticamente en Google Sheet "Pedidos K24"
+  const productosStr = items.map(i => `${i.qty}x ${i.name} ${i.size} $${(i.price*i.qty).toLocaleString('es-AR')}`).join(' | ');
+  fetch('https://script.google.com/macros/s/AKfycbz48Hs8pcO-ewcmnxaHrS-eBrcVk-llMdaCxjNyCXOdP99SahO7X84w-97bs_JvuzOL/exec', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      action: 'guardar_pedido',
+      nombre: userProfile.nombre,
+      telefono: userProfile.telefono,
+      direccion: userProfile.direccion + (userProfile.piso ? `, ${userProfile.piso}` : ''),
+      barrio: userProfile.barrio || '',
+      productos: productosStr,
+      total: '$' + total.toLocaleString('es-AR'),
+      notas: userProfile.referencia || ''
+    })
+  }).catch(() => {});
+
   window.open(`https://wa.me/5493513260094?text=${encodeURIComponent(msg)}`, '_blank');
 }
 </script>
