@@ -3087,8 +3087,9 @@ function getAllSearchableProducts() {
     { key:'cervezas', items: catalog.cervezas || [] },
     { key:'energizantes', items: catalog.energizantes || [] },
     { key:'botellas', items: catalog.botellas || [] },
-    { key:'gondola',  items: (catalog.gondola  || []).flatMap(cat => cat.items || []) },
-    { key:'golosinas',items: (catalog.golosinas|| []).flatMap(cat => cat.items || []) },
+    { key:'promos',   items: catalog.promos    || [] },
+    { key:'gondola',  items: Object.values(catalogGondola).flat() },
+    { key:'golosinas',items: Object.values(catalogGolosinas).flat() },
   ];
   sections.forEach(({ key, items }) => {
     items.forEach(brand => {
