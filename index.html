@@ -39,6 +39,28 @@
     .section-title { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:5px; text-transform:uppercase; color:var(--muted); margin-bottom:16px; display:flex; align-items:center; gap:12px; }
     .section-title::after { content:''; flex:1; height:1px; background:#ddd; }
 
+    /* ── BUSCADOR ── */
+    .search-wrap { padding: 0 20px 20px; max-width: 640px; margin: 0 auto; }
+    .search-bar-box { display:flex; align-items:center; background:#1e1e2e; border:1.5px solid rgba(255,255,255,.15); border-radius:14px; padding:10px 16px; gap:10px; transition:border-color .2s; }
+    .search-bar-box:focus-within { border-color:var(--red); }
+    .search-icon { font-size:18px; flex-shrink:0; }
+    .search-input { flex:1; background:none; border:none; outline:none; color:#fff; font-family:'Inter',sans-serif; font-size:15px; }
+    .search-input::placeholder { color:rgba(255,255,255,.35); }
+    .search-clear { background:none; border:none; color:rgba(255,255,255,.4); font-size:18px; cursor:pointer; padding:0 4px; flex-shrink:0; }
+    .search-results { background:#1e1e2e; border:1px solid rgba(255,255,255,.1); border-radius:14px; margin-top:8px; overflow:hidden; max-height:420px; overflow-y:auto; }
+    .search-result-item { display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,.06); transition:background .15s; }
+    .search-result-item:last-child { border-bottom:none; }
+    .search-result-item:hover { background:rgba(255,255,255,.06); }
+    .search-result-thumb { width:44px; height:44px; border-radius:10px; object-fit:contain; background:#fff; flex-shrink:0; }
+    .search-result-thumb.color-thumb { display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; text-align:center; padding:3px; line-height:1.2; }
+    .search-result-info { flex:1; min-width:0; }
+    .search-result-name { color:#fff; font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .search-result-sub  { color:rgba(255,255,255,.45); font-size:12px; margin-top:2px; }
+    .search-result-price { color:#fff; font-weight:700; font-size:14px; flex-shrink:0; }
+    .search-result-add  { background:var(--red); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0; transition:background .15s; }
+    .search-result-add:hover { background:var(--red-dark); }
+    .search-no-results { padding:24px; text-align:center; color:rgba(255,255,255,.4); font-size:14px; }
+
     /* ── HELADERA ── */
     .fridge {
       background: #06101a;
@@ -710,6 +732,7 @@
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 20px;
       padding: 28px 24px 24px;
+      position: relative;
       width: 92%; max-width: 420px;
       box-shadow: 0 20px 60px rgba(0,0,0,.6);
       transform: translateY(20px);
@@ -897,6 +920,16 @@
       </div>
       <p class="landing-tagline">Tu kiosco en tu celular · Córdoba</p>
 
+    </div>
+
+    <!-- ── BUSCADOR ── -->
+    <div class="search-wrap">
+      <div class="search-bar-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Buscá un producto... (Coca Zero, Stella, Lay's...)" oninput="onSearch(this.value)" autocomplete="off"/>
+        <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+      </div>
+      <div class="search-results" id="searchResults" style="display:none"></div>
     </div>
 
     <div class="cat-grid">
@@ -1173,7 +1206,7 @@ const catalog = {
         {vid:3, size:'1L',         price:2970, img:'/img/productos/73e172d8_3080013_f.jpg'},
         {vid:4, size:'1.25L',      price:2840, img:'/img/productos/f2b31c9a_2b53f55e-5057-4548-90fa-cae1a589fe1.jpg'},
         {vid:5, size:'1.5L',       price:3790, img:'/img/productos/ddce8dc3_28f51ca7-d44b-4d25-b137-9077ecbc540.jpg'},
-        {vid:6, size:'2L',         price:3740, img:'/img/productos/2d7ced1a_3080077_f.jpg'},
+        {vid:6, size:'2L ret.',    price:3740, img:'/img/productos/2d7ced1a_3080077_f.jpg', tag:'retornable'},
         {vid:7, size:'2.25L',      price:5090, img:'/img/productos/eeec8d9e_coca-cola-225L-almacen-gaseosas-cas.jpg'},
         {vid:8, size:'2.5L',       price:4390, img:'/img/productos/5bd2140c_3080288_f.jpg'},
         {vid:9, size:'2.5L ret.',  price:4250, img:'/img/productos/5fcfb43e_3080167_f.jpg', tag:'retornable'},
@@ -1183,8 +1216,10 @@ const catalog = {
       variants:[
         {vid:1, size:'350ml lata', price:1560, img:'/img/productos/37b0f3e1_COCA-COLA-ZERO-LATA-354ML-700x700.w.webp'},
         {vid:2, size:'500ml',      price:1840, img:'/img/productos/17586a71_3080136_f.jpg'},
-        {vid:3, size:'1.5L',       price:3790, img:'/img/productos/a9d30ba5_gaseosa-diet-coca-cola-sin-azucar-1.jpg'},
-        {vid:4, size:'2.25L',      price:5670, img:'/img/productos/2837af97_D_NQ_NP_2X_829930-MLA110666791465_0.webp'},
+        {vid:3, size:'1L',         price:2970, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080212_f.jpg'},
+        {vid:4, size:'1.5L',       price:3790, img:'/img/productos/a9d30ba5_gaseosa-diet-coca-cola-sin-azucar-1.jpg'},
+        {vid:5, size:'2L ret.',    price:3560, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080138_f.jpg', tag:'retornable'},
+        {vid:6, size:'2.25L',      price:5670, img:'/img/productos/2837af97_D_NQ_NP_2X_829930-MLA110666791465_0.webp'},
       ]},
     { id:'sprite', name:'Sprite', color:'#00a651', textColor:'#fff',
       logo:'/img/logos/sprite-logo.jpg',
@@ -1192,7 +1227,7 @@ const catalog = {
         {vid:1, size:'350ml lata', price:1560, img:'/img/productos/561eb843_3080005_f.jpg'},
         {vid:2, size:'500ml',      price:1840, img:'/img/productos/c17030df_791799-800-auto.jpg'},
         {vid:3, size:'1.5L',       price:3790, img:'/img/productos/bcd9e8ea_Gaseosa-Sprite-1-5-Lt-1-42.jpg'},
-        {vid:4, size:'2L',         price:3740, img:'/img/productos/35076a6d_Gaseosa-Sprite-Retornable-2L-x1-sca.jpg'},
+        {vid:4, size:'2L ret.',    price:3740, img:'/img/productos/35076a6d_Gaseosa-Sprite-Retornable-2L-x1-sca.jpg', tag:'retornable'},
         {vid:5, size:'2.25L',      price:5090, img:'/img/productos/4631dea4_D_NQ_NP_2X_768434-MLA99395510832_11.webp'},
       ]},
     { id:'sprite-zero', name:'Sprite Zero', color:'#005a28', textColor:'#fff',
@@ -1235,9 +1270,19 @@ const catalog = {
     { id:'pepsi', name:'Pepsi', color:'#1040a0', textColor:'#fff',
       logo:'/img/logos/8516959a_500px-Pepsi_logo_2014.svg.png',
       variants:[
-        {vid:1, size:'500ml', price:1200, img:'/img/productos/ecd72e42_3080047_f.jpg'},
-        {vid:2, size:'1.5L',  price:2850, img:'/img/productos/7407187b_3080046_f.jpg'},
-        {vid:3, size:'2.25L', price:3500, img:'/img/productos/89e64e36_3080045_f.jpg'},
+        {vid:1, size:'354ml lata', price:1650, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080521_f.jpg'},
+        {vid:2, size:'500ml',      price:1750, img:'/img/productos/ecd72e42_3080047_f.jpg'},
+        {vid:3, size:'1.5L',       price:3800, img:'/img/productos/7407187b_3080046_f.jpg'},
+        {vid:4, size:'2L',         price:4050, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080561_f.jpg'},
+        {vid:5, size:'2.25L',      price:3500, img:'/img/productos/89e64e36_3080045_f.jpg'},
+      ]},
+    { id:'pepsi-black', name:'Pepsi Black', color:'#111111', textColor:'#fff',
+      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080432_f.jpg',
+      variants:[
+        {vid:1, size:'354ml lata', price:1650, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080432_f.jpg'},
+        {vid:2, size:'500ml',      price:1750, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080433_f.jpg'},
+        {vid:3, size:'1.5L',       price:3800, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080434_f.jpg'},
+        {vid:4, size:'2L',         price:3350, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080597_f.jpg'},
       ]},
     { id:'7up', name:'7UP', color:'#00a650', textColor:'#fff',
       logo:'/img/logos/7up-logo.jpg',
@@ -1258,6 +1303,20 @@ const catalog = {
         {vid:1, size:'Pomelo 500ml', price:1100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080182_f.jpg'},
         {vid:2, size:'Pomelo 2.25L', price:3300, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080058_f.jpg'},
         {vid:3, size:'Tónica 1.5L',  price:2600, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080062_f.jpg'},
+      ]},
+    { id:'doble-cola', name:'Doble Cola', color:'#8B0000', textColor:'#fff',
+      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080416_f.jpg',
+      variants:[
+        {vid:1, size:'500ml',       price:900,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080524_f.jpg'},
+        {vid:2, size:'2.25L',       price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080416_f.jpg'},
+        {vid:3, size:'2.25L s/az.', price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080558_f.jpg'},
+        {vid:4, size:'3L',          price:2100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080417_f.jpg'},
+      ]},
+    { id:'cunnington', name:'Cunnington', color:'#333333', textColor:'#fff',
+      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080587_f.jpg',
+      variants:[
+        {vid:1, size:'Cola 2.25L',      price:1880, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080587_f.jpg'},
+        {vid:2, size:'Lima Limón 2.25L', price:1880, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080589_f.jpg'},
       ]},
     { id:'crush', name:'Crush', color:'#e84500', textColor:'#fff',
       logo:'https://static.wikia.nocookie.net/logopedia/images/8/89/Crush_2017.png/revision/latest?cb=20210125210712&path-prefix=es',
@@ -2934,10 +2993,144 @@ function pedirWSP() {
 
   window.open(`https://wa.me/5493513260094?text=${encodeURIComponent(msg)}`, '_blank');
 }
+
+// ── BUSCADOR ──────────────────────────────────────────────────────────────
+function getAllSearchableProducts() {
+  const results = [];
+  const sections = [
+    { key:'gaseosas', items: catalog.gaseosas || [] },
+    { key:'aguas',    items: catalog.aguas    || [] },
+    { key:'cervezas', items: catalog.cervezas || [] },
+    { key:'energizantes', items: catalog.energizantes || [] },
+    { key:'botellas', items: catalog.botellas || [] },
+    { key:'gondola',  items: (catalog.gondola  || []).flatMap(cat => cat.items || []) },
+    { key:'golosinas',items: (catalog.golosinas|| []).flatMap(cat => cat.items || []) },
+  ];
+  sections.forEach(({ key, items }) => {
+    items.forEach(brand => {
+      if (brand.variants) {
+        // Heladera-style: brand con variants
+        brand.variants.forEach(v => {
+          results.push({
+            sectionKey: key,
+            id: brand.id,
+            brandName: brand.name,
+            size: v.size,
+            price: v.price,
+            img: v.img || brand.logo,
+            color: brand.color || '#333',
+            textColor: brand.textColor || '#fff',
+            logo: brand.logo,
+            vid: v.vid,
+            tag: v.tag,
+            isBrand: true,
+          });
+        });
+      } else {
+        // Góndola/Golosinas style: item simple
+        results.push({
+          sectionKey: key,
+          id: brand.id,
+          brandName: brand.name,
+          size: brand.qty || brand.desc || '',
+          price: brand.price,
+          img: brand.img || brand.logo,
+          color: '#333',
+          textColor: '#fff',
+          logo: brand.img,
+          isBrand: false,
+        });
+      }
+    });
+  });
+  return results;
+}
+
+function onSearch(q) {
+  const input = document.getElementById('searchInput');
+  const clearBtn = document.getElementById('searchClear');
+  const resultsEl = document.getElementById('searchResults');
+  clearBtn.style.display = q.length > 0 ? '' : 'none';
+  if (!q.trim()) { resultsEl.style.display = 'none'; return; }
+  const terms = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/\s+/).filter(Boolean);
+  const all = getAllSearchableProducts();
+  const matches = all.filter(p => {
+    const haystack = (p.brandName + ' ' + p.size).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    return terms.every(t => haystack.includes(t));
+  }).slice(0, 30);
+  if (!matches.length) {
+    resultsEl.innerHTML = `<div class="search-no-results">No encontramos "${q}" en el catálogo</div>`;
+    resultsEl.style.display = '';
+    return;
+  }
+  resultsEl.innerHTML = matches.map(p => {
+    const thumbHtml = p.img
+      ? `<img class="search-result-thumb" src="${p.img}" onerror="this.style.display='none'" loading="lazy">`
+      : `<div class="search-result-thumb color-thumb" style="background:${p.color};color:${p.textColor}">${p.brandName}</div>`;
+    const priceStr = p.price ? `$${p.price.toLocaleString('es-AR')}` : '';
+    const tag = p.tag ? ` <span style="font-size:10px;background:rgba(0,200,0,.2);color:#7dff7d;border-radius:6px;padding:1px 5px">${p.tag}</span>` : '';
+    return `<div class="search-result-item" onclick="searchItemClick(${JSON.stringify(p).replace(/"/g,'&quot;')})">
+      ${thumbHtml}
+      <div class="search-result-info">
+        <div class="search-result-name">${p.brandName}${tag}</div>
+        <div class="search-result-sub">${p.size || ''}</div>
+      </div>
+      <div class="search-result-price">${priceStr}</div>
+      <button class="search-result-add" onclick="event.stopPropagation();searchAdd(${JSON.stringify(p).replace(/"/g,'&quot;')})">+</button>
+    </div>`;
+  }).join('');
+  resultsEl.style.display = '';
+}
+
+function searchItemClick(p) {
+  if (p.isBrand) {
+    // Abre el modal de la marca (como si se clickeara en la heladera)
+    const sectionData = catalog[p.sectionKey];
+    if (sectionData) {
+      const brand = sectionData.find ? sectionData.find(b => b.id === p.id) :
+        sectionData.flatMap ? sectionData.flatMap(c => c.items || []).find(b => b.id === p.id) : null;
+      if (brand) { openBrandModal(brand, p.vid); return; }
+    }
+  }
+  searchAdd(p);
+}
+
+function searchAdd(p) {
+  if (p.isBrand && p.vid) {
+    const key = `${p.id}_${p.vid}`;
+    if (cart[key]) { cart[key].qty++; }
+    else { cart[key] = { name:p.brandName, size:p.size, price:p.price, color:p.color, textColor:p.textColor, img:p.img, qty:1 }; }
+    renderCart();
+    showToast(`✅ ${p.brandName} ${p.size} agregado`);
+  } else if (!p.isBrand) {
+    const key = `gondola_${p.id}`;
+    if (cart[key]) { cart[key].qty++; }
+    else { cart[key] = { name:p.brandName, size:p.size || '', price:p.price, color:p.color, textColor:p.textColor, img:p.img, qty:1 }; }
+    renderCart();
+    showToast(`✅ ${p.brandName} agregado`);
+  }
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  document.getElementById('searchResults').style.display = 'none';
+}
+
+function openBrandModal(brand, defaultVid) {
+  currentBrand    = brand;
+  currentShelfKey = null;
+  selectedVid     = defaultVid || brand.variants[0].vid;
+  modalQty        = 1;
+  renderModal();
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalOverlay').classList.add('open');
+}
 </script>
 <!-- PERFIL DE USUARIO -->
-<div class="perfil-overlay" id="perfilOverlay">
+<div class="perfil-overlay" id="perfilOverlay" onclick="if(event.target===this)cerrarPerfil()">
   <div class="perfil-modal">
+    <button onclick="cerrarPerfil()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;" title="Cerrar">✕</button>
     <h2>📦 ¿A dónde te lo llevamos?</h2>
     <p class="perfil-sub">Solo la primera vez. Quedará guardado para futuros pedidos.</p>
 
