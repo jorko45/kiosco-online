@@ -139,6 +139,11 @@
     .shelf-products::-webkit-scrollbar-track { background:rgba(255,255,255,.07); border-radius:4px; margin:0 4px; }
     .shelf-products::-webkit-scrollbar-thumb { background:rgba(140,200,255,.45); border-radius:4px; }
     .shelf-products::-webkit-scrollbar-thumb:hover { background:rgba(140,200,255,.72); }
+    .ssc-card { display:flex; flex-direction:column; align-items:center; cursor:pointer; background:rgba(255,255,255,.09); border-radius:10px; padding:9px 7px; min-width:100px; max-width:100px; gap:5px; flex-shrink:0; border:1px solid rgba(255,255,255,.15); transition:transform .18s,background .18s; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+    .ssc-card:hover { background:rgba(255,255,255,.18); transform:translateY(-3px); }
+    .ssc-card img { width:80px; height:80px; object-fit:contain; border-radius:6px; background:rgba(255,255,255,.08); display:block; }
+    .ssc-name { font-size:9px; color:#d8eeff; text-align:center; line-height:1.3; max-height:2.6em; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+    .ssc-price { font-size:12px; font-weight:700; color:#4dd0ff; }
     .ssc-card { display:flex; flex-direction:column; align-items:center; cursor:pointer; background:rgba(255,255,255,.07); border-radius:10px; padding:8px 6px; min-width:88px; max-width:88px; gap:5px; flex-shrink:0; border:1px solid rgba(255,255,255,.10); transition:transform .18s,background .18s; }
     .ssc-card:hover { background:rgba(255,255,255,.14); transform:translateY(-3px); }
     .ssc-card img { width:68px; height:68px; object-fit:contain; border-radius:6px; background:rgba(255,255,255,.05); }
@@ -1010,55 +1015,11 @@
           <span class="cat-arrow">→</span>
         </div>
 
-        <!-- CERVEZAS+ -->
-        <div class="cat-card" onclick="enterSection('cervezasext')" style="background:linear-gradient(135deg,#1a0a00,#5c2800);">
-          <div class="cat-deco">🍺</div>
-          <div class="cat-grad"></div>
-          <div class="cat-info">
-            <span class="cat-tag">Cervezas</span>
-            <div class="cat-name">Cervezas</div>
-            <div class="cat-sub">Lata · Botella · Sin Alcohol</div>
-          </div>
-          <span class="cat-arrow">→</span>
-        </div>
 
       </div>
 
       <!-- FILA 3 -->
       <div class="cat-row2">
-        <div class="cat-card" onclick="enterSection('vinos')" style="background:linear-gradient(135deg,#3d0015,#800030);">
-          <div class="cat-deco">🍷</div><div class="cat-grad"></div>
-          <div class="cat-info"><span class="cat-tag">Vinos</span><div class="cat-name">Vinos</div><div class="cat-sub">Tinto · Blanco · Rosado</div></div>
-          <span class="cat-arrow">→</span>
-        </div>
-        <div class="cat-card" onclick="enterSection('jugos')" style="background:linear-gradient(135deg,#1a3d00,#3a8000);">
-          <div class="cat-deco">🧃</div><div class="cat-grad"></div>
-          <div class="cat-info"><span class="cat-tag">Jugos</span><div class="cat-name">Jugos en Polvo</div><div class="cat-sub">Tang · Clight · Ades · más</div></div>
-          <span class="cat-arrow">→</span>
-        </div>
-      </div>
-
-      <!-- FILA 4 -->
-      <div class="cat-row2">
-        <div class="cat-card" onclick="enterSection('licores')" style="background:linear-gradient(135deg,#0a001a,#330066);">
-          <div class="cat-deco">🥃</div><div class="cat-grad"></div>
-          <div class="cat-info"><span class="cat-tag">Licores</span><div class="cat-name">Licores</div><div class="cat-sub">Blancas · Whisky · Aperitivos</div></div>
-          <span class="cat-arrow">→</span>
-        </div>
-        <div class="cat-card" onclick="enterSection('aguasext')" style="background:linear-gradient(135deg,#001a2a,#003a5c);">
-          <div class="cat-deco">🌊</div><div class="cat-grad"></div>
-          <div class="cat-info"><span class="cat-tag">Aguas</span><div class="cat-name">Aguas</div><div class="cat-sub">Sin Gas · Con Gas</div></div>
-          <span class="cat-arrow">→</span>
-        </div>
-      </div>
-
-      <!-- FILA 5 -->
-      <div class="cat-row2">
-        <div class="cat-card" onclick="enterSection('gaseosasext')" style="background:linear-gradient(135deg,#001a10,#004020);">
-          <div class="cat-deco">🥤</div><div class="cat-grad"></div>
-          <div class="cat-info"><span class="cat-tag">Gaseosas</span><div class="cat-name">Gaseosas</div><div class="cat-sub">Cola · Naranja · Limón · Pomelo</div></div>
-          <span class="cat-arrow">→</span>
-        </div>
         <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#0a0a0a,#2a2a2a);">
           <div class="cat-prox">Próximamente</div>
           <div class="cat-deco">🚬</div><div class="cat-grad"></div>
@@ -1149,129 +1110,13 @@
     <div class="gon-grid" id="golosinas-grid"></div>
   </div>
 
-  <!-- ── JUGOS ── -->
-  <div id="landing-jugos" class="section-view">
-    <div class="section-view-header">
-      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
-      <h2>🧃 Jugos en Polvo</h2>
-      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
-        🛒 <span id="cartCountJugos" class="cart-count">0</span>
-      </button>
-    </div>
-    <div class="search-wrap" style="padding:12px 16px 4px">
-      <div class="search-bar-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
-        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
-      </div>
-      <div class="search-results" style="display:none"></div>
-    </div>
-    <div class="gon-tabs" id="jugos-tabs"></div>
-    <div class="gon-grid" id="jugos-grid"></div>
-  </div>
+  <!-- jugos polvo: ahora en Góndola -->
   <!-- espumantes: ahora en la heladera -->
-  <!-- ── VINOS ── -->
-  <div id="landing-vinos" class="section-view">
-    <div class="section-view-header">
-      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
-      <h2>🍷 Vinos</h2>
-      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
-        🛒 <span id="cartCountVinos" class="cart-count">0</span>
-      </button>
-    </div>
-    <div class="search-wrap" style="padding:12px 16px 4px">
-      <div class="search-bar-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
-        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
-      </div>
-      <div class="search-results" style="display:none"></div>
-    </div>
-    <div class="gon-tabs" id="vinos-tabs"></div>
-    <div class="gon-grid" id="vinos-grid"></div>
-  </div>
-  <!-- ── LICORES & SPIRITS ── -->
-  <div id="landing-licores" class="section-view">
-    <div class="section-view-header">
-      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
-      <h2>🥃 Licores & Spirits</h2>
-      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
-        🛒 <span id="cartCountLicores" class="cart-count">0</span>
-      </button>
-    </div>
-    <div class="search-wrap" style="padding:12px 16px 4px">
-      <div class="search-bar-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
-        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
-      </div>
-      <div class="search-results" style="display:none"></div>
-    </div>
-    <div class="gon-tabs" id="licores-tabs"></div>
-    <div class="gon-grid" id="licores-grid"></div>
-  </div>
+  <!-- vinos: ahora en Botellas -->
+  <!-- licores: ahora en Botellas -->
   <!-- saborizadas: ahora en la heladera -->
   <!-- ── CERVEZAS ── -->
-  <div id="landing-cervezasext" class="section-view">
-    <div class="section-view-header">
-      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
-      <h2>🍺 Cervezas</h2>
-      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
-        🛒 <span id="cartCountCervezasExt" class="cart-count">0</span>
-      </button>
-    </div>
-    <div class="search-wrap" style="padding:12px 16px 4px">
-      <div class="search-bar-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
-        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
-      </div>
-      <div class="search-results" style="display:none"></div>
-    </div>
-    <div class="gon-tabs" id="cervezasext-tabs"></div>
-    <div class="gon-grid" id="cervezasext-grid"></div>
-  </div>
-  <!-- ── AGUAS ── -->
-  <div id="landing-aguasext" class="section-view">
-    <div class="section-view-header">
-      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
-      <h2>🌊 Aguas</h2>
-      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
-        🛒 <span id="cartCountAguasExt" class="cart-count">0</span>
-      </button>
-    </div>
-    <div class="search-wrap" style="padding:12px 16px 4px">
-      <div class="search-bar-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
-        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
-      </div>
-      <div class="search-results" style="display:none"></div>
-    </div>
-    <div class="gon-tabs" id="aguasext-tabs"></div>
-    <div class="gon-grid" id="aguasext-grid"></div>
-  </div>
-  <!-- ── GASEOSAS ── -->
-  <div id="landing-gaseosasext" class="section-view">
-    <div class="section-view-header">
-      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
-      <h2>🥤 Gaseosas</h2>
-      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
-        🛒 <span id="cartCountGaseosasExt" class="cart-count">0</span>
-      </button>
-    </div>
-    <div class="search-wrap" style="padding:12px 16px 4px">
-      <div class="search-bar-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
-        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
-      </div>
-      <div class="search-results" style="display:none"></div>
-    </div>
-    <div class="gon-tabs" id="gaseosasext-tabs"></div>
-    <div class="gon-grid" id="gaseosasext-grid"></div>
-  </div>
-
+  <!-- cervezas/aguas/gaseosas extra: ahora en la heladera -->
   <!-- ── BOTELLAS ── -->
   <div id="landing-botellas" class="section-view">
     <div class="section-view-header">
@@ -1290,6 +1135,12 @@
       <div class="search-results" style="display:none"></div>
     </div>
     <div class="item-grid" id="botellas-grid"></div>
+    <div class="item-section-label" style="margin:20px 16px 8px;font-size:14px">🍷 Vinos</div>
+    <div class="gon-tabs" id="vinos-tabs"></div>
+    <div class="gon-grid" id="vinos-grid"></div>
+    <div class="item-section-label" style="margin:20px 16px 8px;font-size:14px">🥃 Licores &amp; Spirits</div>
+    <div class="gon-tabs" id="licores-tabs"></div>
+    <div class="gon-grid" id="licores-grid"></div>
   </div>
 
 </div>
@@ -1338,6 +1189,9 @@
     <div class="shelf"><div class="shelf-label">Jugos &amp; Néctares</div><div class="shelf-products" id="shelf-jugos-frio"></div></div>
     <div class="shelf"><div class="shelf-label">Aguas Saborizadas</div><div class="shelf-products" id="shelf-saborizadas-frio"></div></div>
     <div class="shelf"><div class="shelf-label">Espumantes &amp; Champagne</div><div class="shelf-products" id="shelf-espumantes-frio"></div></div>
+    <div class="shelf"><div class="shelf-label">Más Cervezas</div><div class="shelf-products" id="shelf-cervezas-extra"></div></div>
+    <div class="shelf"><div class="shelf-label">Más Aguas</div><div class="shelf-products" id="shelf-aguas-extra"></div></div>
+    <div class="shelf"><div class="shelf-label">Más Gaseosas</div><div class="shelf-products" id="shelf-gaseosas-extra"></div></div>
   </div>
 </main>
 
@@ -2082,6 +1936,12 @@ renderSimpleShelf(
 );
 renderSimpleShelf(Object.values(catalogSaborizadas).flat(), document.getElementById('shelf-saborizadas-frio'));
 renderSimpleShelf(Object.values(catalogEspumantes).flat(), document.getElementById('shelf-espumantes-frio'));
+var _cervBrands=['quilmes','stella','heineken','corona','andes','imperial','brahma','patagonia','budweiser','amstel','schneider'];
+renderSimpleShelf(Object.values(catalogCervezas).flat().filter(function(i){var n=i.name.toLowerCase();return !_cervBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-cervezas-extra'));
+var _aguaBrands=['bon aqua','bonaqua','cepita','villavicencio','cunnington'];
+renderSimpleShelf(Object.values(catalogAguasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_aguaBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-aguas-extra'));
+var _gasBrands=['coca-cola','coca cola','pepsi','sprite','fanta','schweppes','7up','mirinda','paso de los toros','cunnington','manaos','doble cola','pritty'];
+renderSimpleShelf(Object.values(catalogGaseosasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_gasBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-gaseosas-extra'));
 
 // ── SELECCIÓN DE MARCA EN HELADERA ────────────────────────────────────────
 
@@ -2602,6 +2462,7 @@ function enterSection(section) {
     showTicker(false);
     document.getElementById('landing-botellas').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
+    renderVinos(); renderLicores();
   } else if (section === 'gondola') {
     document.getElementById('landing-picker').style.display = 'none';
     hideSectionViews();
@@ -4534,7 +4395,8 @@ let _gondolaRendered = false;
 function renderGondola() {
   if (_gondolaRendered) return;
   _gondolaRendered = true;
-  renderTabSection(catalogGondola,
+  var gondolaConPolvo = Object.assign({}, catalogGondola, {polvo: catalogJugos.polvo});
+  renderTabSection(gondolaConPolvo,
     document.getElementById('gondola-tabs'),
     document.getElementById('gondola-grid'));
 }
@@ -4666,17 +4528,16 @@ function getAllSearchableProducts() {
     { key:'botellas', items: catalog.botellas || [] },
     { key:'promos',   items: catalog.promos    || [] },
     { key:'pritty',   items: catalog.pritty    || [] },
-    { key:'gondola',  items: Object.values(catalogGondola).flat() },
-    { key:'golosinas',items: Object.values(catalogGolosinas).flat() },
-    { key:'jugos',       items: catalogJugos.polvo },
-    { key:'heladeras',   items: [...catalogJugos.naturales, ...catalogJugos.concentrados] },
-    { key:'heladeras',   items: Object.values(catalogEspumantes).flat() },
-    { key:'vinos',       items: Object.values(catalogVinos).flat() },
-    { key:'licores',     items: Object.values(catalogLicores).flat() },
-    { key:'heladeras',   items: Object.values(catalogSaborizadas).flat() },
-    { key:'cervezasext', items: Object.values(catalogCervezas).flat() },
-    { key:'aguasext',    items: Object.values(catalogAguasExtra).flat() },
-    { key:'gaseosasext', items: Object.values(catalogGaseosasExtra).flat() },
+    { key:'gondola',   items: [...Object.values(catalogGondola).flat(), ...catalogJugos.polvo] },
+    { key:'golosinas', items: Object.values(catalogGolosinas).flat() },
+    { key:'heladeras', items: [...catalogJugos.naturales, ...catalogJugos.concentrados] },
+    { key:'heladeras', items: Object.values(catalogEspumantes).flat() },
+    { key:'heladeras', items: Object.values(catalogSaborizadas).flat() },
+    { key:'heladeras', items: Object.values(catalogCervezas).flat() },
+    { key:'heladeras', items: Object.values(catalogAguasExtra).flat() },
+    { key:'heladeras', items: Object.values(catalogGaseosasExtra).flat() },
+    { key:'botellas',  items: Object.values(catalogVinos).flat() },
+    { key:'botellas',  items: Object.values(catalogLicores).flat() },
   ];
   sections.forEach(({ key, items }) => {
     items.forEach(brand => {
