@@ -1186,7 +1186,8 @@
     <div class="shelf"><div class="shelf-label">Cervezas</div><div class="shelf-products" id="shelf-cervezas"></div><div class="variant-panel" id="panel-cervezas"></div></div>
     <div class="shelf"><div class="shelf-label">Energizantes &amp; Isotónicos</div><div class="shelf-products" id="shelf-energizantes"></div><div class="variant-panel" id="panel-energizantes"></div></div>
     <div class="shelf"><div class="shelf-label">Pritty &amp; Económicas</div><div class="shelf-products" id="shelf-pritty"></div><div class="variant-panel" id="panel-pritty"></div></div>
-    <div class="shelf"><div class="shelf-label">Jugos &amp; Néctares</div><div class="shelf-products" id="shelf-jugos-frio"></div></div>
+    <div class="shelf"><div class="shelf-label">Jugos por Marca</div><div class="shelf-products" id="shelf-jugosm"></div><div class="variant-panel" id="panel-jugosm"></div></div>
+    <div class="shelf"><div class="shelf-label">Otros Jugos</div><div class="shelf-products" id="shelf-jugos-frio"></div></div>
     <div class="shelf"><div class="shelf-label">Aguas Saborizadas</div><div class="shelf-products" id="shelf-saborizadas-frio"></div></div>
     <div class="shelf"><div class="shelf-label">Espumantes &amp; Champagne</div><div class="shelf-products" id="shelf-espumantes-frio"></div></div>
     <div class="shelf"><div class="shelf-label">Más Cervezas</div><div class="shelf-products" id="shelf-cervezas-extra"></div></div>
@@ -1377,9 +1378,9 @@ const catalog = {
         {vid:3, size:'Lima Limón 2.25L', price:2590, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080209_f.jpg'},
       ]},
       { id:'rumipal-2', name:'Rumipal', color:'#003388', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080572_f.jpg',
+      logo:'/img/logos/rumipal.png',
       variants:[
-        {vid:1, size:'Lima Limon 2.25L',  price:1115, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080572_f.jpg'},
+        {vid:1, size:'Lima Limon 2.25L',  price:1115, img:'/img/logos/rumipal.png'},
         {vid:2, size:'Naranja 2.25L',      price:1115, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080573_f.jpg'},
         {vid:3, size:'Lima Limon 1.5L',    price:900,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080209_f.jpg'},
       ]},
@@ -1422,7 +1423,7 @@ const catalog = {
         {vid:2, size:'Sin gas 2L',    price:1550, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040055_f.jpg'},
       ]},
     { id:'aquarius', name:'Aquarius', color:'#cc4400', textColor:'#fff',
-      logo:'https://images.seeklogo.com/logo-png/1/1/aquarius-logo-png_seeklogo-10076.png',
+      logo:'/img/logos/aquarius.png',
       variants:[
         {vid:1, size:'Pera 500ml',    price:1548, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040219_f.jpg'},
         {vid:2, size:'Pomelo 500ml',  price:1548, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040218_f.jpg'},
@@ -1438,7 +1439,7 @@ const catalog = {
         {vid:4, size:'Manzana 1.5L',     price:1665, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040841_f.jpg'},
       ]},
     { id:'livra', name:'Livra', color:'#006699', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040735_f.jpg',
+      logo:'/img/logos/livra.png',
       variants:[
         {vid:1,  size:'Naranja 1.5L',       price:1700, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040735_f.jpg'},
         {vid:2,  size:'Pomelo 1.5L',         price:1700, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040736_f.jpg'},
@@ -1452,7 +1453,7 @@ const catalog = {
         {vid:10, size:'Manzana 500ml',        price:1350, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040744_f.jpg'},
       ]},
     { id:'brio', name:'Brio', color:'#338822', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040877_f.jpg',
+      logo:'/img/logos/brio.png',
       variants:[
         {vid:1, size:'Multifruta 1.5L', price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040877_f.jpg'},
         {vid:2, size:'Naranja 1.5L',    price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040794_f.jpg'},
@@ -1460,7 +1461,7 @@ const catalog = {
         {vid:4, size:'Manzana 1.5L',    price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040796_f.jpg'},
       ]},
     { id:'cellier', name:'Cellier', color:'#552288', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040884_f.jpg',
+      logo:'/img/logos/cellier.png',
       variants:[
         {vid:1, size:'Pera 1.5L',    price:1470, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040884_f.jpg'},
         {vid:2, size:'Naranja 1.5L', price:1470, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040850_f.jpg'},
@@ -1469,13 +1470,49 @@ const catalog = {
         {vid:5, size:'Pomelo 1.5L',  price:1470, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040856_f.jpg'},
       ]},
     { id:'fresh-sab', name:'Fresh', color:'#228800', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040400_f.jpg',
+      logo:'/img/logos/fresh.png',
       variants:[
         {vid:1, size:'Pomelo 1.5L',  price:1480, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040400_f.jpg'},
         {vid:2, size:'Manzana 1.5L', price:1480, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040401_f.jpg'},
       ]},
+    { id:'aquarius', name:'Aquarius', color:'#2db04b', textColor:'#fff',
+      logo:'/img/logos/aquarius.png',
+      variants:[
+        {vid:1,  size:'Manzana 500ml',          price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040217_f.jpg'},
+        {vid:2,  size:'Manzana 1.5L',            price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040220_f.jpg'},
+        {vid:3,  size:'Manzana 2.25L',           price:4100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040664_f.jpg'},
+        {vid:4,  size:'Naranja 500ml',           price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040253_f.jpg'},
+        {vid:5,  size:'Naranja 1.5L',            price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040251_f.jpg'},
+        {vid:6,  size:'Naranja 2.25L',           price:4100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040565_f.jpg'},
+        {vid:7,  size:'Uva 500ml',               price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040254_f.jpg'},
+        {vid:8,  size:'Uva 1.5L',                price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040252_f.jpg'},
+        {vid:9,  size:'Uva 2.25L',               price:4100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040880_f.jpg'},
+        {vid:10, size:'Pomelo 500ml',            price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040218_f.jpg'},
+        {vid:11, size:'Pomelo 1.5L',             price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040221_f.jpg'},
+        {vid:12, size:'Pomelo 2.25L',            price:4100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040564_f.jpg'},
+        {vid:13, size:'Pera 500ml',              price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040219_f.jpg'},
+        {vid:14, size:'Pera 1.5L',               price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040222_f.jpg'},
+        {vid:15, size:'Pera 2.25L',              price:4100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040563_f.jpg'},
+        {vid:16, size:'Cepita Limonada 500ml',   price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051580_f.jpg'},
+        {vid:17, size:'Cepita Limonada 1.5L',    price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051581_f.jpg'},
+      ]},
+    { id:'ades', name:'AdeS', color:'#3d9a3e', textColor:'#fff',
+      logo:'/img/logos/ades.png',
+      variants:[
+        {vid:1,  size:'Natural 1L',          price:3160, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051595_f.jpg'},
+        {vid:2,  size:'Multi Manzana 1L',    price:2970, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051596_f.jpg'},
+        {vid:3,  size:'Multi Naranja 1L',    price:2970, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051597_f.jpg'},
+        {vid:4,  size:'Multi Anana 1L',      price:2970, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051598_f.jpg'},
+        {vid:5,  size:'Multi Durazno 1L',    price:2970, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051599_f.jpg'},
+        {vid:6,  size:'Multi Tropical 1L',   price:2970, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051600_f.jpg'},
+        {vid:7,  size:'Multi Manzana 200ml', price:1100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051602_f.jpg'},
+        {vid:8,  size:'Multi Naranja 200ml', price:1100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051601_f.jpg'},
+        {vid:9,  size:'Multi Anana 200ml',   price:1100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051604_f.jpg'},
+        {vid:10, size:'Multi Durazno 200ml', price:1100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051605_f.jpg'},
+        {vid:11, size:'Multi Tropical 200ml',price:1100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051603_f.jpg'},
+      ]},
     { id:'levite', name:'Levite', color:'#338800', textColor:'#fff',
-      logo:'https://images.seeklogo.com/logo-png/8/1/levite-logo-png_seeklogo-83609.png',
+      logo:'/img/logos/levite.png',
       variants:[
         {vid:1, size:'Pomelo 1.5L',       price:2150, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040224_f.jpg'},
         {vid:2, size:'Manzana 1.5L',      price:2600, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040382_f.jpg'},
@@ -1866,9 +1903,9 @@ const catalog = {
         {vid:2, size:'2.25L',  price:1700, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080455_f.jpg'},
       ]},
     { id:'rumipal', name:'Rumipal', color:'#003388', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080572_f.jpg',
+      logo:'/img/logos/rumipal.png',
       variants:[
-        {vid:1, size:'Lima Limón 2.25L', price:1115, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080572_f.jpg'},
+        {vid:1, size:'Lima Limón 2.25L', price:1115, img:'/img/logos/rumipal.png'},
         {vid:2, size:'Naranja 2.25L',    price:1115, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080569_f.jpg'},
         {vid:3, size:'Limón 2.25L',      price:1115, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080571_f.jpg'},
         {vid:4, size:'Tónica 1.5L',      price:1070, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080573_f.jpg'},
@@ -1886,6 +1923,66 @@ const catalog = {
         {vid:8,  size:'Pomelo Suave 2.25L', price:2050, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080594_f.jpg'},
         {vid:9,  size:'Ginger Ale 1.5L',    price:1500, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080593_f.jpg'},
         {vid:10, size:'Tónica 1.5L',        price:1450, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080552_f.jpg'},
+      ]},
+  ],
+  jugosm: [
+    { id:'arcor', name:'Arcor', color:'#2456a4', textColor:'#fff',
+      logo:'/img/logos/arcor.png',
+      variants:[
+        {vid:1, size:'Naranja 200ml',    price:199,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051816_f.jpg'},
+        {vid:2, size:'Manzana 200ml',    price:199,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051817_f.jpg'},
+        {vid:3, size:'Multifruta 200ml', price:199,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051815_f.jpg'},
+        {vid:4, size:'Naranja 1L',       price:2090, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3052073_f.jpg'},
+        {vid:5, size:'Manzana 1L',       price:2090, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3052074_f.jpg'},
+        {vid:6, size:'Multifruta 1L',    price:2090, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3052075_f.jpg'},
+      ]},
+    { id:'citric', name:'Citric', color:'#e87722', textColor:'#fff',
+      logo:'/img/logos/citric.png',
+      variants:[
+        {vid:1,  size:'Naranja 250ml',         price:1730, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3261652_f.jpg'},
+        {vid:2,  size:'Naranja 500ml',         price:3100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3260887_f.jpg'},
+        {vid:3,  size:'Naranja 750ml',         price:4060, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263669_f.jpg'},
+        {vid:4,  size:'Naranja Clasica 1L',    price:5420, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263551_f.jpg'},
+        {vid:5,  size:'Naranja Clasica 1.5L',  price:7700, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263552_f.jpg'},
+        {vid:6,  size:'Manzana 500ml',         price:3100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263668_f.jpg'},
+        {vid:7,  size:'Manzana 1L',            price:5865, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263675_f.jpg'},
+        {vid:8,  size:'Pomelo 500ml',          price:3100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263666_f.jpg'},
+        {vid:9,  size:'Pomelo 1L',             price:5950, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263670_f.jpg'},
+        {vid:10, size:'Naranja Frutilla 500ml', price:3100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263667_f.jpg'},
+        {vid:11, size:'Naranja Durazno 500ml', price:3100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263664_f.jpg'},
+        {vid:12, size:'Naranja Mango 500ml',   price:3100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3263665_f.jpg'},
+        {vid:13, size:'Limon 500ml',           price:2430, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3260893_f.jpg'},
+      ]},
+    { id:'bc', name:'BC', color:'#1a6b1a', textColor:'#fff',
+      logo:'/img/logos/bc.png',
+      variants:[
+        {vid:1, size:'Naranja 200ml',    price:780,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051552_f.jpg'},
+        {vid:2, size:'Manzana 200ml',    price:780,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051553_f.jpg'},
+        {vid:3, size:'Multifruta 200ml', price:780,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051549_f.jpg'},
+        {vid:4, size:'Naranja 1L',       price:2520, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051534_f.jpg'},
+        {vid:5, size:'Multifruta 1L',    price:2520, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051533_f.jpg'},
+      ]},
+    { id:'saldan', name:'Saldan', color:'#7ab621', textColor:'#fff',
+      logo:'/img/logos/saldan.jpg',
+      variants:[
+        {vid:1, size:'Naranja 1.5L',  price:1999, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051713_f.jpg'},
+        {vid:2, size:'Pomelo 1.5L',   price:2200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051714_f.jpg'},
+        {vid:3, size:'Limon 1.5L',    price:2200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051712_f.jpg'},
+        {vid:4, size:'Soda 1.5L',     price:1550, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040690_f.jpg'},
+        {vid:5, size:'Soda 2.25L',    price:1700, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040689_f.jpg'},
+      ]},
+    { id:'minerva', name:'Minerva', color:'#3a8a3a', textColor:'#fff',
+      logo:'/img/logos/minerva.png',
+      variants:[
+        {vid:1, size:'Limon 250ml', price:1550, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050602_f.jpg'},
+        {vid:2, size:'Limon 500ml', price:3040, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050042_f.jpg'},
+        {vid:3, size:'Limon 1L',    price:5700, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050041_f.jpg'},
+      ]},
+    { id:'favinco', name:'Favinco', color:'#1a1a1a', textColor:'#fff',
+      logo:'/img/logos/favinco.png',
+      variants:[
+        {vid:1, size:'Limon 500ml', price:1860, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051969_f.jpg'},
+        {vid:2, size:'Limon 1L',    price:2650, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051970_f.jpg'},
       ]},
   ],
 };
@@ -1943,6 +2040,7 @@ const shelfMap = {
   'shelf-cervezas':    catalog.cervezas,
   'shelf-energizantes':catalog.energizantes,
   'shelf-pritty':      catalog.pritty,
+  'shelf-jugosm':      catalog.jugosm,
 };
 
 Object.entries(shelfMap).forEach(([shelfId, brands]) => {
@@ -4251,7 +4349,7 @@ const catalogGaseosasExtra = {
     {id:'3080112', name:'Gaseosa Sprite Zero Lata x 354 cc', qty:0, price:1560, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080112_f.jpg'},
     {id:'3080116', name:'Gaseosa Seven up Free Botella x 500 cc', qty:0, price:1200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080116_f.jpg'},
     {id:'3080209', name:'Gaseosa Crush Lima Limon Botella x 2.250 cc', qty:0, price:2880, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080209_f.jpg'},
-    {id:'3080572', name:'Gaseosa Rumipal Lima Limon Botella x 2.250 cc', qty:0, price:1240, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080572_f.jpg'},
+    {id:'3080572', name:'Gaseosa Rumipal Lima Limon Botella x 2.250 cc', qty:0, price:1240, img:'/img/logos/rumipal.png'},
     {id:'3080117', name:'Gaseosa Seven up Free Lata x 354 cc', qty:0, price:1150, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080117_f.jpg'},
     {id:'3080021', name:'Gaseosa Sprite Botella x 1.500 cc', qty:0, price:3790, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080021_f.jpg'},
     {id:'3080481', name:'Gaseosa Doble Cola Lima Limon Botella x 3000cc', qty:0, price:2190, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3080481_f.jpg'},
@@ -4331,13 +4429,23 @@ const catalogGaseosasExtra = {
 // ── RENDER ESTANTES SIMPLES (después de definir catálogos) ──
 renderSimpleShelf(
   [...catalogJugos.naturales, ...catalogJugos.concentrados]
-    .filter(function(i){ return i.name.toLowerCase().indexOf('cepita') === -1; }),
+    .filter(function(i){
+      var n = i.name.toLowerCase();
+      return n.indexOf('cepita') === -1
+          && n.indexOf('arcor') === -1
+          && n.indexOf('citric') === -1
+          && (n.indexOf(' bc ') === -1 && n.indexOf('jugo bc') === -1)
+          && n.indexOf('saldan') === -1
+          && n.indexOf('minerva') === -1
+          && n.indexOf('favinco') === -1
+          && n.indexOf('ades') === -1;
+    }),
   document.getElementById('shelf-jugos-frio')
 );
 renderSimpleShelf(
   Object.values(catalogSaborizadas).flat().filter(function(i){
     var n=i.name.toLowerCase();
-    return ['livra','brio','cellier','fresh','baggio'].every(function(b){return n.indexOf(b)===-1;});
+    return ['livra','brio','cellier','fresh','baggio','aquarius','ades'].every(function(b){return n.indexOf(b)===-1;});
   }),
   document.getElementById('shelf-saborizadas-frio'));
 renderSimpleShelf(Object.values(catalogEspumantes).flat(), document.getElementById('shelf-espumantes-frio'));
