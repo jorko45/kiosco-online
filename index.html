@@ -1187,12 +1187,6 @@
     <div class="shelf"><div class="shelf-label">Energizantes &amp; Isotónicos</div><div class="shelf-products" id="shelf-energizantes"></div><div class="variant-panel" id="panel-energizantes"></div></div>
     <div class="shelf"><div class="shelf-label">Pritty &amp; Económicas</div><div class="shelf-products" id="shelf-pritty"></div><div class="variant-panel" id="panel-pritty"></div></div>
     <div class="shelf"><div class="shelf-label">Jugos por Marca</div><div class="shelf-products" id="shelf-jugosm"></div><div class="variant-panel" id="panel-jugosm"></div></div>
-    <div class="shelf"><div class="shelf-label">Otros Jugos</div><div class="shelf-products" id="shelf-jugos-frio"></div></div>
-    <div class="shelf"><div class="shelf-label">Aguas Saborizadas</div><div class="shelf-products" id="shelf-saborizadas-frio"></div></div>
-    <div class="shelf"><div class="shelf-label">Espumantes &amp; Champagne</div><div class="shelf-products" id="shelf-espumantes-frio"></div></div>
-    <div class="shelf"><div class="shelf-label">Más Cervezas</div><div class="shelf-products" id="shelf-cervezas-extra"></div></div>
-    <div class="shelf"><div class="shelf-label">Más Aguas</div><div class="shelf-products" id="shelf-aguas-extra"></div></div>
-    <div class="shelf"><div class="shelf-label">Más Gaseosas</div><div class="shelf-products" id="shelf-gaseosas-extra"></div></div>
   </div>
 </main>
 
@@ -1923,7 +1917,7 @@ const catalog = {
   ],
   jugosm: [
     { id:'arcor', name:'Arcor', color:'#2456a4', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051816_f.jpg',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPgogIDxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwMDMwODcnIHJ4PSc4Jy8+CiAgPHRleHQgeD0nNjAnIHk9JzUxJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMzAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGxldHRlci1zcGFjaW5nPSctMSc+YXJjb3I8L3RleHQ+Cjwvc3ZnPg==',
       variants:[
         {vid:1, size:'Naranja 200ml',    price:199,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051816_f.jpg'},
         {vid:2, size:'Manzana 200ml',    price:199,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051817_f.jpg'},
@@ -4431,35 +4425,7 @@ const catalogGaseosasExtra = {
 
 // Total: 1222 products across 30 categories
 
-// ── RENDER ESTANTES SIMPLES (después de definir catálogos) ──
-renderSimpleShelf(
-  [...catalogJugos.naturales, ...catalogJugos.concentrados]
-    .filter(function(i){
-      var n = i.name.toLowerCase();
-      return n.indexOf('cepita') === -1
-          && n.indexOf('arcor') === -1
-          && n.indexOf('citric') === -1
-          && (n.indexOf(' bc ') === -1 && n.indexOf('jugo bc') === -1)
-          && n.indexOf('saldan') === -1
-          && n.indexOf('minerva') === -1
-          && n.indexOf('favinco') === -1
-          && n.indexOf('ades') === -1;
-    }),
-  document.getElementById('shelf-jugos-frio')
-);
-renderSimpleShelf(
-  Object.values(catalogSaborizadas).flat().filter(function(i){
-    var n=i.name.toLowerCase();
-    return ['livra','brio','cellier','fresh','baggio','aquarius','aquaruis','ades','h2oh','levite','rumipal'].every(function(b){return n.indexOf(b)===-1;});
-  }),
-  document.getElementById('shelf-saborizadas-frio'));
-renderSimpleShelf(Object.values(catalogEspumantes).flat(), document.getElementById('shelf-espumantes-frio'));
-var _cervBrands=['quilmes','stella','heineken','corona','andes','imperial','brahma','patagonia','budweiser','amstel','schneider'];
-renderSimpleShelf(Object.values(catalogCervezas).flat().filter(function(i){var n=i.name.toLowerCase();return !_cervBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-cervezas-extra'));
-var _aguaBrands=['bon aqua','bonaqua','cepita','villavicencio','cunnington'];
-renderSimpleShelf(Object.values(catalogAguasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_aguaBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-aguas-extra'));
-var _gasBrands=['coca-cola','coca cola','pepsi','sprite','fanta','schweppes','7up','mirinda','paso de los toros','cunnington','manaos','doble cola','pritty'];
-renderSimpleShelf(Object.values(catalogGaseosasExtra).flat().filter(function(i){var n=i.name.toLowerCase();return !_gasBrands.some(function(b){return n.indexOf(b)!==-1;});}),document.getElementById('shelf-gaseosas-extra'));
+// Estantes simples removidos — la heladera muestra solo brand cards
 
 
 
