@@ -459,6 +459,27 @@
       gap: 14px;
       padding: 20px 20px 10px;
     }
+    /* ── BOTELLAS: cards de tamaño variable ── */
+    .btl-wrap { display:flex; flex-wrap:wrap; gap:10px; padding:14px 20px 6px; align-items:flex-end; }
+    .btl-card {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      border-radius:14px; cursor:pointer; overflow:hidden; flex-shrink:0; position:relative;
+      border:1px solid rgba(255,255,255,.1);
+      transition:all .2s cubic-bezier(.34,1.4,.64,1);
+    }
+    .btl-card:hover { transform:translateY(-5px) scale(1.04); border-color:rgba(255,180,0,.5); box-shadow:0 12px 30px rgba(0,0,0,.5); }
+    .btl-sm { width:78px;  height:78px; }
+    .btl-md { width:102px; height:124px; }
+    .btl-lg { width:134px; height:162px; }
+    .btl-sm .btl-img  { width:100%; height:100%;   padding:8px; }
+    .btl-md .btl-img  { width:100%; height:72%;    padding:8px; }
+    .btl-lg .btl-img  { width:100%; height:70%;    padding:10px; }
+    .btl-img { object-fit:contain; display:block; box-sizing:border-box; }
+    .btl-name { font-family:'Rajdhani',sans-serif; font-weight:800; text-align:center;
+                padding:2px 5px; line-height:1.1; width:100%; box-sizing:border-box; }
+    .btl-md .btl-name { font-size:11px; }
+    .btl-lg .btl-name { font-size:13px; }
+    .btl-price { font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; color:var(--red); }
     .item-card {
       background: rgba(255,255,255,.04);
       border: 1px solid rgba(255,255,255,.09);
@@ -1134,7 +1155,7 @@
       </div>
       <div class="search-results" style="display:none"></div>
     </div>
-    <div class="item-grid" id="botellas-grid"></div>
+    <div class="btl-wrap" id="botellas-grid"></div>
     <div class="item-section-label" style="margin:20px 16px 8px;font-size:14px">🍷 Vinos</div>
     <div class="gon-tabs" id="vinos-tabs"></div>
     <div class="gon-grid" id="vinos-grid"></div>
@@ -1417,7 +1438,7 @@ const catalog = {
         {vid:2, size:'Sin gas 2L',    price:1550, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040055_f.jpg'},
       ]},
     { id:'aquarius', name:'Aquarius', color:'#cc4400', textColor:'#fff',
-      logo:'/img/logos/aquarius.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNjYzQ0MDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTcnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkFxdWFyaXVzPC90ZXh0Pjwvc3ZnPg==',
       variants:[
         {vid:1, size:'Pera 500ml',    price:1548, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040219_f.jpg'},
         {vid:2, size:'Pomelo 500ml',  price:1548, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040218_f.jpg'},
@@ -1425,7 +1446,7 @@ const catalog = {
         {vid:4, size:'Pomelo 1.5L',   price:2880, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040221_f.jpg'},
       ]},
     { id:'h2oh', name:'H2OH', color:'#0055aa', textColor:'#fff',
-      logo:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040345_f.jpg',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwMDU1YWEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjInIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkgyT0g8L3RleHQ+PC9zdmc+',
       variants:[
         {vid:1, size:'Pomelo 500ml',     price:1035, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040842_f.jpg'},
         {vid:2, size:'Manzana 500ml',    price:1035, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040844_f.jpg'},
@@ -1447,7 +1468,7 @@ const catalog = {
         {vid:10, size:'Manzana 500ml',        price:1350, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040744_f.jpg'},
       ]},
     { id:'brio', name:'Brio', color:'#338822', textColor:'#fff',
-      logo:'/img/logos/BRIO.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPgogIDxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMzMzg4MjInIHJ4PSc4Jy8+CiAgPHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjInIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkJyaW88L3RleHQ+Cjwvc3ZnPg==',
       variants:[
         {vid:1, size:'Multifruta 1.5L', price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040877_f.jpg'},
         {vid:2, size:'Naranja 1.5L',    price:1820, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040794_f.jpg'},
@@ -1469,8 +1490,8 @@ const catalog = {
         {vid:1, size:'Pomelo 1.5L',  price:1480, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040400_f.jpg'},
         {vid:2, size:'Manzana 1.5L', price:1480, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040401_f.jpg'},
       ]},
-    { id:'aquarius', name:'Aquarius', color:'#2db04b', textColor:'#fff',
-      logo:'/img/logos/aquarius.png',
+    { id:'aquarius-g', name:'Aquarius', color:'#2db04b', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMyZGIwNGInIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTcnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkFxdWFyaXVzPC90ZXh0Pjwvc3ZnPg==',
       variants:[
         {vid:1,  size:'Manzana 500ml',          price:1720, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040217_f.jpg'},
         {vid:2,  size:'Manzana 1.5L',            price:3200, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3040220_f.jpg'},
@@ -1693,13 +1714,13 @@ const catalog = {
       logo:'/img/logos/7252cfa7_Smirnoff-Logo.png',
       variants:[{vid:1, size:'700ml', price:7990, img:'/img/productos/dc42af8e_esmirnoff-sabore1-de918628887432ef7.webp', tag:'vodka'}]},
     { id:'sernova',   name:'Sernova',   color:'#1a1a44', textColor:'#fff',
-      logo:'/img/logos/756c1821_thumb_62267_default_medium.jpeg',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMxYTFhNDQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPlNFUk5PVkE8L3RleHQ+PC9zdmc+',
       variants:[{vid:1, size:'700ml', price:7800, img:'/img/productos/fa88ac54_D_NQ_NP_2X_903306-MLA82293452901_02.webp', tag:'vodka'}]},
     { id:'absolut',   name:'Absolut',   color:'#001133', textColor:'#fff',
       logo:'/img/logos/bb42c5b6_500px-Absolut_Vodka_logo.svg.png',
       variants:[{vid:1, size:'700ml', price:25300, img:'/img/productos/c19e15ef_D_NQ_NP_2X_708877-MLA91224902559_08.webp', tag:'vodka'}]},
     { id:'skyy',      name:'Skyy',      color:'#0033aa', textColor:'#fff',
-      logo:'/img/logos/314ce50d_thumb_71136_default_medium.jpeg',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwMDMzYWEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjInIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPlNLWVk8L3RleHQ+PC9zdmc+',
       variants:[{vid:1, size:'700ml', price:8780, img:'/img/productos/317aadc9_D_NQ_NP_2X_982315-MLA69386512535_05.webp', tag:'vodka'}]},
     { id:'new-style', name:'New Style', color:'#221100', textColor:'#ffcc88',
       logo:'/img/logos/new-style-logo.png',
@@ -1710,7 +1731,7 @@ const catalog = {
       ]},
     // ── Fernet ──
     { id:'fernet-branca', name:'Fernet Branca', color:'#003300', textColor:'#ccffcc',
-      logo:'/img/logos/44b1f5ee_d034c65bda6ef517a889de21ad01def0.we.webp',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwMDMzMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTgnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNjY2ZmY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkZlcm5ldDwvdGV4dD48L3N2Zz4=',
       variants:[
         {vid:1, size:'750ml', price:18200, img:'/img/productos/4b1def24_7790290001193_021-4b208b0def7cea643.webp'},
         {vid:2, size:'450ml', price:12000, img:'/img/productos/488a3e99_D_NQ_NP_2X_611836-MLA71643626820_09.webp'},
@@ -1726,7 +1747,7 @@ const catalog = {
       logo:'/img/logos/873119d8_gancia-30719.jpg',
       variants:[{vid:1, size:'950ml', price:8100, img:'/img/productos/6a9ed413_83-b9eb9647280a35fcfb17153592228403.webp'}]},
     { id:'campari', name:'Campari', color:'#cc0011', textColor:'#fff',
-      logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Campari_-_logo_wordmark_%28Italy%2C_2023-%29.svg/500px-Campari_-_logo_wordmark_%28Italy%2C_2023-%29.svg.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNjYzAwMTEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkNBTVBBUkk8L3RleHQ+PC9zdmc+',
       variants:[
         {vid:1, size:'450ml', price:7100, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070933_f.jpg'},
         {vid:2, size:'750ml', price:9000, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070081_f.jpg'},
@@ -1742,7 +1763,7 @@ const catalog = {
         {vid:1, size:'Rosso 1L', price:7010, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3071096_f.jpg'},
       ]},
     { id:'martini', name:'Martini', color:'#0a2244', textColor:'#fff',
-      logo:'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/Martini_%26_Rossi_%28logo%29.svg/500px-Martini_%26_Rossi_%28logo%29.svg.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwYTIyNDQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmY5Y2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPk1BUlRJTkk8L3RleHQ+PC9zdmc+',
       variants:[
         {vid:1, size:'Rosso 1L',     price:9180,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070478_f.jpg'},
         {vid:2, size:'Bianco 1L',    price:9720,  img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070480_f.jpg'},
@@ -1758,10 +1779,10 @@ const catalog = {
       logo:'/img/logos/6355f311_canciller.svg',
       variants:[{vid:1, size:'1L',    price:3860,  img:'/img/productos/8c5863c0_iTMFB3s.png'}]},
     { id:'dr-lemon',  name:'Dr Lemon', color:'#cccc00', textColor:'#333',
-      logo:'/img/logos/a5c934ad_2ce966_DRLEMON_ID_TRESLINEAS-02.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNjY2NjMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyMxYTFhMDAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkRyIExlbW9uPC90ZXh0Pjwvc3ZnPg==',
       variants:[{vid:1, size:'1L',    price:4160,  img:'/img/productos/c3745680_036926_Dr.Lemon-Vodka.jpg'}]},
     { id:'cana-legui',name:'Caña Legui',color:'#5c3800', textColor:'#fff',
-      logo:'/img/logos/23e785af_D_NQ_NP_2X_888128-MLA70096029053_06.webp',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM1YzM4MDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjODgnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkMuTGVndWk8L3RleHQ+PC9zdmc+',
       variants:[{vid:1, size:'750ml', price:4850,  img:'https://www.deliargentina.com/image/cache/catalog/product/vino/licor-cana-legui/Licor%20de%20Ca%C3%B1a%20Legui%20Argentino%20Oferta%20Pack%203%20Botellas-1000x1000.jpeg'}]},
     // ── Whisky ──
     { id:'jameson', name:'Jameson', color:'#1a3300', textColor:'#ffcc88',
@@ -1780,7 +1801,7 @@ const catalog = {
         {vid:4, size:'Fire 700ml',      price:52460, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3071273_f.jpg', tag:'tennessee'},
       ]},
     { id:'johnnie-walker', name:'Johnnie Walker', color:'#1a1a44', textColor:'#ffcc00',
-      logo:'https://upload.wikimedia.org/wikipedia/en/thumb/3/37/Johnnie_Walker_logo_%282015-present%29.svg/500px-Johnnie_Walker_logo_%282015-present%29.svg.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMxYTFhNDQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTQnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjMDAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkouV2Fsa2VyPC90ZXh0Pjwvc3ZnPg==',
       variants:[
         {vid:1, size:'Red Label 750ml',   price:32310, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070046_f.jpg', tag:'scotch'},
         {vid:2, size:'Black Label 750ml', price:74160, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070407_f.jpg', tag:'scotch'},
@@ -1792,7 +1813,7 @@ const catalog = {
         {vid:2, size:'12 años 500ml', price:36450, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3071120_f.jpg', tag:'scotch'},
       ]},
     { id:'ballantines', name:"Ballantine's", color:'#003366', textColor:'#fff',
-      logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Ballantine%27s_logo.svg/500px-Ballantine%27s_logo.svg.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwMDMzNjYnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkJhbGxhbnQuPC90ZXh0Pjwvc3ZnPg==',
       variants:[
         {vid:1, size:'7YO Bourbon 750ml', price:35550, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3071184_f.jpg', tag:'scotch'},
         {vid:2, size:'1L',               price:32040, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3071115_f.jpg', tag:'scotch'},
@@ -1826,7 +1847,7 @@ const catalog = {
       ]},
     // ── Ron ──
     { id:'bacardi', name:'Bacardi', color:'#111111', textColor:'#cc9900',
-      logo:'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Bacardi_-_wordmark_%28Cuba%2C_2013-%29.svg/500px-Bacardi_-_wordmark_%28Cuba%2C_2013-%29.svg.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMxMTExMTEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNjYzk5MDAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkJBQ0FSRMONPC90ZXh0Pjwvc3ZnPg==',
       variants:[
         {vid:1, size:'Carta Blanca 750ml', price:24840, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070090_f.jpg', tag:'ron'},
         {vid:2, size:'Gold 980ml',         price:28070, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3070089_f.jpg', tag:'ron'},
@@ -1837,22 +1858,22 @@ const catalog = {
       variants:[{vid:1, size:'700ml', price:14300, img:'/img/productos/5d7fde89_D_NQ_NP_2X_991546-MLA76520332705_05.webp'}]},
     // ── Vinos ──
     { id:'santa-julia',   name:'Santa Julia',      color:'#5c0000', textColor:'#fff',
-      logo:'/img/logos/321a2db4_unnamed2-3.jpg',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM1YzAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmRkZGQnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPlMuSnVsaWE8L3RleHQ+PC9zdmc+',
       variants:[{vid:1, size:'750ml', price:9350,  img:'/img/productos/7b91e773_D_NQ_NP_2X_601658-MLA46003325717_05.webp'}]},
     { id:'balvo',         name:'Balvo',             color:'#3d0000', textColor:'#fff',
       logo:'/img/logos/balvo-logo.png',
       variants:[{vid:1, size:'1L',    price:3310,  img:'/img/productos/8ef33629_D_NQ_NP_2X_995520-MLA79380508677_09.webp'}]},
     { id:'estancia-mendoza', name:'Estancia Mendoza', color:'#4a1a00', textColor:'#fff',
-      logo:'/img/logos/3be5dd46_thumb_12893_default_medium.jpeg',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM0YTFhMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjODgnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkVzdGFuY2lhPC90ZXh0Pjwvc3ZnPg==',
       variants:[{vid:1, size:'1L',    price:3860,  img:'/img/productos/a2d37089_15379776121-kit-em-site-800x800.jpg'}]},
     { id:'dada',          name:'Dadá',              color:'#aa0000', textColor:'#fff',
       logo:'/img/logos/adc2d5e7_Logo-DADA-Rojo.jpg',
       variants:[{vid:1, size:'750ml', price:8800,  img:'/img/productos/686e1743_D_NQ_NP_2X_836187-MLA75428012612_03.webp'}]},
     { id:'frizze',        name:'Frizze',            color:'#cc4400', textColor:'#fff',
-      logo:'/img/logos/4f4ddc15_D_NQ_NP_2X_934406-MLA81688479404_01.webp',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNjYzQ0MDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTgnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkZyaXp6ZTwvdGV4dD48L3N2Zz4=',
       variants:[{vid:1, size:'1L',    price:3090,  img:'/img/productos/76ccf65a_frizze.jpg'}]},
     { id:'du-champan',    name:'Du Champan',        color:'#886600', textColor:'#fff',
-      logo:'/img/logos/9e3e62ed_D_NQ_NP_2X_854447-MLA48254107343_11.webp',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4ODY2MDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTMnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmUwNjYnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkR1IENoYW1wYW48L3RleHQ+PC9zdmc+',
       variants:[{vid:1, size:'750ml', price:7710,  img:'/img/9e3e62ed_D_NQ_NP_2X_854447-MLA48254107343_11.webp'}]},
     { id:'piel-cordero',  name:'Piel de Cordero',   color:'#6b0000', textColor:'#fff',
       logo:'/img/logos/piel-cordero-logo.jpg',
@@ -1977,10 +1998,10 @@ const catalog = {
 
     // ── Granadinas ──
     { id:'granadina-dellepiane', name:'Granadina Dellepiane', color:'#aa0000', textColor:'#fff',
-      logo:'/img/logos/granadinas.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YjAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkdyYW5hZGluYTwvdGV4dD48L3N2Zz4=',
       variants:[{vid:1, size:'750ml', price:5290, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050137_f.jpg', tag:'granadina'}]},
     { id:'granadina-cusenier', name:'Cusenier Granadina', color:'#880000', textColor:'#fff',
-      logo:'/img/logos/granadinas.png',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YjAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkdyYW5hZGluYTwvdGV4dD48L3N2Zz4=',
       variants:[{vid:1, size:'750ml', price:5300, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050039_f.jpg', tag:'granadina'}]},
   ],
 };
@@ -2698,6 +2719,25 @@ function itemCard(item, sectionKey) {
   el.innerHTML = catalog.promos.map(p => itemCard(p, 'promos')).join('');
 })();
 
+
+// ── BOTTLE CARD: logo con tamaño según precio ──────────────────────────────
+function bottleCard(item) {
+  var maxP = Math.max.apply(null, item.variants.map(function(v){return v.price;}));
+  var minP = Math.min.apply(null, item.variants.map(function(v){return v.price;}));
+  var tier = maxP >= 25000 ? 'lg' : maxP >= 10000 ? 'md' : 'sm';
+  var bg  = item.color     || '#1a1a1a';
+  var txt = item.textColor || '#fff';
+  var imgHtml;
+  if (item.logo) {
+    imgHtml = '<img class="btl-img" src="'+item.logo+'" alt="'+item.name+'" onerror="this.style.display='none'">';
+  } else {
+    imgHtml = '<span style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:900;color:'+txt+';text-align:center;padding:6px;line-height:1.1">'+item.name+'</span>';
+  }
+  var nameHtml = tier !== 'sm' ? '<div class="btl-name" style="color:'+txt+'">'+item.name+'</div>' : '';
+  var priceHtml = tier === 'lg' ? '<div class="btl-price">$'+minP.toLocaleString('es-AR')+'</div>' : '';
+  return '<div class="btl-card btl-'+tier+'" style="background:'+bg+'" onclick="openModal(''+item.id+'','botellas')" title="'+item.name+'">'+imgHtml+nameHtml+priceHtml+'</div>';
+}
+
 // Render botellas — con separadores de categoría
 (function() {
   const el = document.getElementById('botellas-grid');
@@ -2717,7 +2757,7 @@ function itemCard(item, sectionKey) {
     html += `<div class="item-section-label">${g.label}</div>`;
     for (const id of g.ids) {
       const item = catalog.botellas.find(b => b.id === id);
-      if (item) html += itemCard(item, 'botellas');
+      if (item) html += bottleCard(item);
     }
   }
   el.innerHTML = html;
@@ -4850,4 +4890,4 @@ function openBrandModal(brand, defaultVid) {
 
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
