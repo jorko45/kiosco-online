@@ -698,6 +698,16 @@
     }
     .cat-row2 .cat-card { height:190px; }
     /* ── caja formas de pago ── */
+    #fabCaja {
+      position:fixed; bottom:18px; right:16px; z-index:95;
+      display:none; align-items:center; gap:8px;
+      background:linear-gradient(135deg,#cc1010,#e02020); color:#fff; border:none;
+      font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16px; letter-spacing:1px;
+      padding:13px 20px; border-radius:999px; cursor:pointer;
+      box-shadow:0 8px 28px rgba(200,20,20,.5);
+      animation:fadeUp .3s ease both;
+    }
+    #fabCaja:active { transform:scale(.96); }
     .pago-box {
       width:100%; max-width:920px; margin:0 auto 26px; padding:0 16px;
       animation:fadeUp .7s .34s ease both;
@@ -1103,7 +1113,9 @@
 
     <!-- Feature icons -->
     <div class="landing-features">
-      <div class="pago-box">
+      <button id="fabCaja" onclick="toggleCart()" style="display:none">🛒 <span id="fabTxt">Caja</span></button>
+
+    <div class="pago-box">
       <div class="pago-inner">
         <div class="pago-title">💳 FORMAS DE PAGO &amp; INFO</div>
         <div class="pago-items">
@@ -2328,6 +2340,7 @@ function changeCartQty(key, delta) {
 }
 
 function renderCart() {
+  _updateFabCaja();
   const items    = Object.values(cart);
   const totalQty = items.reduce((a, b) => a + b.qty, 0);
   const { costo: envio, gratis, credits, subtotal } = getDeliveryInfo();
@@ -2395,6 +2408,19 @@ function renderCart() {
   document.getElementById('btnWSP').disabled = !has;
 }
 
+function _updateFabCaja() {
+  var fab = document.getElementById('fabCaja');
+  if (!fab) return;
+  var items = Object.values(cart);
+  var n = items.reduce(function(a,i){ return a + i.qty; }, 0);
+  if (n > 0) {
+    var total = items.reduce(function(a,i){ return a + i.qty * i.price; }, 0);
+    document.getElementById('fabTxt').textContent = 'Caja · ' + n + ' item' + (n>1?'s':'') + ' · $' + total.toLocaleString('es-AR');
+    fab.style.display = 'flex';
+  } else {
+    fab.style.display = 'none';
+  }
+}
 function toggleCart() {
   document.getElementById('cartSidebar').classList.toggle('open');
   document.getElementById('cartOverlay').classList.toggle('open');
@@ -4875,6 +4901,7 @@ function getAllSearchableProducts() {
     { key:'pritty',   items: catalog.pritty    || [] },
     { key:'gondola',   items: [...Object.values(catalogGondola).flat(), ...catalogJugos.polvo] },
     { key:'golosinas', items: Object.values(catalogGolosinas).flat() },
+    { key:'golosinas', items: Object.values(catalogGolosinasMami).flat() },
     { key:'heladeras', items: [...catalogJugos.naturales, ...catalogJugos.concentrados] },
     { key:'heladeras', items: Object.values(catalogEspumantes).flat() },
     { key:'heladeras', items: Object.values(catalogSaborizadas).flat() },

@@ -23,6 +23,7 @@ export default async function handler(req, res) {
       quantity: Number(it.cantidad) || 1,
       unit_price: Number(it.precio),
       currency_id: 'ARS',
+      picture_url: 'https://kiosco-online.vercel.app/img/k24-logo.png',
     }));
 
     const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
@@ -41,6 +42,7 @@ export default async function handler(req, res) {
         pending: `${siteUrl}/?pago=pendiente`,
       },
       auto_return: 'approved',
+      statement_descriptor: 'K24 KIOSCO',
     };
 
     const resp = await fetch('https://api.mercadopago.com/checkout/preferences', {
