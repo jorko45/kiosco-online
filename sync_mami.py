@@ -12,9 +12,15 @@ Solo usa la librería estándar de Python — no requiere pip install.
 """
 import re
 import json
+import ssl
 import urllib.request
 import unicodedata
 from pathlib import Path
+
+# Windows suele no tener los certificados raiz para Python -> contexto sin verificacion
+_SSL_CTX = ssl.create_default_context()
+_SSL_CTX.check_hostname = False
+_SSL_CTX.verify_mode = ssl.CERT_NONE
 
 BASE = 'https://www.dinoonline.com.ar'
 HEADERS = {
@@ -58,7 +64,7 @@ def title_case(s):
 
 def fetch(url):
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=45) as r:
+    with urllib.request.urlopen(req, timeout=45, context=_SSL_CTX) as r:
         return r.read().decode('utf-8', errors='replace')
 
 
