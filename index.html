@@ -675,7 +675,7 @@
       width:100%; max-width:920px; margin:0 auto 24px;
       padding:0 16px;
       display:grid;
-      grid-template-columns:2fr 1fr;
+      grid-template-columns:1.4fr 1fr;
       gap:10px;
       animation:fadeUp .7s .28s ease both;
     }
@@ -689,14 +689,33 @@
       transform:translateY(-5px);
       box-shadow:0 22px 55px rgba(0,0,0,.75);
     }
-    .cat-featured { height:280px; }
+    .cat-featured { height:235px; }
     .cat-right-col { display:flex; flex-direction:column; gap:10px; }
     .cat-right-col .cat-card { flex:1; }
     .cat-row2 {
       grid-column:1/-1; display:grid;
       grid-template-columns:repeat(3,1fr); gap:10px;
     }
-    .cat-row2 .cat-card { height:175px; }
+    .cat-row2 .cat-card { height:190px; }
+    /* ── caja formas de pago ── */
+    .pago-box {
+      width:100%; max-width:920px; margin:0 auto 26px; padding:0 16px;
+      animation:fadeUp .7s .34s ease both;
+    }
+    .pago-inner {
+      background:linear-gradient(135deg,#0d1b2a,#16283c);
+      border:1px solid rgba(120,180,255,.18); border-radius:16px;
+      padding:16px 20px;
+    }
+    .pago-title { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16px;
+      letter-spacing:2px; color:#9fc5ff; margin-bottom:10px; }
+    .pago-items { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px; }
+    .pago-item {
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+      border-radius:10px; padding:10px 12px; font-size:13.5px; color:#dce8f5;
+      display:flex; align-items:center; gap:8px;
+    }
+    @media (max-width:480px) { .pago-items { grid-template-columns:1fr 1fr; } .pago-item { font-size:12px; padding:8px 9px; } }
     .cat-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .3s; }
     .cat-card:not(.cat-soon):hover .cat-bg { transform:scale(1.05); }
     .cat-dark-ov { position:absolute; inset:0; background:rgba(0,0,0,.42); }
@@ -1084,8 +1103,20 @@
 
     <!-- Feature icons -->
     <div class="landing-features">
-      <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery en 20-30 min</span></div>
-      <div class="feat"><span class="feat-icon">🕗</span><span class="feat-text">Horario 8 a 21hs</span></div>
+      <div class="pago-box">
+      <div class="pago-inner">
+        <div class="pago-title">💳 FORMAS DE PAGO &amp; INFO</div>
+        <div class="pago-items">
+          <div class="pago-item">💵 Efectivo al recibir tu pedido</div>
+          <div class="pago-item">💳 MercadoPago (tarjetas y QR)</div>
+          <div class="pago-item">🏦 Transferencia bancaria</div>
+          <div class="pago-item">🌙 Comprá 24hs — enviamos desde las 8:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery en 20-30 min</span></div>
+      <div class="feat"><span class="feat-icon">🕗</span><span class="feat-text">Comprá 24hs · Reparto 8 a 21hs</span></div>
       <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 gratis con pedidos +$50.000</span></div>
       <div class="feat"><span class="feat-icon">📲</span><span class="feat-text">Pedido por WhatsApp</span></div>
     </div>
@@ -1291,7 +1322,7 @@
       <span class="cart-total-label">Envío</span>
       <span id="cartDelivery" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:#555">$5.000</span>
     </div>
-    <div class="cart-delivery-note" id="cartDeliveryNote">🛵 Envío $5.000 · Gratis en tus primeras 10 compras de $50.000+</div>
+    <div class="cart-delivery-note" id="cartDeliveryNote">🛵 Envío $5.000 · Gratis en tus primeras 10 compras de $50.000+<br>🌙 Comprá a cualquier hora: fuera de horario tu pedido sale apenas empieza el reparto</div>
     <div class="cart-total-row" style="border-top:2px solid #eee;padding-top:12px;margin-top:4px;margin-bottom:16px">
       <span class="cart-total-label" style="font-size:14px;letter-spacing:3px">Total</span>
       <span class="cart-total-amount" id="cartTotal" style="color:var(--red)">$0</span>
@@ -2528,10 +2559,10 @@ async function reverseGeocode(lat, lng) {
 }
 
 function checkDeliveryHours() {
+  // Compra habilitada 24hs — fuera de horario solo se avisa que el envio sale al empezar el reparto
   const hora = new Date().getHours();
   if (hora < 8 || hora >= 21) {
-    showToast('⚠️ Estamos cerrados. Delivery de 8 a 21hs');
-    return false;
+    showToast('🌙 Pedido registrado — te lo enviamos apenas empiece el reparto (8:00hs)');
   }
   return true;
 }
@@ -4605,7 +4636,16 @@ const catalogGaseosasExtra = {
 
 
 
+// MAMI-AUTOGEN-START (no editar a mano: lo regenera sync_mami.py)
+const catalogGolosinasMami = { m_alfajores: [], m_chocolates: [], m_golosinas: [], m_obleas: [], m_postre: [] };
+// MAMI-AUTOGEN-END
+
 const gonLabels = {
+  m_alfajores:          'Alfajores',
+  m_chocolates:         'Chocolates',
+  m_golosinas:          'Caramelos & Chicles',
+  m_obleas:             'Obleas & Turrones',
+  m_postre:             'Postre de Maní',
   aceites_vinagres:     'Aceites & Vinagres',
   aderezos:             'Aderezos & Salsas',
   arroz_pastas:         'Arroz & Pastas',
@@ -4716,7 +4756,9 @@ let _golosinasRendered = false;
 function renderGolosinas() {
   if (_golosinasRendered) return;
   _golosinasRendered = true;
-  renderTabSection(catalogGolosinas,
+  var golosMami = {};
+  Object.keys(catalogGolosinasMami).forEach(function(k){ if (catalogGolosinasMami[k].length) golosMami[k] = catalogGolosinasMami[k]; });
+  renderTabSection(Object.assign({}, golosMami, catalogGolosinas),
     document.getElementById('golosinas-tabs'),
     document.getElementById('golosinas-grid'));
 }
