@@ -461,6 +461,38 @@
     }
     /* ── BOTELLAS: cards de tamaño variable ── */
     .btl-wrap { display:flex; flex-wrap:wrap; gap:10px; padding:14px 20px 6px; align-items:flex-end; }
+    /* ── BOTELLAS: cava / toneles / góndola ── */
+    .theme-box { margin:16px 14px; border-radius:16px; overflow:hidden; border:1px solid rgba(255,255,255,.08); }
+    .theme-head { font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:3px; font-size:15px;
+                  padding:12px 18px; display:flex; justify-content:space-between; align-items:center; }
+    .shelf-label { font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:2px; font-size:12px;
+                   text-transform:uppercase; padding:12px 20px 0; }
+    .theme-box .btl-wrap { margin:0 12px 14px; padding:12px 8px 14px; }
+    /* cava: piedra y estantes de madera */
+    .cava-box { background:linear-gradient(180deg,#2a1710 0%,#1c0f08 100%); }
+    .cava-box .theme-head { background:linear-gradient(90deg,#3a2012,#2a1710); color:#e8c39a; border-bottom:1px solid #4a2c18; }
+    .cava-box .shelf-label { color:#d9a86b; }
+    .cava-box .btl-wrap { border-bottom:7px solid #5a3a22; border-radius:0 0 6px 6px;
+                          box-shadow:0 10px 0 -5px #3a2414; }
+    /* toneles: duelas de roble con zunchos */
+    .barrel-box { background:repeating-linear-gradient(90deg,#5a3a1c 0px,#6b4522 22px,#523415 44px);
+                  border-top:9px solid #2b2b30; border-bottom:9px solid #2b2b30; }
+    .barrel-box .theme-head { background:rgba(0,0,0,.45); color:#f5d9a8; border-bottom:3px solid #2b2b30; }
+    .barrel-box .shelf-label { color:#ffe1b0; text-shadow:0 1px 2px rgba(0,0,0,.6); }
+    .barrel-box .btl-wrap { background:rgba(0,0,0,.25); border-radius:10px; }
+    /* góndola: estantes metálicos */
+    .gondola-box { background:#1b2026; }
+    .gondola-box .theme-head { background:#232a31; color:#9fb3c8; border-bottom:1px solid #39424c; }
+    .gondola-box .shelf-label { color:#9fb3c8; }
+    .gondola-box .btl-wrap { border-bottom:8px solid #39424c; border-radius:0 0 4px 4px;
+                             box-shadow:0 11px 0 -5px #12161a; }
+    @media (max-width:480px) {
+      .theme-box { margin:10px 6px; }
+      .theme-head { font-size:13px; padding:10px 12px; letter-spacing:2px; }
+      .theme-box .btl-wrap { margin:0 6px 12px; padding:10px 4px 12px; gap:8px; }
+      .shelf-label { padding:10px 14px 0; }
+    }
+
     .btl-card {
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       border-radius:14px; cursor:pointer; overflow:hidden; flex-shrink:0; position:relative;
@@ -1155,11 +1187,18 @@
       </div>
       <div class="search-results" style="display:none"></div>
     </div>
-    <div class="btl-wrap" id="botellas-grid"></div>
-    <div class="item-section-label" style="margin:20px 16px 8px;font-size:14px">🍷 Vinos</div>
-    <div class="btl-wrap" id="vinos-brands"></div>
-    <div class="item-section-label" style="margin:20px 16px 8px;font-size:14px">🥃 Licores &amp; Spirits</div>
-    <div class="btl-wrap" id="licores-brands"></div>
+    <div class="theme-box cava-box">
+      <div class="theme-head">🍷 CAVA DE VINOS <span>14°C</span></div>
+      <div id="cava-shelves"></div>
+    </div>
+    <div class="theme-box barrel-box">
+      <div class="theme-head">🥃 TONELES DE AÑEJAMIENTO <span>Whisky</span></div>
+      <div id="toneles-shelves"></div>
+    </div>
+    <div class="theme-box gondola-box">
+      <div class="theme-head">🧉 GÓNDOLA DE APERITIVOS &amp; LICORES <span>🛒</span></div>
+      <div id="gondola-shelves"></div>
+    </div>
   </div>
 
 </div>
@@ -1864,6 +1903,14 @@ const catalog = {
     { id:'pato-criollo',  name:'Pato Criollo',      color:'#1a3300', textColor:'#fff',
       logo:'http://packagingoftheworld.com/wp-content/uploads/2024/06/PC_1-2-1536x1536.jpg',
       variants:[{vid:1, size:'1L',    price:3860,  img:'/img/productos/18d3d742_3064132_f.jpg'}]},
+    // ── Granadinas ──
+    { id:'granadina-dellepiane', name:'Granadina Dellepiane', color:'#aa0000', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YjAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkdyYW5hZGluYTwvdGV4dD48L3N2Zz4=',
+      variants:[{vid:1, size:'750ml', price:5290, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050137_f.jpg', tag:'granadina'}]},
+    { id:'granadina-cusenier', name:'Cusenier Granadina', color:'#880000', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YjAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkdyYW5hZGluYTwvdGV4dD48L3N2Zz4=',
+      variants:[{vid:1, size:'750ml', price:5300, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050039_f.jpg', tag:'granadina'}]},
+
   ],
   pritty: [
     { id:'pritty-limon', name:'Pritty Limón', color:'#00aa33', textColor:'#fff',
@@ -1979,13 +2026,6 @@ const catalog = {
         {vid:2, size:'Limon 1L',    price:2650, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3051970_f.jpg'},
       ]},
 
-    // ── Granadinas ──
-    { id:'granadina-dellepiane', name:'Granadina Dellepiane', color:'#aa0000', textColor:'#fff',
-      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YjAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkdyYW5hZGluYTwvdGV4dD48L3N2Zz4=',
-      variants:[{vid:1, size:'750ml', price:5290, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050137_f.jpg', tag:'granadina'}]},
-    { id:'granadina-cusenier', name:'Cusenier Granadina', color:'#880000', textColor:'#fff',
-      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YjAwMDAnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzUwJyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTUnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmNjY2MnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGRvbWluYW50LWJhc2VsaW5lPSdtaWRkbGUnPkdyYW5hZGluYTwvdGV4dD48L3N2Zz4=',
-      variants:[{vid:1, size:'750ml', price:5300, img:'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/3050039_f.jpg', tag:'granadina'}]},
   ],
 };
 
@@ -2759,58 +2799,104 @@ function _mkWordmark(name, bg, fg, style) {
   var svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 80'><rect width='120' height='80' fill='" + bg + "' rx='8'/>" + deco + text + "</svg>";
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
-function buildBrandBottles(defs, flatCatalog, idPrefix, containerId, style) {
-  var el = document.getElementById(containerId);
-  if (!el || el.dataset.done) return;
-  el.dataset.done = '1';
+
+// ── BOTELLAS: cava de vinos, toneles de whisky y góndola de licores ──────────
+function _normBrand(s) {
+  s = s.toLowerCase();
+  try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch(e) {}
+  return s.replace(/[^a-z0-9]+/g, '');
+}
+function _makeBrandObjs(defs, flatCatalog, idPrefix, style) {
   var byId = {};
-  Object.values(flatCatalog).forEach(function(arr) { arr.forEach(function(it) { byId[it.id] = it; }); });
-  var html = '';
+  Object.values(flatCatalog).forEach(function(arr){ arr.forEach(function(it){ byId[it.id] = it; }); });
+  var groups = [];
   defs.forEach(function(g, gi) {
-    var cards = '';
+    var brands = [];
     g.brands.forEach(function(b) {
-      var items = b.ids.map(function(id) { return byId[id]; }).filter(Boolean);
+      var items = b.ids.map(function(id){ return byId[id]; }).filter(Boolean);
       if (!items.length) return;
       var slug = b.n.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      var brandObj = {
+      var obj = {
         id: idPrefix + gi + '-' + slug, name: b.n, color: b.c, textColor: b.t || '#fff',
         logo: b.l || _mkWordmark(b.n, b.c, b.t || '#fff', style),
-        variants: items.map(function(it, i) {
-          return {vid: i + 1, size: _sizeOf(it.name, b.n), price: it.price, img: it.img};
-        })
+        _type: (items[0].name.split(' ')[0] || '').toLowerCase(),
+        variants: items.map(function(it, i){ return {vid: i + 1, size: _sizeOf(it.name, b.n), price: it.price, img: it.img}; })
       };
-      catalog.botellas.push(brandObj);
-      cards += bottleCard(brandObj);
+      catalog.botellas.push(obj);
+      brands.push(obj);
     });
-    if (cards) html += '<div class="item-section-label">' + g.label + '</div>' + cards;
+    groups.push({label: g.label, brands: brands});
   });
-  el.innerHTML = html;
+  return groups;
 }
+function _mergeVariants(target, source) {
+  var seen = {};
+  target.variants.forEach(function(v){ seen[(String(v.size).match(/\d+/g) || ['x']).join('')] = 1; });
+  source.variants.forEach(function(v) {
+    var k = (String(v.size).match(/\d+/g) || ['x']).join('');
+    if (!seen[k]) { seen[k] = 1; target.variants.push({vid: target.variants.length + 1, size: v.size, price: v.price, img: v.img}); }
+  });
+}
+function renderBotellasAll() {
+  if (renderBotellasAll._done) return;
+  var cavaEl = document.getElementById('cava-shelves');
+  if (!cavaEl) return;
+  renderBotellasAll._done = true;
 
-// Render botellas — con separadores de categoría
-(function() {
-  const el = document.getElementById('botellas-grid');
-  if (!el) return;
-  const grupos = [
-    { label: 'Granadinas', ids: ['granadina-dellepiane','granadina-cusenier'] },
-    { label: 'Vodkas',              ids: ['smirnoff','sernova','absolut','skyy','new-style'] },
-    { label: 'Whisky',              ids: ['jameson','jack-daniels','johnnie-walker','chivas','ballantines','jb','grants','old-smuggler','blenders','white-horse'] },
-    { label: 'Ron',                 ids: ['bacardi'] },
-    { label: 'Fernet',              ids: ['fernet-branca','fernet-1882'] },
-    { label: 'Gancia & Aperitivos', ids: ['gancia','campari','aperol','cinzano','martini','cynar','cancillier','dr-lemon','cana-legui'] },
-    { label: 'Gin',                 ids: ['gordons'] },
-    { label: 'Vinos & Espumantes',  ids: ['santa-julia','balvo','estancia-mendoza','dada','frizze','du-champan','piel-cordero','pato-criollo'] },
-  ];
-  let html = '';
-  for (const g of grupos) {
-    html += `<div class="item-section-label">${g.label}</div>`;
-    for (const id of g.ids) {
-      const item = catalog.botellas.find(b => b.id === id);
-      if (item) html += bottleCard(item);
-    }
+  var vinoGroups  = _makeBrandObjs(vinosMarcas, catalogVinos, 'vm', 'vino');
+  var licorGroups = _makeBrandObjs(licoresMarcas, catalogLicores, 'lm', 'licor');
+  function byId(id) { return catalog.botellas.find(function(b){ return b.id === id; }); }
+  function ids(arr) { return arr.map(byId); }
+  function vg(label) { var g = vinoGroups.filter(function(x){ return x.label === label; })[0]; return g ? g.brands : []; }
+  function lg(label) { var g = licorGroups.filter(function(x){ return x.label === label; })[0]; return g ? g.brands : []; }
+
+  function shelves(el, defs) {
+    if (!el) return;
+    var html = '';
+    defs.forEach(function(s) {
+      var placed = {}, c = '';
+      s.list.forEach(function(b) {
+        if (!b) return;
+        var k = _normBrand(b.name);
+        if (placed[k]) { _mergeVariants(placed[k], b); return; }
+        placed[k] = b;
+        c += bottleCard(b);
+      });
+      if (c) html += '<div class="shelf-label">' + s.label + '</div><div class="btl-wrap">' + c + '</div>';
+    });
+    el.innerHTML = html;
   }
-  el.innerHTML = html;
-})();
+
+  var blancas = lg('Vodka · Gin · Ron');
+  var aper    = lg('Aperitivos & Fernet');
+  function tipo(t) { return blancas.filter(function(b){ return b._type === t; }); }
+  function esRon(b) { return b._type === 'ron' || /malibu|havana|jamaica|padilla|cordillera/i.test(b.name); }
+  function esFernet(b) { return /fernet|vittone|buhero/i.test(b.name); }
+
+  shelves(cavaEl, [
+    {label: '🍾 Espumantes & Frizzé', list: ids(['frizze','du-champan','balvo','piel-cordero','pato-criollo'])},
+    {label: '🍷 Tintos',       list: vg('Tintos')},
+    {label: '🥂 Blancos',      list: vg('Blancos')},
+    {label: '🌸 Rosados',      list: vg('Rosados')},
+    {label: '🧃 Tetra Brik',   list: vg('Tetra Brik')},
+    {label: '🍇 Bivarietales', list: vg('Bivarietales')},
+    {label: '🍯 Generosos',    list: vg('Generosos')}
+  ]);
+  shelves(document.getElementById('toneles-shelves'), [
+    {label: '🥃 Whisky & Bourbon', list: ids(['jameson','jack-daniels','johnnie-walker','chivas','ballantines','jb','grants','old-smuggler','blenders','white-horse']).concat(lg('Whisky'))}
+  ]);
+  shelves(document.getElementById('gondola-shelves'), [
+    {label: '🧊 Vodkas',      list: ids(['smirnoff','sernova','absolut','skyy','new-style']).concat(tipo('vodka'))},
+    {label: '🍸 Gin',         list: ids(['gordons']).concat(tipo('gin'), tipo('ginebra'))},
+    {label: '🏝️ Ron & Caña',  list: ids(['bacardi']).concat(blancas.filter(esRon))},
+    {label: '🌿 Fernet',      list: ids(['fernet-branca','fernet-1882']).concat(aper.filter(esFernet))},
+    {label: '🍊 Aperitivos',  list: ids(['gancia','campari','aperol','cinzano','martini','cynar','cancillier','dr-lemon','cana-legui']).concat(aper.filter(function(b){ return !esFernet(b); }))},
+    {label: '🍫 Licores',     list: lg('Licores').concat(blancas.filter(function(b){ return ['vodka','gin','ginebra'].indexOf(b._type) === -1 && !esRon(b); }))},
+    {label: '🧉 Amargos sin Alcohol', list: lg('Amargos sin Alcohol')},
+    {label: '🍒 Granadinas',  list: ids(['granadina-dellepiane','granadina-cusenier'])}
+  ]);
+}
+renderBotellasAll();
 
 
 // ── CATÁLOGO GÓNDOLA & GOLOSINAS ─────────────────────────────────────────────
@@ -4646,16 +4732,8 @@ function renderEspumantes() {
   if (_espumantesRendered) return; _espumantesRendered = true;
   renderTabSection(catalogEspumantes, document.getElementById('espumantes-tabs'), document.getElementById('espumantes-grid'));
 }
-let _vinosRendered = false;
-function renderVinos() {
-  if (_vinosRendered) return; _vinosRendered = true;
-  buildBrandBottles(vinosMarcas, catalogVinos, 'vm', 'vinos-brands', 'vino');
-}
-let _licoresRendered = false;
-function renderLicores() {
-  if (_licoresRendered) return; _licoresRendered = true;
-  buildBrandBottles(licoresMarcas, catalogLicores, 'lm', 'licores-brands', 'licor');
-}
+function renderVinos() { renderBotellasAll(); }
+function renderLicores() { renderBotellasAll(); }
 let _saborRendered = false;
 function renderSaborizadas() {
   if (_saborRendered) return; _saborRendered = true;
