@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       quantity: Number(it.cantidad) || 1,
       unit_price: Number(it.precio),
       currency_id: 'ARS',
-      picture_url: 'https://kiosco-online.vercel.app/img/k24-logo.png',
+      picture_url: 'https://k24hs.com/img/k24-logo.png',
     }));
 
     const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Token de Mercado Pago no configurado' });
     }
 
-    const siteUrl = 'https://kiosco-online.vercel.app';
+    const siteUrl = 'https://k24hs.com';
 
     const preference = {
       items: mpItems,
