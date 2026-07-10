@@ -48,6 +48,20 @@ BRANDS = ['ARCOR','JORGITO','MOGUL','BON O BON','AGUILA','MILKA','BELDENT','TOP 
  'MANTECOL','GUAYMALLEN','FANTOCHE','PEPITOS','OREO','TERRABUSI','MALVAVISCOS','DOS EN UNO']
 
 
+# ── MARGENES K24 ──────────────────────────────────────────────
+# precio final = base Mami x (1 + margen) x (1 + COMISION_MP), redondeado a $50
+COMISION_MP = 0.066
+MARGEN_PRIMERAS = 0.15
+MARGEN_RESTO = 0.25
+PRIMERAS_MARCAS = {'milka','ferrero','kinder','oreo','arcor','aguila','bon o bon','cadbury','mogul',
+ 'beldent','sugus','toddy','terrabusi','tofi','shot','rocklets','mentos','halls','tita','rhodesia',
+ 'mantecol','top line','menthoplus'}
+
+def precio_final(base, marca=''):
+    m = MARGEN_PRIMERAS if (marca or '').strip().lower() in PRIMERAS_MARCAS else MARGEN_RESTO
+    return int(round(base * (1 + m) * (1 + COMISION_MP) / 50.0)) * 50
+
+
 def norm(s):
     s = unicodedata.normalize('NFD', s)
     return ''.join(c for c in s if unicodedata.category(c) != 'Mn')
@@ -135,9 +149,10 @@ def main():
         for key, items in golos.items():
             arr = []
             for pid, nombre, precio in items:
+                marca = brand_of(nombre)
                 arr.append({
-                    'id': pid, 'name': title_case(nombre), 'brand': brand_of(nombre),
-                    'cat': '', 'price': precio,
+                    'id': pid, 'name': title_case(nombre), 'brand': marca,
+                    'cat': '', 'price': precio_final(precio, marca),
                     'img': f'https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/{pid}_f.jpg',
                 })
             js_items[key] = arr
@@ -156,15 +171,15 @@ def main():
     # ── 2. PRICE SYNC: todas las bebidas + golosinas por id ──
     precios = {}
     for key, items in golos.items():
-        for pid, _, precio in items:
-            precios[pid] = precio
+        for pid, nombre, precio in items:
+            precios[pid] = precio_final(precio, brand_of(nombre))
     slugs_bebidas = [s for s in cats if any(s.startswith(p) for p in PRICE_SYNC_PREFIXES)]
     print(f'Precio-sync: scrapeando {len(slugs_bebidas)} categorías de bebidas...')
     for slug in slugs_bebidas:
         try:
             url = f'{BASE}/super/categoria/{slug}/_/{cats[slug]}?No=0&Nrpp=500'
             for pid, _, precio in parse_products(fetch(url)):
-                precios[pid] = precio
+                precios[pid] = precio_final(precio)  # bebidas sueltas: margen resto
         except Exception as e:
             print(f'  ⚠ {slug}: {e}')
     print(f'  {len(precios)} precios de referencia')
