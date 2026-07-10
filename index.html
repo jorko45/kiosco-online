@@ -708,6 +708,11 @@
       animation:fadeUp .3s ease both;
     }
     #fabCaja:active { transform:scale(.96); }
+    .cigar-box { background:linear-gradient(180deg,#241a0c,#170f06); }
+    .cigar-box .theme-head { background:linear-gradient(90deg,#3a2c12,#241a0c); color:#e0c896; border-bottom:1px solid #4a3a1c; }
+    .cigar-box .shelf-label { color:#c9a961; }
+    .cigar-box .btl-wrap { border-bottom:7px solid #4a3a20; border-radius:0 0 6px 6px; box-shadow:0 10px 0 -5px #2a2010; }
+    .cigar-box .drink-card { width:118px; flex-shrink:0; }
     .pago-box {
       width:100%; max-width:920px; margin:0 auto 26px; padding:0 16px;
       animation:fadeUp .7s .34s ease both;
@@ -1102,10 +1107,11 @@
 
       <!-- FILA 3 -->
       <div class="cat-row2">
-        <div class="cat-card cat-soon" style="background:linear-gradient(135deg,#0a0a0a,#2a2a2a);">
-          <div class="cat-prox">Próximamente</div>
+        <div class="cat-card" onclick="enterSection('cigarreria')" style="background:linear-gradient(135deg,#1a1208,#4a3418);">
+          <div class="cat-shine"></div>
           <div class="cat-deco">🚬</div><div class="cat-grad"></div>
-          <div class="cat-info"><span class="cat-tag">Tabaco</span><div class="cat-name">Cigarrería</div><div class="cat-sub">Cigarrillos · Encendedores</div></div>
+          <div class="cat-info"><span class="cat-tag">Tabaco · +18</span><div class="cat-name">Cigarrería</div><div class="cat-sub">Marlboro · Camel · Lucky · Económicos</div></div>
+          <span class="cat-arrow">→</span>
         </div>
       </div>
 
@@ -1242,6 +1248,29 @@
       <div class="theme-head">🧉 GÓNDOLA DE APERITIVOS &amp; LICORES <span>🛒</span></div>
       <div id="gondola-shelves"></div>
     </div>
+  </div>
+
+  <div id="landing-cigarreria" class="section-view">
+    <div class="section-view-header">
+      <button class="btn-back-section" onclick="backToLanding()">← Inicio</button>
+      <h2>🚬 Cigarrería</h2>
+      <button class="cart-btn" onclick="toggleCart()" style="font-size:13px;padding:9px 14px;gap:6px">
+        🛒 <span id="cartCountCigarreria" class="cart-count">0</span>
+      </button>
+    </div>
+    <div class="search-wrap" style="padding:12px 16px 4px">
+      <div class="search-bar-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Buscá un producto..." oninput="onSearch(this.value,this)" autocomplete="off"/>
+        <button class="search-clear" onclick="clearSearch(this)" style="display:none">✕</button>
+      </div>
+      <div class="search-results" style="display:none"></div>
+    </div>
+    <div class="theme-box cigar-box">
+      <div class="theme-head">🚬 CIGARRERÍA · PRECIO POR ATADO <span>+18</span></div>
+      <div id="cigarreria-shelves"></div>
+    </div>
+    <div style="text-align:center;font-size:11.5px;color:#8a7a60;padding:0 20px 20px">Venta prohibida a menores de 18 años. Fumar es perjudicial para la salud.</div>
   </div>
 
 </div>
@@ -2070,6 +2099,167 @@ const catalog = {
       ]},
 
   ],
+  cigarrillos: [
+    { id:'marlboro', name:'Marlboro', color:'#b3000c', textColor:'#fff',
+      logo:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/F0n2r6mw3dt7f_NhTOE3r.png?size=400x400',
+      variants:[
+        {vid:1, size:'Red Box 20', price:5940, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/F0n2r6mw3dt7f_NhTOE3r.png?size=400x400'},
+        {vid:2, size:'Red KS 20', price:5590, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/s69Q7eyZG61pa__elo1z7.png?size=400x400'},
+        {vid:3, size:'Red Box 10', price:3550, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/TlntUbhVvUGHOfdAhuoyC.png?size=400x400'},
+        {vid:4, size:'Fusion Box 20 (uva)', price:5940, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/JDaHG4n-ywEMLuMiVjyta.png?size=400x400'},
+        {vid:5, size:'Fusion Box 10 (uva)', price:3550, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/aIaSqRjnHXZeTYwwpVKiA.png?size=400x400'},
+        {vid:6, size:'Gold Box 20', price:5940, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/JdDU9Uaz8OCMQAt_T8Lkb.png?size=400x400'},
+        {vid:7, size:'Summer Box 20 (sandía)', price:5940, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/Vnj5PYZrmm4z24a-bSv7G.png?size=400x400'},
+        {vid:8, size:'Ice Blast Box 20 (menta)', price:5940, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/KAJOM1aHPFE5NqzCLpnWi.png?size=400x400'},
+        {vid:9, size:'Crafted Box 20', price:3690, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/whQrmt6sCgVNR8CsAmNsK.png?size=400x400'},
+        {vid:10, size:'Crafted Forward Box 20', price:3690, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/4q9tdTR3jddO-Xupjve6s.png?size=400x400'},
+        {vid:11, size:'Crafted Coral Box 20', price:3690, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/WqqTCRo9eWzCwZw4qle6d.png?size=400x400'},
+        {vid:12, size:'Crafted Uva Box 20', price:3690, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/-22lsZ_wEDawv-J8FfSBB.png?size=400x400'},
+        {vid:13, size:'Crafted KS 20', price:3390, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/dWeuBYGauFFmIVX61_x0J.png?size=400x400'},
+        {vid:14, size:'Crafted Forward KS 20', price:3390, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/U3gRThZx1bSk511Oqukpi.png?size=400x400'},
+        {vid:15, size:'Crafted Blue KS 20 (suave)', price:3390, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/SoHILER2C_wIsAKJ9GmIB.png?size=400x400'},
+      ]},
+    { id:'philip-morris', name:'Philip Morris', color:'#b8a988', textColor:'#222',
+      logo:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/Sx8cHpPkjiUoamAbCWfVf.png?size=400x400',
+      variants:[
+        {vid:1, size:'Box 20', price:5390, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/Sx8cHpPkjiUoamAbCWfVf.png?size=400x400'},
+        {vid:2, size:'KS 20', price:4990, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/sKaC3YXXA79XV3mTT_9n5.png?size=400x400'},
+        {vid:3, size:'Box 10', price:3210, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/Nu_QHH5ueXbe493xOQ4Tt.png?size=400x400'},
+        {vid:4, size:'Caps Box 20', price:5390, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/0OHH9ADUgmuiVwe8eXOqA.png?size=400x400'},
+        {vid:5, size:'Caps Box 10', price:3250, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/D-0OS3miXrGZlFOx6Oy5i.png?size=400x400'},
+        {vid:6, size:'Red Select KS 20', price:2130, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/QB1MeR2AWhwZN3Nt9VMAs.png?size=400x400'},
+      ]},
+    { id:'camel', name:'Camel', color:'#d9a441', textColor:'#3a2a10',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNkOWE0NDEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyMzYTJhMTAnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkNhbWVsPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Box 20', price:6040, img:null},
+        {vid:2, size:'Box 10', price:3600, img:null},
+        {vid:3, size:'KS 20', price:5690, img:null},
+        {vid:4, size:'Legend KS 20', price:3430, img:null},
+        {vid:5, size:'Legend Box 20', price:3740, img:null},
+      ]},
+    { id:'lucky-strike', name:'Lucky Strike', color:'#eee6d8', textColor:'#b3000c',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNlZWU2ZDgnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzM2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNiMzAwMGMnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkx1Y2t5PC90ZXh0Pjx0ZXh0IHg9JzYwJyB5PSc1OCcgZm9udC1mYW1pbHk9J0FyaWFsIEJsYWNrLEltcGFjdCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzIwJyBmb250LXdlaWdodD0nOTAwJyBmaWxsPScjYjMwMDBjJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJz5TdHJpa2U8L3RleHQ+PC9zdmc+',
+      variants:[
+        {vid:1, size:'Box 20', price:5480, img:null},
+        {vid:2, size:'KS 20', price:5070, img:null},
+        {vid:3, size:'Box 10', price:3260, img:null},
+        {vid:4, size:'Box Click 10', price:3300, img:null},
+        {vid:5, size:'Box Click XL 20', price:5480, img:null},
+        {vid:6, size:'Click KS 20', price:5070, img:null},
+        {vid:7, size:'Doble Cap 10', price:3600, img:null},
+        {vid:8, size:'Doble Cap 20', price:6050, img:null},
+        {vid:9, size:'Origen KS 20', price:3430, img:null},
+        {vid:10, size:'Origen Conv KS 20', price:3430, img:null},
+        {vid:11, size:'Origen Conv 10', price:2100, img:null},
+        {vid:12, size:'Origen 10', price:1900, img:null},
+      ]},
+    { id:'chesterfield', name:'Chesterfield', color:'#1f3f6e', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMxZjNmNmUnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTMnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkNoZXN0ZXJmaWVsZDwvdGV4dD48L3N2Zz4=',
+      variants:[
+        {vid:1, size:'Red KS 20', price:4320, img:null},
+        {vid:2, size:'Red Box 12', price:2860, img:null},
+        {vid:3, size:'Fresh Box 20', price:4790, img:null},
+        {vid:4, size:'Fresh Box 12', price:2860, img:null},
+        {vid:5, size:'Purple Box 20', price:4790, img:null},
+        {vid:6, size:'Fresh KS 20', price:4320, img:null},
+      ]},
+    { id:'parliament', name:'Parliament', color:'#0d2c54', textColor:'#fff',
+      logo:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/gFf55XRSr8ge5eXPILKTj.png?size=400x400',
+      variants:[
+        {vid:1, size:'Box 20 (Blue Titanium)', price:6490, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/gFf55XRSr8ge5eXPILKTj.png?size=400x400'},
+        {vid:2, size:'Virginia Slim 20 (Gold Titanium)', price:6490, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/7m88fpvBvPJLhUnz3JW8U.png?size=400x400'},
+      ]},
+    { id:'rothmans', name:'Rothmans', color:'#0a3d91', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwYTNkOTEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPlJvdGhtYW5zPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Cigarrito 20', price:2380, img:null},
+        {vid:2, size:'43/70 20', price:5070, img:null},
+      ]},
+    { id:'parisiennes', name:'Parisiennes', color:'#0d84c4', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMwZDg0YzQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTMnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPlBhcmlzaWVubmVzPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Box 20', price:6600, img:null},
+      ]},
+    { id:'harmony', name:'Harmony', color:'#c8b89a', textColor:'#222',
+      logo:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/ibOvEyYD4aMhIPlVLRLq0.png?size=400x400',
+      variants:[
+        {vid:1, size:'Dorados KS 20', price:4320, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/ibOvEyYD4aMhIPlVLRLq0.png?size=400x400'},
+        {vid:2, size:'Colorados KS 20', price:4320, img:'https://cdn.pedix.app/7ltuWl4bsDfETazQggnQ/products/KPymqHsqaBiVkqY6DfktY.png?size=400x400'},
+      ]},
+    { id:'red-cig', name:'Red', color:'#c01818', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNjMDE4MTgnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPlJlZDwvdGV4dD48L3N2Zz4=',
+      variants:[
+        {vid:1, size:'Box 20', price:1670, img:null},
+        {vid:2, size:'Point KS 20', price:1560, img:null},
+        {vid:3, size:'Click/Six 20', price:1855, img:null},
+        {vid:4, size:'Click 10', price:1020, img:null},
+        {vid:5, size:'Común 10', price:920, img:null},
+      ]},
+    { id:'milenio', name:'Milenio', color:'#7a2d8a', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM3YTJkOGEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTYnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPk1pbGVuaW88L3RleHQ+PC9zdmc+',
+      variants:[
+        {vid:1, size:'Sandía 20', price:2100, img:null},
+        {vid:2, size:'Click 20', price:2100, img:null},
+      ]},
+    { id:'mill', name:'Mill', color:'#4a6a8a', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM0YTZhOGEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPk1pbGw8L3RleHQ+PC9zdmc+',
+      variants:[
+        {vid:1, size:'KS 20', price:1350, img:null},
+        {vid:2, size:'Conv 20', price:1500, img:null},
+      ]},
+    { id:'hills', name:'Hills', color:'#2d6a4a', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMyZDZhNGEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkhpbGxzPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Conv 20', price:1450, img:null},
+      ]},
+    { id:'dolchester', name:'Dolchester', color:'#8a5a2d', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YTVhMmQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMTMnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkRvbGNoZXN0ZXI8L3RleHQ+PC9zdmc+',
+      variants:[
+        {vid:1, size:'KS 20', price:1420, img:null},
+      ]},
+    { id:'master', name:'Master', color:'#555555', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM1NTU1NTUnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPk1hc3RlcjwvdGV4dD48L3N2Zz4=',
+      variants:[
+        {vid:1, size:'KS 20', price:1320, img:null},
+      ]},
+    { id:'kiel', name:'Kiel', color:'#2d4a7a', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMyZDRhN2EnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPktpZWw8L3RleHQ+PC9zdmc+',
+      variants:[
+        {vid:1, size:'KS 20', price:1200, img:null},
+      ]},
+    { id:'golden', name:'Golden', color:'#b8952d', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyNiODk1MmQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkdvbGRlbjwvdGV4dD48L3N2Zz4=',
+      variants:[
+        {vid:1, size:'KS 20', price:900, img:null},
+      ]},
+    { id:'cj', name:'CJ', color:'#6a6a2d', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM2YTZhMmQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkNKPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Común 20', price:825, img:null},
+        {vid:2, size:'Mentolado 20', price:825, img:null},
+      ]},
+    { id:'pablo-emilio', name:'Pablo Emilio', color:'#4a4a4a', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM0YTRhNGEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzM2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPlBhYmxvPC90ZXh0Pjx0ZXh0IHg9JzYwJyB5PSc1OCcgZm9udC1mYW1pbHk9J0FyaWFsIEJsYWNrLEltcGFjdCxzYW5zLXNlcmlmJyBmb250LXNpemU9JzIwJyBmb250LXdlaWdodD0nOTAwJyBmaWxsPScjZmZmJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJz5FbWlsaW88L3RleHQ+PC9zdmc+',
+      variants:[
+        {vid:1, size:'Común 20', price:825, img:null},
+      ]},
+    { id:'boxer', name:'Boxer', color:'#8a2d2d', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyM4YTJkMmQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkJveGVyPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Común 20', price:880, img:null},
+      ]},
+    { id:'rex', name:'Rex', color:'#2d2d2d', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMyZDJkMmQnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPlJleDwvdGV4dD48L3N2Zz4=',
+      variants:[
+        {vid:1, size:'Común 20', price:800, img:null},
+      ]},
+    { id:'go', name:'GO', color:'#2d8a6a', textColor:'#fff',
+      logo:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHdpZHRoPScxMjAnIGhlaWdodD0nODAnIGZpbGw9JyMyZDhhNmEnIHJ4PSc4Jy8+PHRleHQgeD0nNjAnIHk9JzQ2JyBmb250LWZhbWlseT0nQXJpYWwgQmxhY2ssSW1wYWN0LHNhbnMtc2VyaWYnIGZvbnQtc2l6ZT0nMjAnIGZvbnQtd2VpZ2h0PSc5MDAnIGZpbGw9JyNmZmYnIHRleHQtYW5jaG9yPSdtaWRkbGUnPkdPPC90ZXh0Pjwvc3ZnPg==',
+      variants:[
+        {vid:1, size:'Común 20', price:810, img:null},
+      ]},
+  ],
 };
 
 // ── HELPERS DE LOGO ───────────────────────────────────────────────────────
@@ -2708,6 +2898,13 @@ function enterSection(section) {
     document.getElementById('landing-golosinas').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
     renderGolosinas();
+  } else if (section === 'cigarreria') {
+    document.getElementById('landing-picker').style.display = 'none';
+    hideSectionViews();
+    showTicker(false);
+    document.getElementById('landing-cigarreria').classList.add('active');
+    document.getElementById('landing').scrollTo(0, 0);
+    renderCigarreria();
   } else if (['jugos','vinos','licores','cervezasext','aguasext','gaseosasext'].indexOf(section) !== -1) {
     document.getElementById('landing-picker').style.display = 'none';
     hideSectionViews();
@@ -2953,6 +3150,29 @@ function renderBotellasAll() {
     {label: '🍒 Granadinas',  list: ids(['granadina-dellepiane','granadina-cusenier'])}
   ]);
 }
+function renderCigarreria() {
+  var el = document.getElementById('cigarreria-shelves');
+  if (!el || el.dataset.done) return;
+  el.dataset.done = '1';
+  var premium = ['marlboro','philip-morris','camel','lucky-strike','chesterfield','parliament','rothmans','parisiennes','harmony'];
+  function cards(ids) {
+    return ids.map(function(bid) {
+      var b = catalog.cigarrillos.find(function(x){ return x.id === bid; });
+      if (!b) return '';
+      var minP = Math.min.apply(null, b.variants.map(function(v){ return v.price; }));
+      var nv = b.variants.length;
+      return '<div class="drink-card" onclick="openModal(\'' + b.id + '\',\'cigarrillos\')" title="' + b.name + '">' +
+        brandLogoCard(b) +
+        '<div class="drink-name">' + b.name + '</div>' +
+        (nv > 1 ? '<div class="drink-opts">' + nv + ' variedades</div>' : '') +
+        '<div class="drink-price">desde $' + minP.toLocaleString('es-AR') + '</div></div>';
+    }).join('');
+  }
+  var econ = catalog.cigarrillos.map(function(b){ return b.id; }).filter(function(id){ return premium.indexOf(id) === -1; });
+  el.innerHTML = '<div class="shelf-label">⭐ Marcas Premium</div><div class="btl-wrap">' + cards(premium) + '</div>' +
+                 '<div class="shelf-label">💸 Económicos</div><div class="btl-wrap">' + cards(econ) + '</div>';
+}
+
 // (render lazy: se llama desde showSection('botellas') via renderVinos/renderLicores)
 
 
@@ -4899,6 +5119,7 @@ function getAllSearchableProducts() {
     { key:'botellas', items: catalog.botellas || [] },
     { key:'promos',   items: catalog.promos    || [] },
     { key:'pritty',   items: catalog.pritty    || [] },
+    { key:'cigarrillos', items: catalog.cigarrillos || [] },
     { key:'gondola',   items: [...Object.values(catalogGondola).flat(), ...catalogJugos.polvo] },
     { key:'golosinas', items: Object.values(catalogGolosinas).flat() },
     { key:'golosinas', items: Object.values(catalogGolosinasMami).flat() },
