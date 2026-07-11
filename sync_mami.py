@@ -36,6 +36,10 @@ GOLOSINAS_CATS = {
     'm_golosinas':  'supermami-almacen-golosinas-y-chocolates-golosinas',
     'm_obleas':     'supermami-almacen-golosinas-y-chocolates-obleas-y-turrones',
     'm_postre':     'supermami-almacen-golosinas-y-chocolates-postre-de-mani',
+    'm_galletas_dulces':  'supermami-almacen-desayuno-galletas-dulces',
+    'm_galletas_saladas': 'supermami-almacen-desayuno-galletas-saladas',
+    'm_galletas_arroz':   'supermami-almacen-desayuno-galletas-de-arroz',
+    'm_galletas_sinsal':  'supermami-almacen-desayuno-galletas-sin-sal',
 }
 # Prefijos de categorías extra solo para ACTUALIZAR PRECIOS de productos ya cargados
 PRICE_SYNC_PREFIXES = ['supermami-bebidas-']
