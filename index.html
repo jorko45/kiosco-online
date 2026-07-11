@@ -2979,28 +2979,28 @@ function enterSection(section) {
     showTicker(false);
     document.getElementById('landing-botellas').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
-    renderVinos(); renderLicores();
+    setTimeout(function(){ renderVinos(); renderLicores(); }, 0);
   } else if (section === 'gondola') {
     document.getElementById('landing-picker').style.display = 'none';
     hideSectionViews();
     showTicker(false);
     document.getElementById('landing-gondola').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
-    renderGondola();
+    setTimeout(renderGondola, 0);
   } else if (section === 'golosinas') {
     document.getElementById('landing-picker').style.display = 'none';
     hideSectionViews();
     showTicker(false);
     document.getElementById('landing-golosinas').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
-    renderGolosinas();
+    setTimeout(renderGolosinas, 0);
   } else if (section === 'cigarreria') {
     document.getElementById('landing-picker').style.display = 'none';
     hideSectionViews();
     showTicker(false);
     document.getElementById('landing-cigarreria').classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
-    renderCigarreria();
+    setTimeout(renderCigarreria, 0);
   } else if (['jugos','vinos','licores','cervezasext','aguasext','gaseosasext'].indexOf(section) !== -1) {
     document.getElementById('landing-picker').style.display = 'none';
     hideSectionViews();
@@ -3008,7 +3008,7 @@ function enterSection(section) {
     document.getElementById('landing-' + section).classList.add('active');
     document.getElementById('landing').scrollTo(0, 0);
     var renderMap = {jugos:renderJugos, vinos:renderVinos, licores:renderLicores, cervezasext:renderCervezasExt, aguasext:renderAguasExt, gaseosasext:renderGaseosasExt};
-    renderMap[section]();
+    setTimeout(function(){ renderMap[section](); }, 0);
   } else {
     const meta = sectionMeta[section];
     document.getElementById('landing-picker').style.display = 'none';
