@@ -677,6 +677,31 @@
     @media(max-width:600px){ .kiosco-wrap { border-radius: 10px; } }
 
     /* ── LANDING CATEGORÍAS ── */
+    /* ── hero del kiosco clickeable ── */
+    .kiosco-hero {
+      position:relative; width:100%; max-width:920px; margin:0 auto 20px;
+      padding:0 16px; animation:fadeUp .7s .22s ease both;
+    }
+    .kh-frame { position:relative; border-radius:18px; overflow:hidden;
+      box-shadow:0 18px 50px rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.1); }
+    .kh-frame img { width:100%; display:block; }
+    .kh-zone {
+      position:absolute; cursor:pointer; border-radius:10px;
+      transition:background .15s, outline .15s; outline:2px solid transparent;
+    }
+    .kh-zone:hover, .kh-zone:active {
+      background:rgba(224,24,24,.14); outline:2px solid rgba(255,90,90,.85);
+    }
+    .kh-zone span {
+      position:absolute; left:50%; bottom:6px; transform:translateX(-50%);
+      background:rgba(10,15,22,.85); color:#fff; font-family:'Rajdhani',sans-serif;
+      font-weight:800; font-size:12px; letter-spacing:1px; padding:3px 10px;
+      border-radius:999px; opacity:0; transition:opacity .15s; white-space:nowrap; pointer-events:none;
+    }
+    .kh-zone:hover span { opacity:1; }
+    .kh-hint { text-align:center; font-size:11.5px; color:#7d8ea0; margin-top:8px; letter-spacing:1px; }
+    @media (max-width:480px) { .kiosco-hero { padding:0 8px; } .kh-zone span { font-size:10px; } }
+
     .cat-grid {
       width:100%; max-width:920px; margin:0 auto 24px;
       padding:0 16px;
@@ -1023,6 +1048,22 @@
       </div>
       <p class="landing-tagline">Tu kiosco en tu celular · Córdoba</p>
 
+    </div>
+
+    <!-- ── KIOSCO HERO CLICKEABLE ── -->
+    <div class="kiosco-hero" id="kioscoHero">
+      <div class="kh-frame">
+        <img src="/img/kiosco-hero.jpg" alt="Kiosco K24" onerror="document.getElementById('kioscoHero').style.display='none'">
+        <div class="kh-zone" style="left:1%;  top:28%; width:22.5%; height:70%" onclick="enterSection('golosinas')"><span>🍬 Golosinas</span></div>
+        <div class="kh-zone" style="left:23.5%; top:13%; width:18.5%; height:62%" onclick="enterSection('gondola')"><span>🛒 Góndola</span></div>
+        <div class="kh-zone" style="left:42.5%; top:4%;  width:19%; height:13%" onclick="toggleCart()"><span>💳 Caja</span></div>
+        <div class="kh-zone" style="left:43%; top:58%; width:9%;  height:32%" onclick="toggleCart()"><span>💳 Caja</span></div>
+        <div class="kh-zone" style="left:52%; top:68%; width:13.5%; height:26%" onclick="enterSection('promos')"><span>🔥 Promos</span></div>
+        <div class="kh-zone" style="left:60.5%; top:13%; width:18%; height:82%" onclick="enterSection('heladeras')"><span>❄️ Heladeras</span></div>
+        <div class="kh-zone" style="left:78.8%; top:13%; width:10.7%; height:82%" onclick="enterSection('cigarreria')"><span>🚬 Cigarrería</span></div>
+        <div class="kh-zone" style="left:89.7%; top:13%; width:10.3%; height:82%" onclick="enterSection('botellas')"><span>🍾 Botellas</span></div>
+      </div>
+      <div class="kh-hint">👆 TOCÁ UNA SECCIÓN DEL KIOSCO PARA ENTRAR</div>
     </div>
 
     <!-- ── BUSCADOR ── -->
