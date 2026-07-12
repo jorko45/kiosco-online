@@ -810,6 +810,22 @@
       display:flex; align-items:center; gap:8px;
     }
     @media (max-width:480px) { .pago-items { grid-template-columns:1fr 1fr; } .pago-item { font-size:12px; padding:8px 9px; } }
+    /* CTA destacado: instalar la app */
+    .btn-install-cta {
+      grid-column:1 / -1; justify-content:center; align-items:center; gap:9px;
+      background:linear-gradient(135deg,#e01818,#ff3b3b); border:none; border-radius:12px; color:#fff;
+      font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16.5px; letter-spacing:1px;
+      padding:14px 16px; margin-top:6px; cursor:pointer;
+      box-shadow:0 8px 24px rgba(224,24,24,.45);
+      animation:instalarPulse 2.2s ease-in-out infinite;
+    }
+    .btn-install-cta:hover { filter:brightness(1.08); }
+    .btn-install-cta:active { transform:scale(.98); }
+    @keyframes instalarPulse {
+      0%,100% { box-shadow:0 8px 22px rgba(224,24,24,.4); }
+      50% { box-shadow:0 8px 30px rgba(224,24,24,.8), 0 0 22px rgba(255,70,70,.45); }
+    }
+    @media (max-width:480px){ .btn-install-cta{ font-size:15.5px; padding:13px 14px; } }
     .cat-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .3s; }
     .cat-card:not(.cat-soon):hover .cat-bg { transform:scale(1.05); }
     .cat-dark-ov { position:absolute; inset:0; background:rgba(0,0,0,.42); }
@@ -1234,7 +1250,7 @@
           <div class="pago-item">💳 MercadoPago (tarjetas y QR)</div>
           <div class="pago-item">🏦 Transferencia bancaria</div>
           <div class="pago-item">🌙 Comprá 24hs — enviamos desde las 8:00</div>
-          <button class="pago-item" id="btnInstalar" style="display:none;cursor:pointer;border-color:rgba(255,80,80,.4);background:rgba(224,24,24,.15)">📲 Instalar la app K24</button>
+          <button class="btn-install-cta" id="btnInstalar" style="display:none">📲 Instalar la app K24 · acceso directo</button>
         </div>
       </div>
     </div>
