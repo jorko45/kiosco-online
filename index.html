@@ -2826,6 +2826,7 @@ function syncUsuario(evento) {
       carrito: cart,
       deseos:  wishlist,
     });
+    delete payload.foto; // la foto queda local (no la mandamos en cada sync)
     fetch(K24_SYNC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2854,6 +2855,108 @@ async function restaurarEstadoRemoto(telefono, email) {
       saveWishlist();
     }
     renderCart();
+    return true;
+  } catch (e) { return false; }
+}
+
+// ══ FOTO DE PERFIL + HUELLA (WebAuthn) ══════════════════════════════════════
+let _fotoData = null;
+function onFotoSelected(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (ev) {
+    const img = new Image();
+    img.onload = function () {
+      const S = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = S; canvas.height = S;
+      const ctx = canvas.getContext('2d');
+      const min = Math.min(img.width, img.height);
+      const sx = (img.width - min) / 2, sy = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, S, S);
+      _fotoData = canvas.toDataURL('image/jpeg', 0.8);
+      _pintarAvatar(_fotoData);
+      if (userProfile) {
+        userProfile.foto = _fotoData;
+        try { localStorage.setItem('k24_perfil', JSON.stringify(userProfile)); } catch (e) {}
+        if (typeof syncUsuario === 'function') syncUsuario('actualizacion');
+        showToast('📷 Foto actualizada');
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function _pintarAvatar(dataUrl) {
+  const a = document.getElementById('perfilAvatar');
+  if (a) {
+    if (dataUrl) { a.style.backgroundImage = 'url(' + dataUrl + ')'; a.textContent = ''; }
+    else { a.style.backgroundImage = ''; a.textContent = '👤'; }
+  }
+}
+
+// ── Huella / biometría del teléfono (WebAuthn) ──
+function _huellaSoportada() {
+  return !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.create);
+}
+function _b64(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
+function _unb64(str) { const bin = atob(str); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return arr; }
+async function activarHuella() {
+  if (!_huellaSoportada()) { showToast('Tu dispositivo no soporta huella'); return; }
+  try {
+    const uid = crypto.getRandomValues(new Uint8Array(16));
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rp: { name: 'K24', id: location.hostname },
+        user: { id: uid, name: (userProfile && userProfile.telefono) || 'k24user', displayName: (userProfile && userProfile.nombre) || 'K24' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+        timeout: 60000,
+        attestation: 'none',
+      },
+    });
+    localStorage.setItem('k24_huella_id', _b64(cred.rawId));
+    localStorage.setItem('k24_huella', '1');
+    _pintarBtnHuella();
+    showToast('🔒 Confirmación por huella activada');
+  } catch (e) { showToast('No se pudo activar la huella'); }
+}
+function desactivarHuella() {
+  localStorage.removeItem('k24_huella');
+  localStorage.removeItem('k24_huella_id');
+  _pintarBtnHuella();
+  showToast('Huella desactivada');
+}
+function toggleHuella() {
+  if (localStorage.getItem('k24_huella') === '1') desactivarHuella();
+  else activarHuella();
+}
+function _pintarBtnHuella() {
+  const b = document.getElementById('btnHuella');
+  if (!b) return;
+  if (!_huellaSoportada()) { b.style.display = 'none'; return; }
+  b.style.display = '';
+  const on = localStorage.getItem('k24_huella') === '1';
+  b.innerHTML = on ? '🔒 Huella activada · tocá para desactivar' : '🔒 Activar confirmación por huella';
+  b.style.borderColor = on ? 'rgba(120,255,150,.5)' : 'rgba(120,180,255,.35)';
+  b.style.color = on ? '#bfffce' : '#cfe0ee';
+}
+async function confirmarHuella() {
+  if (localStorage.getItem('k24_huella') !== '1') return true;   // no activada → no bloquea
+  if (!_huellaSoportada()) return true;
+  const id = localStorage.getItem('k24_huella_id');
+  if (!id) return true;
+  try {
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: 'public-key', id: _unb64(id) }],
+        userVerification: 'required',
+        timeout: 60000,
+      },
+    });
     return true;
   } catch (e) { return false; }
 }
@@ -3050,6 +3153,9 @@ function abrirPerfil() {
     // Primera vez: auto-geolocalizar para pre-llenar la dirección
     setTimeout(obtenerUbicacion, 400);
   }
+  _fotoData = (userProfile && userProfile.foto) || null;
+  if (typeof _pintarAvatar === 'function') _pintarAvatar(_fotoData);
+  if (typeof _pintarBtnHuella === 'function') _pintarBtnHuella();
   o.classList.add('open');
 }
 
@@ -3082,6 +3188,7 @@ async function guardarPerfil() {
     barrio:     document.getElementById('pBarrio').value.trim(),
     referencia: document.getElementById('pReferencia').value.trim(),
     coords:     coordsCapturadas,
+    foto:       _fotoData || (userProfile && userProfile.foto) || '',
   };
   localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
   cargarPerfil();
@@ -5416,7 +5523,7 @@ function addGonToCart(id, name, price, img) {
 // Bloquear scroll del body mientras el landing está activo
 document.body.style.overflow = 'hidden';
 
-function pedirWSP() {
+async function pedirWSP() {
   const items = Object.values(cart);
   if (!items.length) return;
   if (!checkDeliveryHours()) return;
@@ -5427,6 +5534,12 @@ function pedirWSP() {
     showToast('📝 Completá tu perfil para continuar');
     abrirPerfil();
     return;
+  }
+
+  // Confirmación por huella (si el usuario la activó) — no aplica a MercadoPago
+  if (typeof confirmarHuella === 'function') {
+    const ok = await confirmarHuella();
+    if (!ok) { showToast('❌ Confirmación cancelada'); return; }
   }
 
   const { costo: envio, gratis, subtotal } = getDeliveryInfo();
@@ -5678,10 +5791,17 @@ document.addEventListener('click', function(ev) {
     <p class="perfil-sub">Tu primera entrega va a tu ubicación actual. Luego podés cambiar la dirección.</p>
     <p class="perfil-sub" id="perfilSubVerif" style="display:none;color:#7dff7d">✅ Ya verificado — podés usar cualquier domicilio.</p>
 
-    <div style="display:flex;gap:8px;margin:4px 0 16px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:7px;margin:6px 0 14px">
+      <div id="perfilAvatar" onclick="document.getElementById('inputFoto').click()" style="width:84px;height:84px;border-radius:50%;background:#1c2836;background-size:cover;background-position:center;border:2px solid rgba(255,90,90,.5);display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;overflow:hidden">👤</div>
+      <button type="button" onclick="document.getElementById('inputFoto').click()" style="background:none;border:none;color:#9fc5ff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.5px;cursor:pointer">📷 Cambiar foto</button>
+      <input type="file" id="inputFoto" accept="image/*" style="display:none" onchange="onFotoSelected(this)"/>
+    </div>
+
+    <div style="display:flex;gap:8px;margin:4px 0 10px">
       <button type="button" onclick="verPedidos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#dce8f5;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">🧾 Mis pedidos</button>
       <button type="button" onclick="verDeseos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,90,90,.35);color:#ffd0d0;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">❤️ Mis deseos</button>
     </div>
+    <button type="button" id="btnHuella" onclick="toggleHuella()" style="display:none;width:100%;margin:0 0 16px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.35);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔒 Activar confirmación por huella</button>
 
     <div class="perfil-field">
       <label>Nombre y apellido *</label>
