@@ -1466,6 +1466,7 @@
     <button class="btn-add" onclick="addFromModal()">
       Agregar al carrito &nbsp;·&nbsp; <span id="modalTotal">$0</span>
     </button>
+    <button id="btnWishModal" onclick="toggleWishlistCurrent()" style="width:100%;margin-top:8px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.18);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:14px;letter-spacing:.5px;padding:11px;border-radius:10px;cursor:pointer">♡ Agregar a mis deseos</button>
   </div>
 </div>
 
@@ -2599,6 +2600,7 @@ function renderModal() {
 
   document.getElementById('variantsRow').innerHTML = variantsHtml;
   updateModalTotal();
+  if (typeof _syncWishBtn === 'function') _syncWishBtn();
 }
 
 function selectVariant(vid) {
@@ -2654,9 +2656,9 @@ function getDeliveryInfo() {
   return { costo: gratis ? 0 : DELIVERY_COSTO, gratis, credits, subtotal };
 }
 
-function recordarCompra() {
+function recordarCompra(canal) {
   // Usar crédito de envío gratis si corresponde
-  const { gratis, subtotal } = getDeliveryInfo();
+  const { gratis, subtotal, costo } = getDeliveryInfo();
   if (gratis) {
     const credits = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
     localStorage.setItem('k24_envios_gratis', Math.max(0, credits - 1));
@@ -2671,11 +2673,146 @@ function recordarCompra() {
   localStorage.setItem('k24_verificado', '1');
   const c = parseInt(localStorage.getItem('k24_compras') || '0');
   localStorage.setItem('k24_compras', c + 1);
+
+  // ── Registro de compra (historial local + Sheets) ──
+  try {
+    const items = Object.values(cart).map(function(i) {
+      return { name: i.name, size: i.size || '', qty: i.qty, price: i.price };
+    });
+    if (items.length) {
+      const envio  = gratis ? 0 : costo;
+      const pedido = {
+        fecha:    new Date().toISOString(),
+        canal:    canal || '',
+        items:    items,
+        subtotal: subtotal,
+        envio:    envio,
+        total:    subtotal + envio,
+      };
+      // Historial local (todos los canales) → para "Mis pedidos"
+      const pedidos = JSON.parse(localStorage.getItem('k24_pedidos') || '[]');
+      pedidos.unshift(pedido);
+      localStorage.setItem('k24_pedidos', JSON.stringify(pedidos.slice(0, 100)));
+      // A la planilla de Pedidos: solo MercadoPago (los de WhatsApp ya se envían en pedirWSP)
+      if (canal === 'mercadopago' && userProfile) {
+        const productosStr = items.map(function(i){ return i.qty + 'x ' + i.name + (i.size ? ' ' + i.size : '') + ' $' + (i.price * i.qty).toLocaleString('es-AR'); }).join(' | ');
+        fetch('https://script.google.com/macros/s/AKfycbz48Hs8pcO-ewcmnxaHrS-eBrcVk-llMdaCxjNyCXOdP99SahO7X84w-97bs_JvuzOL/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action:    'guardar_pedido',
+            nombre:    userProfile.nombre,
+            telefono:  userProfile.telefono,
+            direccion: userProfile.direccion + (userProfile.piso ? ', ' + userProfile.piso : ''),
+            barrio:    userProfile.barrio || '',
+            productos: productosStr,
+            total:     '$' + (subtotal + envio).toLocaleString('es-AR'),
+            notas:     (userProfile.referencia || '') + ' [MercadoPago]',
+          }),
+        }).catch(function(){});
+      }
+    }
+  } catch (e) {}
 }
 
 function _loadCart() { try { return JSON.parse(localStorage.getItem('k24_cart') || '{}') || {}; } catch (e) { return {}; } }
 function saveCart() { try { localStorage.setItem('k24_cart', JSON.stringify(cart)); } catch (e) {} }
 let cart = _loadCart();
+
+// ══ LISTA DE DESEOS + MIS PEDIDOS ══════════════════════════════════════════
+let wishlist = [];
+try { wishlist = JSON.parse(localStorage.getItem('k24_wishlist') || '[]') || []; } catch (e) { wishlist = []; }
+function saveWishlist() { try { localStorage.setItem('k24_wishlist', JSON.stringify(wishlist)); } catch (e) {} }
+function inWishlist(id) { return wishlist.some(function (w) { return w.id === id; }); }
+function toggleWishlistCurrent() {
+  if (typeof currentBrand === 'undefined' || !currentBrand) return;
+  const id = currentBrand.id;
+  const minP = Math.min.apply(null, currentBrand.variants.map(function (v) { return v.price; }));
+  if (inWishlist(id)) {
+    wishlist = wishlist.filter(function (w) { return w.id !== id; });
+    showToast('♡ Quitado de tus deseos');
+  } else {
+    wishlist.unshift({ id: id, shelfKey: currentShelfKey, name: currentBrand.name, price: minP });
+    showToast('❤️ Agregado a tus deseos');
+  }
+  saveWishlist();
+  _syncWishBtn();
+}
+function _syncWishBtn() {
+  const b = document.getElementById('btnWishModal');
+  if (b && typeof currentBrand !== 'undefined' && currentBrand) {
+    const on = inWishlist(currentBrand.id);
+    b.innerHTML = on ? '❤️ En tus deseos' : '♡ Agregar a mis deseos';
+    b.style.color = on ? '#ff5a5a' : '#cfe0ee';
+    b.style.borderColor = on ? 'rgba(255,90,90,.6)' : 'rgba(255,255,255,.18)';
+  }
+}
+function _cerrarOverlays() {
+  document.querySelectorAll('.k24-ov').forEach(function (o) { o.remove(); });
+}
+function _overlay(titulo, innerHtml) {
+  const ov = document.createElement('div');
+  ov.className = 'k24-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#0f1722;border:1px solid rgba(120,180,255,.25);border-radius:16px;max-width:420px;width:100%;max-height:82vh;overflow:auto;padding:20px;color:#fff;font-family:Rajdhani,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)';
+  box.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:17px">' + titulo + '</div></div>' + innerHtml;
+  const x = document.createElement('button');
+  x.textContent = '✕';
+  x.style.cssText = 'position:absolute;background:none;border:none;color:#8aa;font-size:22px;cursor:pointer;margin-top:-6px';
+  x.onclick = function () { ov.remove(); };
+  box.querySelector('div > div').parentNode.appendChild(x);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  return ov;
+}
+function verDeseos() {
+  _cerrarOverlays();
+  if (!wishlist.length) {
+    _overlay('❤️ Mis deseos', '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Todavía no guardaste nada. Tocá “Agregar a mis deseos” dentro de un producto para sumarlo acá.</div>');
+    return;
+  }
+  const rows = wishlist.map(function (w) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + w.name + '</div><div style="color:#4dff88;font-weight:700;font-size:13px">desde $' + (w.price || 0).toLocaleString('es-AR') + '</div></div>'
+      + '<button onclick="abrirDeseo(\'' + w.id + '\',\'' + (w.shelfKey || '') + '\')" style="background:#cc1010;border:none;color:#fff;font-weight:800;font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer">Ver</button>'
+      + '<button onclick="quitarDeseo(\'' + w.id + '\',this)" style="background:none;border:1px solid rgba(255,255,255,.2);color:#bcd;font-size:12px;padding:8px 10px;border-radius:8px;cursor:pointer">Quitar</button>'
+      + '</div>';
+  }).join('');
+  _overlay('❤️ Mis deseos (' + wishlist.length + ')', rows);
+}
+function abrirDeseo(id, shelfKey) {
+  _cerrarOverlays();
+  if (shelfKey) { try { openModal(id, shelfKey); } catch (e) {} }
+}
+function quitarDeseo(id, btn) {
+  wishlist = wishlist.filter(function (w) { return w.id !== id; });
+  saveWishlist();
+  const row = btn.parentNode;
+  if (row) row.remove();
+}
+function verPedidos() {
+  _cerrarOverlays();
+  let pedidos = [];
+  try { pedidos = JSON.parse(localStorage.getItem('k24_pedidos') || '[]') || []; } catch (e) { pedidos = []; }
+  if (!pedidos.length) {
+    _overlay('🧾 Mis pedidos', '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Todavía no tenés pedidos. Cuando hagas tu primera compra van a aparecer acá.</div>');
+    return;
+  }
+  const rows = pedidos.map(function (p) {
+    const f = new Date(p.fecha);
+    const fecha = isNaN(f) ? '' : f.toLocaleDateString('es-AR') + ' ' + f.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const canal = p.canal === 'mercadopago' ? '💳 MercadoPago' : (p.canal === 'whatsapp' ? '📱 WhatsApp' : '');
+    const detalle = (p.items || []).map(function (i) { return i.qty + 'x ' + i.name + (i.size ? ' ' + i.size : ''); }).join(', ');
+    return '<div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+      + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#8aa;margin-bottom:4px"><span>' + fecha + '</span><span>' + canal + '</span></div>'
+      + '<div style="font-size:13.5px;color:#dce8f5;line-height:1.4">' + detalle + '</div>'
+      + '<div style="color:#4dff88;font-weight:800;font-size:14px;margin-top:4px">Total: $' + (p.total || 0).toLocaleString('es-AR') + '</div>'
+      + '</div>';
+  }).join('');
+  _overlay('🧾 Mis pedidos (' + pedidos.length + ')', rows);
+}
 
 function changeCartQty(key, delta) {
   if (!cart[key]) return;
@@ -2821,7 +2958,7 @@ async function pagarMP() {
       throw new Error(data.error || 'Error al crear el pago');
     }
 
-    recordarCompra();
+    recordarCompra('mercadopago');
     window.location.href = data.init_point;
 
   } catch (err) {
@@ -5268,7 +5405,7 @@ function pedirWSP() {
   const refLinea = userProfile.referencia ? `\n🏠 Ref: ${userProfile.referencia}` : '';
 
   const msg = `🛒 *Pedido K24*\n\n${lineas}\n\nSubtotal: $${subtotal.toLocaleString('es-AR')}\n${envioLinea}\n*Total: $${total.toLocaleString('es-AR')}*\n\n👤 ${userProfile.nombre}\n📱 ${userProfile.telefono}\n📍 ${dirCompleta}${refLinea}${mapaLinea}`;
-  recordarCompra();
+  recordarCompra('whatsapp');
 
   // Guardar pedido automáticamente en Google Sheet "Pedidos K24"
   const productosStr = items.map(i => `${i.qty}x ${i.name} ${i.size} $${(i.price*i.qty).toLocaleString('es-AR')}`).join(' | ');
@@ -5500,6 +5637,11 @@ document.addEventListener('click', function(ev) {
     <h2>📦 ¿A dónde te lo llevamos?</h2>
     <p class="perfil-sub">Tu primera entrega va a tu ubicación actual. Luego podés cambiar la dirección.</p>
     <p class="perfil-sub" id="perfilSubVerif" style="display:none;color:#7dff7d">✅ Ya verificado — podés usar cualquier domicilio.</p>
+
+    <div style="display:flex;gap:8px;margin:4px 0 16px">
+      <button type="button" onclick="verPedidos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#dce8f5;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">🧾 Mis pedidos</button>
+      <button type="button" onclick="verDeseos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,90,90,.35);color:#ffd0d0;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">❤️ Mis deseos</button>
+    </div>
 
     <div class="perfil-field">
       <label>Nombre y apellido *</label>
