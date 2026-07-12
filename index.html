@@ -2716,13 +2716,13 @@ function recordarCompra(canal) {
 }
 
 function _loadCart() { try { return JSON.parse(localStorage.getItem('k24_cart') || '{}') || {}; } catch (e) { return {}; } }
-function saveCart() { try { localStorage.setItem('k24_cart', JSON.stringify(cart)); } catch (e) {} }
+function saveCart() { try { localStorage.setItem('k24_cart', JSON.stringify(cart)); } catch (e) {} if (typeof syncEstadoDebounced === 'function') syncEstadoDebounced(); }
 let cart = _loadCart();
 
 // ══ LISTA DE DESEOS + MIS PEDIDOS ══════════════════════════════════════════
 let wishlist = [];
 try { wishlist = JSON.parse(localStorage.getItem('k24_wishlist') || '[]') || []; } catch (e) { wishlist = []; }
-function saveWishlist() { try { localStorage.setItem('k24_wishlist', JSON.stringify(wishlist)); } catch (e) {} }
+function saveWishlist() { try { localStorage.setItem('k24_wishlist', JSON.stringify(wishlist)); } catch (e) {} if (typeof syncEstadoDebounced === 'function') syncEstadoDebounced(); }
 function inWishlist(id) { return wishlist.some(function (w) { return w.id === id; }); }
 function toggleWishlistCurrent() {
   if (typeof currentBrand === 'undefined' || !currentBrand) return;
@@ -2812,6 +2812,50 @@ function verPedidos() {
       + '</div>';
   }).join('');
   _overlay('🧾 Mis pedidos (' + pedidos.length + ')', rows);
+}
+
+// ══ SYNC ENTRE DISPOSITIVOS (Google Sheets vía Apps Script) ══════════════════
+const K24_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxHw92ciow84P-SFFgABT4i04OH21qbaTuOsXM0PPbG2pxA6BcoA3kBuK2rD7dWqdYZGw/exec';
+let _syncTimer = null;
+function syncUsuario(evento) {
+  if (!userProfile || !K24_SYNC_URL) return;
+  try {
+    const payload = Object.assign({}, userProfile, {
+      evento:  evento || 'actualizacion',
+      fecha:   new Date().toISOString(),
+      carrito: cart,
+      deseos:  wishlist,
+    });
+    fetch(K24_SYNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    }).catch(function () {});
+  } catch (e) {}
+}
+function syncEstadoDebounced() {
+  if (!userProfile) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(function () { syncUsuario('actualizacion'); }, 1500);
+}
+async function restaurarEstadoRemoto(telefono, email) {
+  try {
+    const r = await fetch('/api/estado?telefono=' + encodeURIComponent(telefono || '') + '&email=' + encodeURIComponent(email || ''));
+    const data = await r.json();
+    if (!data || !data.encontrado) return false;
+    if (data.carrito && typeof data.carrito === 'object') {
+      Object.keys(data.carrito).forEach(function (k) { if (!cart[k]) cart[k] = data.carrito[k]; });
+      saveCart();
+    }
+    if (Array.isArray(data.deseos)) {
+      data.deseos.forEach(function (w) {
+        if (w && w.id && !wishlist.some(function (x) { return x.id === w.id; })) wishlist.unshift(w);
+      });
+      saveWishlist();
+    }
+    renderCart();
+    return true;
+  } catch (e) { return false; }
 }
 
 function changeCartQty(key, delta) {
@@ -3043,15 +3087,11 @@ async function guardarPerfil() {
   cargarPerfil();
   cerrarPerfil();
 
-  // Registrar/actualizar en Google Sheets (registro de cada persona que ingresa datos)
-  fetch('/api/registrar-usuario', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign({}, userProfile, {
-      evento: esNuevo ? 'registro' : 'actualizacion',
-      fecha:  new Date().toISOString(),
-    })),
-  }).catch(() => {}); // silencioso
+  // Registro + sync entre dispositivos: traer el estado guardado (carrito/deseos)
+  // y luego subir el estado actual ya combinado.
+  restaurarEstadoRemoto(telefono, email).then(function () {
+    syncUsuario(esNuevo ? 'registro' : 'actualizacion');
+  });
 
   // Continuar con la acción que disparó el registro
   if (_pendingAction) {
