@@ -1,0 +1,47 @@
+name: Sync precios Mami
+
+# Corre solo en horario (hora Argentina = UTC-3) y también se puede
+# disparar a mano desde la pestaña "Actions" de GitHub.
+on:
+  schedule:
+    - cron: '0 11 * * *'   # 08:00 ART
+    - cron: '0 20 * * *'   # 17:00 ART
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-mami
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Traer el repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Actualizar precios del Mami
+        run: python sync_mami.py
+
+      - name: Publicar si hubo cambios
+        run: |
+          if git diff --quiet index.html; then
+            echo "Sin cambios de precio, no publico."
+          else
+            git config user.name  "K24 Bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add index.html
+            git commit -m "Auto: precios Mami actualizados [skip ci]"
+            git pull --rebase origin main || true
+            git push
+            echo "Precios actualizados y publicados."
+          fi
