@@ -15,6 +15,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --red:#CC0000; --red-dark:#a80000; --dark:#0d0d0d; --text:#111; --muted:#777; }
+    html, body { overflow-x:hidden; width:100%; max-width:100%; }
     body { font-family:'Inter',sans-serif; background:#f0f0f0; color:var(--text); min-height:100vh; }
 
     /* ── HEADER ── */
@@ -342,7 +343,7 @@
     #landing {
       position: fixed; inset: 0; z-index: 1000;
       background: #060f18;
-      overflow-y: auto;
+      overflow-y: auto; overflow-x: hidden;
       display: flex; flex-direction: column;
       transition: opacity .55s ease, transform .55s ease;
     }
