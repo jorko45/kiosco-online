@@ -5415,19 +5415,53 @@ if ('serviceWorker' in navigator) {
   });
 }
 var _deferredInstall = null;
+function _isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+function _isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function _showInstallBtn() {
+  var b = document.getElementById('btnInstalar');
+  if (!b) return;
+  // Ocultar solo si ya está abierta como app instalada; si no, mostrarla siempre
+  b.style.display = _isStandalone() ? 'none' : 'flex';
+}
+window.addEventListener('load', _showInstallBtn);
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   _deferredInstall = e;
-  var b = document.getElementById('btnInstalar');
-  if (b) b.style.display = 'flex';
+  _showInstallBtn();
 });
+window.addEventListener('appinstalled', function() {
+  _deferredInstall = null;
+  var b = document.getElementById('btnInstalar');
+  if (b) b.style.display = 'none';
+});
+function _instruccionesInstalar() {
+  var pasos = _isIOS()
+    ? 'En iPhone / iPad (Safari):<br>1) Tocá el botón <b>Compartir</b> (el cuadrado con la flecha ↑).<br>2) Elegí <b>“Agregar a inicio”</b>.<br>3) Confirmá <b>Agregar</b>.'
+    : 'En tu teléfono:<br>1) Abrí el menú <b>⋮</b> del navegador (arriba a la derecha).<br>2) Tocá <b>“Instalar app”</b> o <b>“Agregar a pantalla de inicio”</b>.';
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick = function(e) { if (e.target === ov) document.body.removeChild(ov); };
+  ov.innerHTML =
+    '<div style="background:#0f1722;border:1px solid rgba(255,90,90,.5);border-radius:16px;max-width:340px;padding:22px;color:#fff;font-family:Rajdhani,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">' +
+      '<div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:17px;margin-bottom:12px">📲 Instalar K24</div>' +
+      '<div style="font-size:15px;line-height:1.6;color:#cfe0ee">' + pasos + '</div>' +
+      '<button style="margin-top:18px;width:100%;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;letter-spacing:1px;padding:11px;border-radius:10px;cursor:pointer">Entendido</button>' +
+    '</div>';
+  ov.querySelector('button').onclick = function() { document.body.removeChild(ov); };
+  document.body.appendChild(ov);
+}
 document.addEventListener('click', function(ev) {
-  if (ev.target && ev.target.id === 'btnInstalar' && _deferredInstall) {
-    _deferredInstall.prompt();
-    _deferredInstall.userChoice.then(function() {
-      _deferredInstall = null;
-      ev.target.style.display = 'none';
-    });
+  if (ev.target && ev.target.id === 'btnInstalar') {
+    if (_deferredInstall) {
+      _deferredInstall.prompt();
+      _deferredInstall.userChoice.then(function() { _deferredInstall = null; });
+    } else {
+      _instruccionesInstalar();
+    }
   }
 });
 </script>
