@@ -2817,7 +2817,7 @@ function verPedidos() {
 // ══ SYNC ENTRE DISPOSITIVOS (Google Sheets vía Apps Script) ══════════════════
 const K24_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxHw92ciow84P-SFFgABT4i04OH21qbaTuOsXM0PPbG2pxA6BcoA3kBuK2rD7dWqdYZGw/exec';
 let _syncTimer = null;
-function syncUsuario(evento) {
+function syncUsuario(evento, incluirFoto) {
   if (!userProfile || !K24_SYNC_URL) return;
   try {
     const payload = Object.assign({}, userProfile, {
@@ -2826,7 +2826,7 @@ function syncUsuario(evento) {
       carrito: cart,
       deseos:  wishlist,
     });
-    delete payload.foto; // la foto queda local (no la mandamos en cada sync)
+    if (!incluirFoto) delete payload.foto; // la foto solo viaja cuando cambia el perfil
     fetch(K24_SYNC_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2854,6 +2854,12 @@ async function restaurarEstadoRemoto(telefono, email) {
       });
       saveWishlist();
     }
+    if (data.perfil && data.perfil.foto && userProfile && !userProfile.foto) {
+      userProfile.foto = data.perfil.foto;
+      _fotoData = data.perfil.foto;
+      try { localStorage.setItem('k24_perfil', JSON.stringify(userProfile)); } catch (e) {}
+      if (typeof _pintarAvatar === 'function') _pintarAvatar(_fotoData);
+    }
     renderCart();
     return true;
   } catch (e) { return false; }
@@ -2880,7 +2886,7 @@ function onFotoSelected(input) {
       if (userProfile) {
         userProfile.foto = _fotoData;
         try { localStorage.setItem('k24_perfil', JSON.stringify(userProfile)); } catch (e) {}
-        if (typeof syncUsuario === 'function') syncUsuario('actualizacion');
+        if (typeof syncUsuario === 'function') syncUsuario('actualizacion', true);
         showToast('📷 Foto actualizada');
       }
     };
@@ -3197,7 +3203,7 @@ async function guardarPerfil() {
   // Registro + sync entre dispositivos: traer el estado guardado (carrito/deseos)
   // y luego subir el estado actual ya combinado.
   restaurarEstadoRemoto(telefono, email).then(function () {
-    syncUsuario(esNuevo ? 'registro' : 'actualizacion');
+    syncUsuario(esNuevo ? 'registro' : 'actualizacion', true);
   });
 
   // Continuar con la acción que disparó el registro
