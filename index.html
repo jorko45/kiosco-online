@@ -2673,6 +2673,7 @@ function recordarCompra(canal) {
   localStorage.setItem('k24_verificado', '1');
   const c = parseInt(localStorage.getItem('k24_compras') || '0');
   localStorage.setItem('k24_compras', c + 1);
+  if (typeof marcarDireccionEntregada === 'function') marcarDireccionEntregada();
 
   // ── Registro de compra (historial local + Sheets) ──
   try {
@@ -2967,6 +2968,89 @@ async function confirmarHuella() {
   } catch (e) { return false; }
 }
 
+// ══ LIBRETA DE DIRECCIONES (lugares confiables) ════════════════════════════
+let direcciones = [];
+try { direcciones = JSON.parse(localStorage.getItem('k24_direcciones') || '[]') || []; } catch (e) { direcciones = []; }
+function saveDirecciones() { try { localStorage.setItem('k24_direcciones', JSON.stringify(direcciones)); } catch (e) {} }
+function _dirId() { return 'd' + Date.now() + Math.floor(Math.random() * 1000); }
+function _mismaDir(a, b) {
+  return (a.direccion || '').trim().toLowerCase() === (b.direccion || '').trim().toLowerCase()
+    && (a.piso || '').trim().toLowerCase() === (b.piso || '').trim().toLowerCase();
+}
+// Asegura que la direccion del perfil esté en la libreta (como principal)
+function registrarDireccionPerfil() {
+  if (!userProfile || !userProfile.direccion) return;
+  const actual = { direccion: userProfile.direccion, piso: userProfile.piso || '', barrio: userProfile.barrio || '', referencia: userProfile.referencia || '', coords: userProfile.coords || null };
+  let ex = direcciones.find(function (d) { return _mismaDir(d, actual); });
+  if (ex) {
+    ex.barrio = actual.barrio; ex.referencia = actual.referencia; if (actual.coords) ex.coords = actual.coords;
+  } else {
+    ex = Object.assign({ id: _dirId(), etiqueta: '', confiable: false, entregas: 0 }, actual);
+    direcciones.unshift(ex);
+  }
+  direcciones.forEach(function (d) { d.principal = (d === ex); });
+  saveDirecciones();
+}
+// Marca la direccion de entrega como confiable (tras una compra)
+function marcarDireccionEntregada() {
+  if (!userProfile || !userProfile.direccion) return;
+  registrarDireccionPerfil();
+  const d = direcciones.find(function (x) { return _mismaDir(x, { direccion: userProfile.direccion, piso: userProfile.piso || '' }); });
+  if (d) { d.confiable = true; d.entregas = (d.entregas || 0) + 1; saveDirecciones(); }
+}
+function usarDireccion(id) {
+  const d = direcciones.find(function (x) { return x.id === id; });
+  if (!d || !userProfile) return;
+  userProfile.direccion = d.direccion; userProfile.piso = d.piso || ''; userProfile.barrio = d.barrio || '';
+  userProfile.referencia = d.referencia || ''; userProfile.coords = d.coords || null;
+  direcciones.forEach(function (x) { x.principal = (x === d); });
+  try { localStorage.setItem('k24_perfil', JSON.stringify(userProfile)); } catch (e) {}
+  saveDirecciones();
+  showToast('📍 Dirección seleccionada');
+  _cerrarOverlays();
+}
+function eliminarDireccion(id, btn) {
+  direcciones = direcciones.filter(function (x) { return x.id !== id; });
+  saveDirecciones();
+  const row = btn.closest('.k24-dir-row'); if (row) row.remove();
+}
+function agregarDireccionInline() {
+  const et = (document.getElementById('nuevaDirEtiqueta') || {}).value || '';
+  const dir = (document.getElementById('nuevaDirTexto') || {}).value || '';
+  if (!dir.trim()) { showToast('Escribí la dirección'); return; }
+  direcciones.unshift({ id: _dirId(), etiqueta: et.trim(), direccion: dir.trim(), piso: '', barrio: '', referencia: '', coords: null, confiable: false, entregas: 0, principal: false });
+  saveDirecciones();
+  verDirecciones();
+}
+function verDirecciones() {
+  _cerrarOverlays();
+  registrarDireccionPerfil();
+  var inp = 'width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;font-family:Inter,sans-serif;outline:none';
+  var html = '';
+  if (!direcciones.length) {
+    html = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Todavía no hay direcciones guardadas.</div>';
+  } else {
+    html = direcciones.map(function (d) {
+      var badge = d.confiable ? '<span style="background:rgba(0,204,119,.15);color:#4dff88;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:6px">✓ Confiable</span>' : '';
+      var princ = d.principal ? '<span style="color:#9fc5ff;font-size:11px;font-weight:800;margin-left:6px">• Principal</span>' : '';
+      var et = d.etiqueta ? '<span style="font-weight:800">' + d.etiqueta + '</span> · ' : '';
+      return '<div class="k24-dir-row" style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+        + '<div style="font-size:14px;color:#dce8f5">' + et + d.direccion + (d.piso ? ', ' + d.piso : '') + badge + princ + '</div>'
+        + (d.barrio ? '<div style="font-size:12px;color:#8aa">' + d.barrio + '</div>' : '')
+        + '<div style="display:flex;gap:8px;margin-top:8px">'
+        + (d.principal ? '' : '<button onclick="usarDireccion(\'' + d.id + '\')" style="background:#cc1010;border:none;color:#fff;font-weight:800;font-size:12px;padding:7px 12px;border-radius:8px;cursor:pointer">Usar esta</button>')
+        + '<button onclick="eliminarDireccion(\'' + d.id + '\',this)" style="background:none;border:1px solid rgba(255,255,255,.2);color:#bcd;font-size:12px;padding:7px 10px;border-radius:8px;cursor:pointer">Eliminar</button>'
+        + '</div></div>';
+    }).join('');
+  }
+  html += '<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">'
+    + '<input id="nuevaDirEtiqueta" placeholder="Nombre (ej: Casa, Trabajo)" style="' + inp + '"/>'
+    + '<input id="nuevaDirTexto" placeholder="Dirección (calle y número)" style="' + inp + '"/>'
+    + '<button onclick="agregarDireccionInline()" style="background:rgba(120,180,255,.12);border:1px solid rgba(120,180,255,.35);color:#cfe0ee;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">➕ Agregar dirección</button>'
+    + '</div>';
+  _overlay('📍 Mis direcciones', html);
+}
+
 function changeCartQty(key, delta) {
   if (!cart[key]) return;
   cart[key].qty += delta;
@@ -3197,6 +3281,7 @@ async function guardarPerfil() {
     foto:       _fotoData || (userProfile && userProfile.foto) || '',
   };
   localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
+  if (typeof registrarDireccionPerfil === 'function') registrarDireccionPerfil();
   cargarPerfil();
   cerrarPerfil();
 
@@ -5807,6 +5892,7 @@ document.addEventListener('click', function(ev) {
       <button type="button" onclick="verPedidos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#dce8f5;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">🧾 Mis pedidos</button>
       <button type="button" onclick="verDeseos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,90,90,.35);color:#ffd0d0;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">❤️ Mis deseos</button>
     </div>
+    <button type="button" onclick="verDirecciones()" style="width:100%;margin:0 0 10px;background:rgba(255,255,255,.06);border:1px solid rgba(120,180,255,.3);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">📍 Mis direcciones</button>
     <button type="button" id="btnHuella" onclick="toggleHuella()" style="display:none;width:100%;margin:0 0 16px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.35);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔒 Activar confirmación por huella</button>
 
     <div class="perfil-field">
