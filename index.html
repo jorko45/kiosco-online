@@ -2673,7 +2673,9 @@ function recordarCompra() {
   localStorage.setItem('k24_compras', c + 1);
 }
 
-let cart = {};
+function _loadCart() { try { return JSON.parse(localStorage.getItem('k24_cart') || '{}') || {}; } catch (e) { return {}; } }
+function saveCart() { try { localStorage.setItem('k24_cart', JSON.stringify(cart)); } catch (e) {} }
+let cart = _loadCart();
 
 function changeCartQty(key, delta) {
   if (!cart[key]) return;
@@ -2683,6 +2685,7 @@ function changeCartQty(key, delta) {
 }
 
 function renderCart() {
+  saveCart();
   _updateFabCaja();
   const items    = Object.values(cart);
   const totalQty = items.reduce((a, b) => a + b.qty, 0);
@@ -2847,6 +2850,7 @@ function abrirPerfil() {
   if (userProfile) {
     document.getElementById('pNombre').value     = userProfile.nombre     || '';
     document.getElementById('pTelefono').value   = userProfile.telefono   || '';
+    document.getElementById('pEmail').value      = userProfile.email      || '';
     document.getElementById('pDireccion').value  = userProfile.direccion  || '';
     document.getElementById('pPiso').value       = userProfile.piso       || '';
     document.getElementById('pBarrio').value     = userProfile.barrio     || '';
@@ -2877,15 +2881,21 @@ let _pendingAction = null; // acción pendiente después de registrarse
 async function guardarPerfil() {
   const nombre    = document.getElementById('pNombre').value.trim();
   const telefono  = document.getElementById('pTelefono').value.trim();
+  const email     = document.getElementById('pEmail').value.trim();
   const direccion = document.getElementById('pDireccion').value.trim();
-  if (!nombre || !telefono || !direccion) {
-    showToast('⚠️ Nombre, teléfono y dirección son obligatorios');
+  if (!nombre || !telefono || !email || !direccion) {
+    showToast('⚠️ Nombre, teléfono, email y dirección son obligatorios');
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('⚠️ Ingresá un email válido');
     return;
   }
   const esNuevo = !userProfile;
   userProfile = {
     nombre,
     telefono,
+    email,
     direccion,
     piso:       document.getElementById('pPiso').value.trim(),
     barrio:     document.getElementById('pBarrio').value.trim(),
@@ -2896,14 +2906,15 @@ async function guardarPerfil() {
   cargarPerfil();
   cerrarPerfil();
 
-  // Guardar en Google Sheets si es un registro nuevo
-  if (esNuevo) {
-    fetch('/api/registrar-usuario', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userProfile),
-    }).catch(() => {}); // silencioso
-  }
+  // Registrar/actualizar en Google Sheets (registro de cada persona que ingresa datos)
+  fetch('/api/registrar-usuario', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({}, userProfile, {
+      evento: esNuevo ? 'registro' : 'actualizacion',
+      fecha:  new Date().toISOString(),
+    })),
+  }).catch(() => {}); // silencioso
 
   // Continuar con la acción que disparó el registro
   if (_pendingAction) {
@@ -2966,6 +2977,7 @@ async function obtenerUbicacion() {
 // Al cargar la página
 window.addEventListener('DOMContentLoaded', () => {
   cargarPerfil();
+  renderCart(); // restaurar carrito guardado (no se pierde al recargar)
   // El perfil se pide durante el checkout, no al entrar
 });
 
@@ -5497,6 +5509,11 @@ document.addEventListener('click', function(ev) {
     <div class="perfil-field">
       <label>Teléfono (WhatsApp) *</label>
       <input type="tel" id="pTelefono" placeholder="Ej: 351 000 0000" autocomplete="tel"/>
+    </div>
+
+    <div class="perfil-field">
+      <label>Email *</label>
+      <input type="email" id="pEmail" placeholder="Ej: juan@email.com" autocomplete="email"/>
     </div>
 
     <div class="perfil-field">
