@@ -2466,6 +2466,18 @@ function renderShelvesHeladera() {
     }).join('');
   });
 }
+// Quitar de la heladera los productos que ya están (duplicados) en los listados del Mami
+const SKUS_DUP_HELADERA = ['coca-cola_2','coca-cola_3','coca-cola_5','coca-cola_6','coca-cola_8','coca-cola_9','sprite_2','sprite_3','sprite_4','sprite_5','sprite-zero_2','sprite-zero_3','sprite-zero_4','fanta-zero_2','pepsi_1','pepsi_2','pepsi_3','pepsi_4','pepsi-black_1','pepsi-black_2','pepsi-black_3','pepsi-black_4','quilmes_1','quilmes_4','corona_1','corona_2','corona_3','brahma_3','budweiser_1','budweiser_2','schneider_2','schneider_4','cordoba_1','cordoba_2','miller_1','miller_2','pritty-limon_1','pritty-limon_2','pritty-limon_3','pritty-limon_4','pritty-limon_5','pritty-limon_6','pritty-limon_7','doble-cola_1','doble-cola_2','doble-cola_3','doble-cola_4','doble-cola_5','doble-cola_6','doble-cola_7','doble-cola_8','doble-cola_9','doble-cola_10','doble-cola_11','doble-cola_12','saldan_1','saldan_2','saldan_3','saldan_4','saldan_5'];
+(function quitarDuplicadosHeladera() {
+  var set = new Set(SKUS_DUP_HELADERA);
+  ['gaseosas', 'aguas', 'cervezas', 'energizantes', 'pritty', 'jugosm'].forEach(function (sh) {
+    var arr = catalog[sh]; if (!Array.isArray(arr)) return;
+    arr.forEach(function (brand) {
+      if (brand.variants) brand.variants = brand.variants.filter(function (v) { return !set.has(brand.id + '_' + v.vid); });
+    });
+    for (var i = arr.length - 1; i >= 0; i--) { if (!arr[i].variants || !arr[i].variants.length) arr.splice(i, 1); }
+  });
+})();
 renderShelvesHeladera();
 
 // ── Precios desde la planilla de Google (la app los lee y pisa el catálogo) ──
