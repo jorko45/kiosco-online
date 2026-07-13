@@ -2450,20 +2450,56 @@ const shelfMap = {
   'shelf-jugosm':      catalog.jugosm,
 };
 
-Object.entries(shelfMap).forEach(([shelfId, brands]) => {
-  const shelf = document.getElementById(shelfId);
-  if (!shelf) return;
-  shelf.innerHTML = brands.map(brand => {
-    const minPrice = Math.min(...brand.variants.map(v => v.price));
-    const nv = brand.variants.length;
-    return `<div class="drink-card" id="card-${brand.id}" onclick="selectBrand('${brand.id}','${shelfId}')" title="${brand.name}">
-      ${brandLogoCard(brand)}
-      <div class="drink-name">${brand.name}</div>
-      ${nv > 1 ? `<div class="drink-opts">${nv} tamaños</div>` : ''}
-      <div class="drink-price">desde $${minPrice.toLocaleString('es-AR')}</div>
-    </div>`;
-  }).join('');
-});
+function renderShelvesHeladera() {
+  Object.entries(shelfMap).forEach(([shelfId, brands]) => {
+    const shelf = document.getElementById(shelfId);
+    if (!shelf) return;
+    shelf.innerHTML = brands.map(brand => {
+      const minPrice = Math.min(...brand.variants.map(v => v.price));
+      const nv = brand.variants.length;
+      return `<div class="drink-card" id="card-${brand.id}" onclick="selectBrand('${brand.id}','${shelfId}')" title="${brand.name}">
+        ${brandLogoCard(brand)}
+        <div class="drink-name">${brand.name}</div>
+        ${nv > 1 ? `<div class="drink-opts">${nv} tamaños</div>` : ''}
+        <div class="drink-price">desde $${minPrice.toLocaleString('es-AR')}</div>
+      </div>`;
+    }).join('');
+  });
+}
+renderShelvesHeladera();
+
+// ── Precios desde la planilla de Google (la app los lee y pisa el catálogo) ──
+async function aplicarPreciosRemotos() {
+  try {
+    const r = await fetch('/api/precios');
+    const d = await r.json();
+    const map = d && d.precios;
+    if (!map || !Object.keys(map).length) return;
+    // Brand cards (catalog.*): clave = brandId_vid
+    Object.values(catalog).forEach(function (shelf) {
+      if (!Array.isArray(shelf)) return;
+      shelf.forEach(function (brand) {
+        (brand.variants || []).forEach(function (v) {
+          const k = brand.id + '_' + v.vid;
+          if (map[k] != null) v.price = map[k];
+        });
+      });
+    });
+    // Catálogos planos: clave = id
+    ['catalogVinos', 'catalogLicores', 'catalogSaborizadas', 'catalogCervezas', 'catalogAguasExtra', 'catalogGaseosasExtra', 'catalogJugos', 'catalogEspumantes', 'catalogGondola', 'catalogGolosinas'].forEach(function (n) {
+      var cat; try { cat = eval(n); } catch (e) { return; }
+      if (!cat) return;
+      Object.values(cat).forEach(function (arr) {
+        (Array.isArray(arr) ? arr : []).forEach(function (it) {
+          if (it && it.id != null && map[it.id] != null) it.price = map[it.id];
+        });
+      });
+    });
+    // Refrescar lo que se ve
+    if (typeof renderShelvesHeladera === 'function') renderShelvesHeladera();
+    if (typeof renderCart === 'function') renderCart();
+  } catch (e) {}
+}
 
 // ── Indicador de scroll horizontal en estantes ("hay más, deslizá") ──────────
 function initShelfScrollHints() {
@@ -3421,6 +3457,7 @@ async function obtenerUbicacion() {
 window.addEventListener('DOMContentLoaded', () => {
   cargarPerfil();
   renderCart(); // restaurar carrito guardado (no se pierde al recargar)
+  if (typeof aplicarPreciosRemotos === 'function') aplicarPreciosRemotos(); // precios desde la planilla
   // El perfil se pide durante el checkout, no al entrar
 });
 
