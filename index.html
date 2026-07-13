@@ -2466,16 +2466,16 @@ function renderShelvesHeladera() {
     }).join('');
   });
 }
-// Quitar de la heladera los productos que ya están (duplicados) en los listados del Mami
-const SKUS_DUP_HELADERA = ['coca-cola_2','coca-cola_3','coca-cola_5','coca-cola_6','coca-cola_8','coca-cola_9','sprite_2','sprite_3','sprite_4','sprite_5','sprite-zero_2','sprite-zero_3','sprite-zero_4','fanta-zero_2','pepsi_1','pepsi_2','pepsi_3','pepsi_4','pepsi-black_1','pepsi-black_2','pepsi-black_3','pepsi-black_4','quilmes_1','quilmes_4','corona_1','corona_2','corona_3','brahma_3','budweiser_1','budweiser_2','schneider_2','schneider_4','cordoba_1','cordoba_2','miller_1','miller_2','pritty-limon_1','pritty-limon_2','pritty-limon_3','pritty-limon_4','pritty-limon_5','pritty-limon_6','pritty-limon_7','doble-cola_1','doble-cola_2','doble-cola_3','doble-cola_4','doble-cola_5','doble-cola_6','doble-cola_7','doble-cola_8','doble-cola_9','doble-cola_10','doble-cola_11','doble-cola_12','saldan_1','saldan_2','saldan_3','saldan_4','saldan_5'];
-(function quitarDuplicadosHeladera() {
-  var set = new Set(SKUS_DUP_HELADERA);
-  ['gaseosas', 'aguas', 'cervezas', 'energizantes', 'pritty', 'jugosm'].forEach(function (sh) {
-    var arr = catalog[sh]; if (!Array.isArray(arr)) return;
-    arr.forEach(function (brand) {
-      if (brand.variants) brand.variants = brand.variants.filter(function (v) { return !set.has(brand.id + '_' + v.vid); });
+// Quitar de los listados del Mami los productos que ya están (mejor, con logo) en la heladera
+const IDS_DUP_MAMI = ['3080047','3080013','3080432','3080046','3080597','3080288','3080167','3080561','3080521','3080006','3080434','3080433','3080416','3080417','3080015','3080524','3080077','3080406','3080008','3080199','3080079','3080085','3080408','3080029','3080407','3080084','3080021','3080410','3080193','3040689','3040690','3100652','3100436','3100966','3100967','3100986','3100981','3100560','3100712','3100951','3100845','3100595','3100950','3100656','3100532','3100555','3100145','3100695','3100978','3100977','3100952'];
+(function quitarDuplicadosMami() {
+  var set = new Set(IDS_DUP_MAMI);
+  ['catalogGaseosasExtra', 'catalogAguasExtra', 'catalogCervezas', 'catalogSaborizadas', 'catalogJugos', 'catalogEspumantes'].forEach(function (n) {
+    var cat; try { cat = eval(n); } catch (e) { return; }
+    if (!cat) return;
+    Object.keys(cat).forEach(function (k) {
+      if (Array.isArray(cat[k])) cat[k] = cat[k].filter(function (it) { return it && !set.has(String(it.id)); });
     });
-    for (var i = arr.length - 1; i >= 0; i--) { if (!arr[i].variants || !arr[i].variants.length) arr.splice(i, 1); }
   });
 })();
 renderShelvesHeladera();
