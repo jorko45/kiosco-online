@@ -1124,7 +1124,7 @@
     <!-- ── KIOSCO HERO CLICKEABLE ── -->
     <div class="kiosco-hero" id="kioscoHero">
       <div class="kh-frame">
-        <img src="/img/kiosco-hero.jpg" alt="Kiosco K24" onerror="document.getElementById('kioscoHero').style.display='none'">
+        <img src="img/kiosco-hero.jpg" alt="Kiosco K24" onerror="document.getElementById('kioscoHero').style.display='none'">
         <div class="kh-zone" style="left:1%;  top:28%; width:22.5%; height:70%" onclick="enterSection('golosinas')"><span>🍬 Golosinas</span></div>
         <div class="kh-zone" style="left:23.5%; top:13%; width:18.5%; height:62%" onclick="enterSection('gondola')"><span>🛒 Góndola</span></div>
         <div class="kh-zone" style="left:42.5%; top:4%;  width:19%; height:13%" onclick="toggleCart()"><span>💳 Caja</span></div>
@@ -2497,8 +2497,9 @@ async function aplicarPreciosRemotos() {
         });
       });
     });
-    // Catálogos planos: clave = id
-    ['catalogVinos', 'catalogLicores', 'catalogSaborizadas', 'catalogCervezas', 'catalogAguasExtra', 'catalogGaseosasExtra', 'catalogJugos', 'catalogEspumantes', 'catalogGondola', 'catalogGolosinas'].forEach(function (n) {
+    // Catálogos planos MANUALES (góndola/golosinas usan ids 'prod...', el Mami NO los toca).
+    // Las bebidas del Mami (vinos, licores, aguas, gaseosas, etc.) se actualizan solas y NO se pisan acá.
+    ['catalogGondola', 'catalogGolosinas'].forEach(function (n) {
       var cat; try { cat = eval(n); } catch (e) { return; }
       if (!cat) return;
       Object.values(cat).forEach(function (arr) {
@@ -2981,6 +2982,7 @@ async function activarHuella() {
     });
     localStorage.setItem('k24_huella_id', _b64(cred.rawId));
     localStorage.setItem('k24_huella', '1');
+    localStorage.removeItem('k24_huella_optout');
     _pintarBtnHuella();
     showToast('🔒 Confirmación por huella activada');
   } catch (e) { showToast('No se pudo activar la huella'); }
@@ -2988,6 +2990,7 @@ async function activarHuella() {
 function desactivarHuella() {
   localStorage.removeItem('k24_huella');
   localStorage.removeItem('k24_huella_id');
+  localStorage.setItem('k24_huella_optout', '1');
   _pintarBtnHuella();
   showToast('Huella desactivada');
 }
@@ -3269,8 +3272,11 @@ async function pagarMP() {
 
 
 // ── PERFIL DE USUARIO ────────────────────────────────────────────────────
-let userProfile = JSON.parse(localStorage.getItem('k24_perfil') || 'null');
+let _perfilGuardado = JSON.parse(localStorage.getItem('k24_perfil') || 'null');
+// Solo se considera logueado si hay sesión activa (usuario ya ingresó).
+let userProfile = (localStorage.getItem('k24_sesion') === '1') ? _perfilGuardado : null;
 let coordsCapturadas = null;
+function _setVal(id, v) { var e = document.getElementById(id); if (e) e.value = v || ''; }
 
 function cargarPerfil() {
   if (userProfile) {
@@ -3296,32 +3302,30 @@ function _pintarCuentaLanding() {
 function abrirPerfil() {
   const o = document.getElementById('perfilOverlay');
   const verificado = localStorage.getItem('k24_verificado') === '1';
-  // Pre-cargar campos si ya hay datos
-  if (userProfile) {
-    document.getElementById('pNombre').value     = userProfile.nombre     || '';
-    document.getElementById('pTelefono').value   = userProfile.telefono   || '';
-    document.getElementById('pEmail').value      = userProfile.email      || '';
-    document.getElementById('pDireccion').value  = userProfile.direccion  || '';
-    document.getElementById('pPiso').value       = userProfile.piso       || '';
-    document.getElementById('pBarrio').value     = userProfile.barrio     || '';
-    document.getElementById('pReferencia').value = userProfile.referencia || '';
-    if (userProfile.coords) {
-      coordsCapturadas = userProfile.coords;
+  const base = userProfile || _perfilGuardado;   // datos para prellenar
+  if (base) {
+    _setVal('pNombre', base.nombre);
+    _setVal('pTelefono', base.telefono);
+    _setVal('pEmail', base.email);
+    _setVal('pDireccion', base.direccion);
+    _setVal('pPiso', base.piso);
+    _setVal('pBarrio', base.barrio);
+    _setVal('pReferencia', base.referencia);
+    _setVal('pUsuario', base.usuario);
+    _setVal('lUsuario', base.usuario);
+    if (base.coords) {
+      coordsCapturadas = base.coords;
       const btn = document.getElementById('btnUbicacion');
-      btn.textContent = '✅ Ubicación guardada';
-      btn.classList.add('ok');
+      if (btn) { btn.textContent = '✅ Ubicación guardada'; btn.classList.add('ok'); }
     }
-    document.getElementById('btnCancelarPerfil').style.display = 'block';
     document.getElementById('perfilSubVerif').style.display = verificado ? '' : 'none';
   } else {
-    document.getElementById('btnCancelarPerfil').style.display = 'none';
     document.getElementById('perfilSubVerif').style.display = 'none';
-    // Primera vez: auto-geolocalizar para pre-llenar la dirección
-    setTimeout(obtenerUbicacion, 400);
   }
-  _fotoData = (userProfile && userProfile.foto) || null;
+  _fotoData = (base && base.foto) || null;
   if (typeof _pintarAvatar === 'function') _pintarAvatar(_fotoData);
   if (typeof _pintarBtnHuella === 'function') _pintarBtnHuella();
+  _mostrarVistaCuenta();
   o.classList.add('open');
 }
 
@@ -3329,9 +3333,199 @@ function cerrarPerfil() {
   document.getElementById('perfilOverlay').classList.remove('open');
 }
 
+// ── Estado de sesión ──
+function estaLogueado() { return !!userProfile; }
+var _vistaActual = 'login';
+
+// Cambia entre las vistas del modal: 'login' | 'registro' | 'cuenta' | 'edit'
+function _mostrarVistaCuenta(modo) {
+  if (!modo) modo = estaLogueado() ? 'cuenta' : 'login';
+  _vistaActual = modo;
+  var login    = document.getElementById('perfilLogin');
+  var avatar   = document.getElementById('perfilAvatarWrap');
+  var hola     = document.getElementById('perfilHola');
+  var acc      = document.getElementById('perfilAccesos');
+  var huella   = document.getElementById('btnHuella');
+  var editar   = document.getElementById('btnEditarDatos');
+  var datos    = document.getElementById('perfilDatos');
+  var acciones = document.getElementById('perfilActions');
+  var titulo   = document.getElementById('perfilTitulo');
+  var subInfo  = document.getElementById('perfilSubInfo');
+  var cancel   = document.getElementById('btnCancelarPerfil');
+  var guardar  = document.getElementById('btnGuardarPerfil');
+  var fldPass  = document.getElementById('fldPass');
+  var pUsuario = document.getElementById('pUsuario');
+  var soportaHuella = (typeof _huellaSoportada === 'function') && _huellaSoportada();
+  var show = function (el, v) { if (el) el.style.display = v ? '' : 'none'; };
+
+  show(login,    modo === 'login');
+  show(avatar,   modo !== 'login');
+  show(acc,      modo === 'cuenta');
+  show(editar,   modo === 'cuenta');
+  show(datos,    modo === 'registro' || modo === 'edit');
+  show(acciones, modo === 'registro' || modo === 'edit');
+  show(huella,   (modo === 'cuenta' || modo === 'edit') && soportaHuella);
+
+  if (modo === 'login') {
+    if (titulo) titulo.textContent = '🔑 Ingresá a tu cuenta';
+    if (subInfo) { subInfo.style.display = ''; subInfo.textContent = 'Entrá con tu usuario y contraseña.'; }
+    if (hola) hola.style.display = 'none';
+  } else if (modo === 'registro') {
+    if (titulo) titulo.textContent = '👋 Creá tu cuenta';
+    if (subInfo) { subInfo.style.display = ''; subInfo.textContent = 'Completá tus datos para registrarte y poder comprar.'; }
+    if (hola) hola.style.display = 'none';
+    if (fldPass) fldPass.style.display = '';
+    if (pUsuario) { pUsuario.readOnly = false; pUsuario.style.opacity = '1'; }
+    if (guardar) guardar.textContent = 'Crear cuenta';
+    if (cancel) cancel.style.display = 'none';
+    if (!coordsCapturadas) setTimeout(obtenerUbicacion, 400);
+  } else if (modo === 'cuenta') {
+    if (titulo) titulo.textContent = '👤 Mi cuenta';
+    if (subInfo) subInfo.style.display = 'none';
+    if (hola) {
+      hola.style.display = 'block';
+      var pn = document.getElementById('perfilHolaNombre');
+      var ps = document.getElementById('perfilHolaSub');
+      if (pn) pn.textContent = 'Hola, ' + ((userProfile.nombre || '').split(' ')[0] || '') + ' 👋';
+      if (ps) ps.textContent = '@' + (userProfile.usuario || '') + (userProfile.email ? ' · ' + userProfile.email : '');
+    }
+  } else if (modo === 'edit') {
+    if (titulo) titulo.textContent = '✏️ Editar mis datos';
+    if (subInfo) { subInfo.style.display = ''; subInfo.textContent = 'Cambiá lo que necesites. Dejá la contraseña en blanco para no cambiarla.'; }
+    if (hola) hola.style.display = 'none';
+    if (fldPass) fldPass.style.display = '';
+    if (pUsuario) { pUsuario.readOnly = true; pUsuario.style.opacity = '.6'; }   // usuario fijo
+    if (guardar) guardar.textContent = 'Guardar cambios';
+    if (cancel) cancel.style.display = 'block';
+    _setVal('pPass', ''); _setVal('pPass2', '');
+  }
+}
+function _pintarCuentaVista() { _mostrarVistaCuenta(); }   // compat
+function mostrarLogin() { _mostrarVistaCuenta('login'); }
+function mostrarRegistro() { _mostrarVistaCuenta('registro'); }
+function toggleDatosPerfil() {
+  _mostrarVistaCuenta('edit');
+  var d = document.getElementById('perfilDatos');
+  if (d) { try { d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {} }
+}
+
+// ── Hash de contraseña (SHA-256; nunca viaja la contraseña en texto) ──
+async function _hashPass(usuario, pass) {
+  var txt = 'k24:' + String(usuario || '').trim().toLowerCase() + ':' + String(pass || '');
+  try {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  } catch (e) {
+    var h = 5381;
+    for (var i = 0; i < txt.length; i++) { h = ((h << 5) + h + txt.charCodeAt(i)) >>> 0; }
+    return 'x' + h.toString(16);
+  }
+}
+
+// ── Iniciar sesión (verificación contra Google Sheets) ──
+async function iniciarSesion() {
+  var usuario = (document.getElementById('lUsuario').value || '').trim();
+  var pass = document.getElementById('lPass').value || '';
+  if (!usuario || !pass) { showToast('⚠️ Ingresá usuario y contraseña'); return; }
+  var btn = document.getElementById('btnIngresar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Ingresando...'; }
+  try {
+    var passHash = await _hashPass(usuario, pass);
+    var r = await fetch('/api/cuenta', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', usuario: usuario, passHash: passHash })
+    });
+    var data = await r.json();
+    if (!data || !data.encontrado) { showToast('😕 No existe ese usuario'); return; }
+    if (!data.auth) { showToast('🔒 Contraseña incorrecta'); return; }
+    userProfile = Object.assign({ usuario: usuario }, data.perfil || {});
+    _perfilGuardado = userProfile;
+    localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
+    localStorage.setItem('k24_sesion', '1');
+    _fotoData = userProfile.foto || null;
+    if (data.carrito && typeof data.carrito === 'object') {
+      Object.keys(data.carrito).forEach(function (k) { if (!cart[k]) cart[k] = data.carrito[k]; });
+      saveCart(); renderCart();
+    }
+    if (Array.isArray(data.deseos)) {
+      data.deseos.forEach(function (w) { if (w && w.id && !wishlist.some(function (x) { return x.id === w.id; })) wishlist.unshift(w); });
+      saveWishlist();
+    }
+    cargarPerfil();
+    showToast('👋 ¡Hola de nuevo, ' + ((userProfile.nombre || usuario).split(' ')[0]) + '!');
+    _setVal('lPass', '');
+    _mostrarVistaCuenta('cuenta');
+    if (_pendingAction) { var a = _pendingAction; _pendingAction = null; cerrarPerfil(); setTimeout(a, 200); }
+  } catch (e) { showToast('No se pudo conectar. Probá de nuevo.'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Ingresar'; } }
+}
+
+// ── Cerrar sesión (mantiene la cuenta; pide contraseña la próxima vez) ──
+function cerrarSesion() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  localStorage.removeItem('k24_sesion');
+  userProfile = null;
+  var hn = document.getElementById('headerNombre'); if (hn) hn.textContent = 'Mi cuenta';
+  _setVal('lPass', ''); _setVal('pPass', ''); _setVal('pPass2', '');
+  if (typeof _pintarCuentaLanding === 'function') _pintarCuentaLanding();
+  _mostrarVistaCuenta('login');
+  showToast('Sesión cerrada');
+}
+
+// ── Ayuda por WhatsApp ──
+function ayudaWhatsApp() {
+  var nombre = (userProfile && userProfile.nombre) ? userProfile.nombre : '';
+  var msg = 'Hola K24 👋 necesito ayuda' + (nombre ? ' (soy ' + nombre + ')' : '');
+  window.open('https://wa.me/5493513260094?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// ── Notificaciones del navegador ──
+function verNotificaciones() {
+  _cerrarOverlays();
+  var soporta = ('Notification' in window);
+  var estado = soporta ? Notification.permission : 'unsupported';
+  var pref = localStorage.getItem('k24_notif') === '1';
+  var body;
+  if (!soporta) {
+    body = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Tu dispositivo no soporta notificaciones.</div>';
+  } else if (estado === 'granted' && pref) {
+    body = '<div style="color:#bfffce;font-size:15px;padding:8px 0">🔔 Notificaciones activadas. Te vamos a avisar de promos y del estado de tus pedidos.</div>'
+      + '<button onclick="desactivarNotif()" style="width:100%;margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.2);color:#dce8f5;font-family:Rajdhani,sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">Desactivar</button>';
+  } else if (estado === 'denied') {
+    body = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Bloqueaste las notificaciones. Activálas desde los permisos del sitio en tu navegador.</div>';
+  } else {
+    body = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Activá las notificaciones para enterarte de promos, ofertas y el estado de tus pedidos.</div>'
+      + '<button onclick="activarNotif()" style="width:100%;margin-top:12px;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:14px;padding:12px;border-radius:10px;cursor:pointer">🔔 Activar notificaciones</button>';
+  }
+  _overlay('🔔 Notificaciones', body);
+}
+async function activarNotif() {
+  if (!('Notification' in window)) { showToast('No soportado'); return; }
+  try {
+    var p = await Notification.requestPermission();
+    if (p === 'granted') {
+      localStorage.setItem('k24_notif', '1');
+      showToast('🔔 Notificaciones activadas');
+      try { new Notification('K24', { body: '¡Listo! Te vamos a avisar de las promos 🎉' }); } catch (e) {}
+      _cerrarOverlays();
+    } else {
+      showToast('Permiso no concedido');
+    }
+  } catch (e) { showToast('No se pudo activar'); }
+}
+function desactivarNotif() {
+  localStorage.removeItem('k24_notif');
+  showToast('Notificaciones desactivadas');
+  _cerrarOverlays();
+}
+
 let _pendingAction = null; // acción pendiente después de registrarse
 
 async function guardarPerfil() {
+  var esRegistro = (_vistaActual === 'registro') || !userProfile;
+  var usuarioInput = (document.getElementById('pUsuario').value || '').trim();
+  var pass  = document.getElementById('pPass').value || '';
+  var pass2 = document.getElementById('pPass2').value || '';
   const nombre    = document.getElementById('pNombre').value.trim();
   const telefono  = document.getElementById('pTelefono').value.trim();
   const email     = document.getElementById('pEmail').value.trim();
@@ -3344,6 +3538,18 @@ async function guardarPerfil() {
     showToast('⚠️ Ingresá un email válido');
     return;
   }
+
+  var usuario = esRegistro ? usuarioInput : (userProfile.usuario || usuarioInput);
+  if (esRegistro) {
+    if (usuario.length < 3) { showToast('⚠️ El usuario debe tener al menos 3 caracteres'); return; }
+    if (!/^[a-zA-Z0-9._-]+$/.test(usuario)) { showToast('⚠️ Usuario: solo letras, números, . _ -'); return; }
+    if (pass.length < 4) { showToast('⚠️ La contraseña debe tener al menos 4 caracteres'); return; }
+    if (pass !== pass2) { showToast('⚠️ Las contraseñas no coinciden'); return; }
+  } else if (pass || pass2) {
+    if (pass.length < 4) { showToast('⚠️ La contraseña debe tener al menos 4 caracteres'); return; }
+    if (pass !== pass2) { showToast('⚠️ Las contraseñas no coinciden'); return; }
+  }
+
   // Solo Córdoba Capital (13 km del centro)
   const _zona = await validarZonaCordoba(coordsCapturadas, direccion);
   if (!_zona.ok) {
@@ -3355,34 +3561,73 @@ async function guardarPerfil() {
     return;
   }
   if (_zona.coords) coordsCapturadas = _zona.coords;
-  const esNuevo = !userProfile;
-  userProfile = {
-    nombre,
-    telefono,
-    email,
-    direccion,
-    piso:       document.getElementById('pPiso').value.trim(),
-    barrio:     document.getElementById('pBarrio').value.trim(),
-    referencia: document.getElementById('pReferencia').value.trim(),
-    coords:     coordsCapturadas,
-    foto:       _fotoData || (userProfile && userProfile.foto) || '',
-  };
-  localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
-  if (typeof registrarDireccionPerfil === 'function') registrarDireccionPerfil();
-  cargarPerfil();
-  cerrarPerfil();
 
-  // Registro + sync entre dispositivos: traer el estado guardado (carrito/deseos)
-  // y luego subir el estado actual ya combinado.
-  restaurarEstadoRemoto(telefono, email).then(function () {
-    syncUsuario(esNuevo ? 'registro' : 'actualizacion', true);
-  });
+  var passHash = '';
+  if (pass) passHash = await _hashPass(usuario, pass);
 
-  // Continuar con la acción que disparó el registro
-  if (_pendingAction) {
-    const action = _pendingAction;
-    _pendingAction = null;
-    setTimeout(action, 200);
+  const btnG = document.getElementById('btnGuardarPerfil');
+  if (btnG) { btnG.disabled = true; btnG.textContent = esRegistro ? 'Creando...' : 'Guardando...'; }
+
+  try {
+    var piso = document.getElementById('pPiso').value.trim();
+    var barrio = document.getElementById('pBarrio').value.trim();
+    var referencia = document.getElementById('pReferencia').value.trim();
+    var foto = _fotoData || (userProfile && userProfile.foto) || '';
+
+    // Guardar/verificar en Google Sheets (a través del proxy /api/cuenta)
+    var payload = {
+      action: 'registrar', evento: esRegistro ? 'registro' : 'actualizacion',
+      usuario: usuario, passHash: passHash,
+      nombre: nombre, telefono: telefono, email: email, direccion: direccion,
+      barrio: barrio, referencia: referencia, foto: foto,
+      carrito: cart, deseos: wishlist, fecha: new Date().toISOString()
+    };
+    var resp = await fetch('/api/cuenta', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    var data = await resp.json();
+    if (esRegistro && data && data.motivo === 'usuario_ocupado') {
+      showToast('😕 Ese usuario ya está en uso. Probá otro.');
+      return;
+    }
+    if (data && data.ok === false) {
+      showToast('⚠️ No se pudo guardar en el servidor. Probá de nuevo.');
+      return;
+    }
+
+    userProfile = {
+      usuario: usuario, nombre: nombre, telefono: telefono, email: email,
+      direccion: direccion, piso: piso, barrio: barrio, referencia: referencia,
+      coords: coordsCapturadas, foto: foto,
+    };
+    _perfilGuardado = userProfile;
+    localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
+    localStorage.setItem('k24_sesion', '1');
+    if (typeof registrarDireccionPerfil === 'function') registrarDireccionPerfil();
+
+    // Huella activada por defecto al crear la cuenta la primera vez
+    if (esRegistro && typeof _huellaSoportada === 'function' && _huellaSoportada()
+        && localStorage.getItem('k24_huella') !== '1' && localStorage.getItem('k24_huella_optout') !== '1') {
+      try { await activarHuella(); } catch (e) {}
+    }
+
+    cargarPerfil();
+    showToast(esRegistro ? '✅ ¡Cuenta creada!' : '✅ Datos actualizados');
+    _mostrarVistaCuenta('cuenta');
+
+    if (esRegistro) restaurarEstadoRemoto(telefono, email);
+
+    if (_pendingAction) {
+      const action = _pendingAction;
+      _pendingAction = null;
+      cerrarPerfil();
+      setTimeout(action, 200);
+    }
+  } catch (e) {
+    showToast('No se pudo conectar. Probá de nuevo.');
+  } finally {
+    if (btnG) { btnG.disabled = false; btnG.textContent = (_vistaActual === 'registro') ? 'Crear cuenta' : 'Guardar cambios'; }
   }
 }
 
@@ -5998,70 +6243,128 @@ document.addEventListener('click', function(ev) {
   }
 });
 </script>
+
 <!-- PERFIL DE USUARIO -->
+
+<style>
+  .ml-accesos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:2px 0 14px}
+  .ml-acc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 6px;color:#dce8f5;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:.3px;cursor:pointer;transition:all .15s;text-align:center;line-height:1.15}
+  .ml-acc:hover{background:rgba(255,255,255,.1);border-color:rgba(255,90,90,.45);transform:translateY(-1px)}
+  .ml-acc-ico{font-size:22px;line-height:1}
+</style>
 <div class="perfil-overlay" id="perfilOverlay" onclick="if(event.target===this)cerrarPerfil()">
   <div class="perfil-modal">
     <button onclick="cerrarPerfil()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;" title="Cerrar">✕</button>
-    <h2>📦 ¿A dónde te lo llevamos?</h2>
-    <p class="perfil-sub">Tu primera entrega va a tu ubicación actual. Luego podés cambiar la dirección.</p>
+    <h2 id="perfilTitulo">🔑 Ingresá a tu cuenta</h2>
+    <p class="perfil-sub" id="perfilSubInfo">Entrá con tu usuario y contraseña.</p>
     <p class="perfil-sub" id="perfilSubVerif" style="display:none;color:#7dff7d">✅ Ya verificado — podés usar cualquier domicilio.</p>
 
-    <div style="display:flex;flex-direction:column;align-items:center;gap:7px;margin:6px 0 14px">
+    <!-- VISTA LOGIN -->
+    <div id="perfilLogin" style="display:none">
+      <div class="perfil-field">
+        <label>Usuario</label>
+        <input type="text" id="lUsuario" placeholder="Tu usuario" autocomplete="username" autocapitalize="none"/>
+      </div>
+      <div class="perfil-field">
+        <label>Contraseña</label>
+        <input type="password" id="lPass" placeholder="Tu contraseña" autocomplete="current-password"/>
+      </div>
+      <button class="btn-guardar-perfil" id="btnIngresar" style="width:100%;margin-top:4px" onclick="iniciarSesion()">Ingresar</button>
+      <div style="text-align:center;margin-top:14px;font-family:Rajdhani,sans-serif;font-size:13.5px;color:#9fb4c8">
+        ¿No tenés cuenta?
+        <button type="button" onclick="mostrarRegistro()" style="background:none;border:none;color:#ff8a8a;font-family:Rajdhani,sans-serif;font-weight:800;font-size:13.5px;cursor:pointer;padding:0 2px">Registrate</button>
+      </div>
+    </div>
+
+    <!-- AVATAR + SALUDO -->
+    <div id="perfilAvatarWrap" style="display:none;flex-direction:column;align-items:center;gap:7px;margin:6px 0 14px">
       <div id="perfilAvatar" onclick="document.getElementById('inputFoto').click()" style="width:84px;height:84px;border-radius:50%;background:#1c2836;background-size:cover;background-position:center;border:2px solid rgba(255,90,90,.5);display:flex;align-items:center;justify-content:center;font-size:34px;cursor:pointer;overflow:hidden">👤</div>
       <button type="button" onclick="document.getElementById('inputFoto').click()" style="background:none;border:none;color:#9fc5ff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.5px;cursor:pointer">📷 Cambiar foto</button>
       <input type="file" id="inputFoto" accept="image/*" style="display:none" onchange="onFotoSelected(this)"/>
-    </div>
-
-    <div style="display:flex;gap:8px;margin:4px 0 10px">
-      <button type="button" onclick="verPedidos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#dce8f5;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">🧾 Mis pedidos</button>
-      <button type="button" onclick="verDeseos()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,90,90,.35);color:#ffd0d0;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">❤️ Mis deseos</button>
-    </div>
-    <button type="button" onclick="verDirecciones()" style="width:100%;margin:0 0 10px;background:rgba(255,255,255,.06);border:1px solid rgba(120,180,255,.3);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:10px;border-radius:10px;cursor:pointer">📍 Mis direcciones</button>
-    <button type="button" id="btnHuella" onclick="toggleHuella()" style="display:none;width:100%;margin:0 0 16px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.35);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔒 Activar confirmación por huella</button>
-
-    <div class="perfil-field">
-      <label>Nombre y apellido *</label>
-      <input type="text" id="pNombre" placeholder="Ej: Juan Pérez" autocomplete="name"/>
-    </div>
-
-    <div class="perfil-field">
-      <label>Teléfono (WhatsApp) *</label>
-      <input type="tel" id="pTelefono" placeholder="Ej: 351 000 0000" autocomplete="tel"/>
-    </div>
-
-    <div class="perfil-field">
-      <label>Email *</label>
-      <input type="email" id="pEmail" placeholder="Ej: juan@email.com" autocomplete="email"/>
-    </div>
-
-    <div class="perfil-field">
-      <label>Dirección *</label>
-      <input type="text" id="pDireccion" placeholder="Ej: Av. Colón 1234" autocomplete="street-address"/>
-    </div>
-
-    <div class="perfil-row2">
-      <div class="perfil-field">
-        <label>Piso / Depto</label>
-        <input type="text" id="pPiso" placeholder="Ej: 3° B"/>
-      </div>
-      <div class="perfil-field">
-        <label>Barrio</label>
-        <input type="text" id="pBarrio" placeholder="Ej: Nueva Córdoba"/>
+      <div id="perfilHola" style="display:none;text-align:center;margin-top:4px">
+        <div id="perfilHolaNombre" style="font-family:'Orbitron',sans-serif;font-weight:900;font-size:19px;color:#fff"></div>
+        <div id="perfilHolaSub" style="font-family:'Rajdhani',sans-serif;font-size:12.5px;color:#9fb4c8;letter-spacing:.5px;margin-top:2px"></div>
       </div>
     </div>
 
-    <div class="perfil-field">
-      <label>Referencia</label>
-      <input type="text" id="pReferencia" placeholder="Ej: Portón verde, esquina con Bv. San Juan"/>
+    <!-- ACCESOS RAPIDOS estilo Mercado Libre -->
+    <div id="perfilAccesos" style="display:none">
+      <div class="ml-accesos">
+        <button type="button" class="ml-acc" onclick="verPedidos()"><span class="ml-acc-ico">🧾</span><span>Mis compras</span></button>
+        <button type="button" class="ml-acc" onclick="verDirecciones()"><span class="ml-acc-ico">📍</span><span>Mis direcciones</span></button>
+        <button type="button" class="ml-acc" onclick="verDeseos()"><span class="ml-acc-ico">❤️</span><span>Favoritos</span></button>
+        <button type="button" class="ml-acc" onclick="verNotificaciones()"><span class="ml-acc-ico">🔔</span><span>Notificaciones</span></button>
+        <button type="button" class="ml-acc" onclick="ayudaWhatsApp()"><span class="ml-acc-ico">💬</span><span>Ayuda</span></button>
+        <button type="button" class="ml-acc" onclick="cerrarSesion()"><span class="ml-acc-ico">🚪</span><span>Salir</span></button>
+      </div>
     </div>
 
-    <button class="btn-ubicacion" id="btnUbicacion" onclick="obtenerUbicacion()">
-      📍 Usar mi ubicación actual
-    </button>
+    <button type="button" id="btnHuella" onclick="toggleHuella()" style="display:none;width:100%;margin:0 0 12px;background:rgba(120,180,255,.1);border:1px solid rgba(120,180,255,.35);color:#cfe0ee;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔒 Activar confirmación por huella</button>
 
-    <div class="perfil-actions">
+    <button type="button" id="btnEditarDatos" onclick="toggleDatosPerfil()" style="display:none;width:100%;margin:0 0 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);color:#dce8f5;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">✏️ Editar mis datos</button>
+
+    <!-- FORMULARIO DE DATOS (registro / editar) -->
+    <div id="perfilDatos" style="display:none">
+      <div class="perfil-field" id="fldUsuario">
+        <label>Usuario *</label>
+        <input type="text" id="pUsuario" placeholder="Ej: juanperez" autocomplete="username" autocapitalize="none"/>
+      </div>
+
+      <div class="perfil-row2" id="fldPass">
+        <div class="perfil-field">
+          <label>Contraseña *</label>
+          <input type="password" id="pPass" placeholder="Mín. 4 caracteres" autocomplete="new-password"/>
+        </div>
+        <div class="perfil-field">
+          <label>Repetir *</label>
+          <input type="password" id="pPass2" placeholder="Repetí la clave" autocomplete="new-password"/>
+        </div>
+      </div>
+
+      <div class="perfil-field">
+        <label>Nombre y apellido *</label>
+        <input type="text" id="pNombre" placeholder="Ej: Juan Pérez" autocomplete="name"/>
+      </div>
+
+      <div class="perfil-field">
+        <label>Teléfono (WhatsApp) *</label>
+        <input type="tel" id="pTelefono" placeholder="Ej: 351 000 0000" autocomplete="tel"/>
+      </div>
+
+      <div class="perfil-field">
+        <label>Email *</label>
+        <input type="email" id="pEmail" placeholder="Ej: juan@email.com" autocomplete="email"/>
+      </div>
+
+      <div class="perfil-field">
+        <label>Dirección *</label>
+        <input type="text" id="pDireccion" placeholder="Ej: Av. Colón 1234" autocomplete="street-address"/>
+      </div>
+
+      <div class="perfil-row2">
+        <div class="perfil-field">
+          <label>Piso / Depto</label>
+          <input type="text" id="pPiso" placeholder="Ej: 3° B"/>
+        </div>
+        <div class="perfil-field">
+          <label>Barrio</label>
+          <input type="text" id="pBarrio" placeholder="Ej: Nueva Córdoba"/>
+        </div>
+      </div>
+
+      <div class="perfil-field">
+        <label>Referencia</label>
+        <input type="text" id="pReferencia" placeholder="Ej: Portón verde, esquina con Bv. San Juan"/>
+      </div>
+
+      <button class="btn-ubicacion" id="btnUbicacion" onclick="obtenerUbicacion()">
+        📍 Usar mi ubicación actual
+      </button>
+    </div><!-- /perfilDatos -->
+
+    <div class="perfil-actions" id="perfilActions" style="display:none">
       <button class="btn-cancelar-perfil" id="btnCancelarPerfil" onclick="cerrarPerfil()">Cancelar</button>
-      <button class="btn-guardar-perfil" onclick="guardarPerfil()">Guardar</button>
+      <button class="btn-guardar-perfil" id="btnGuardarPerfil" onclick="guardarPerfil()">Crear cuenta</button>
     </div>
   </div>
 </div>
@@ -6069,4 +6372,3 @@ document.addEventListener('click', function(ev) {
 
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
