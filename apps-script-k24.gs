@@ -1,204 +1,190 @@
 // K24 — Google Apps Script (backend sobre Google Sheets)
-// Maneja 3 cosas en tu planilla:
-//   1) Usuarios → registro de cada persona (1 fila por usuario/telefono, con
-//      su ultimo carrito, lista de deseos, y usuario+contrasena)
-//   2) Pedidos  → historial de compras (WhatsApp y MercadoPago)
-//   3) Estado   → devolver carrito/deseos/perfil para sincronizar entre
-//      dispositivos (cuando alguien entra en otro telefono)
+// ⚠️ Este archivo ES el que está publicado. Preserva TODO lo existente
+// (pedidos con numero correlativo, registro de usuarios, backups a Drive) y
+// AGREGA el login con usuario/contrasena usando una hoja nueva "Cuentas".
 //
-// COMO INSTALARLO / ACTUALIZARLO:
-//   1. Abri tu Google Sheet de K24.
-//   2. Menu  Extensiones -> Apps Script.
-//   3. Selecciona todo (Ctrl+A), borralo y pega TODO este archivo. Guarda.
-//   4. Boton  Implementar -> Gestionar implementaciones -> editar (lapiz) ->
-//      Version: "Nueva version" -> Implementar. (Asi la URL /exec sigue igual.)
-//
-// Las hojas "Usuarios", "Pedidos" y "Estado" se crean solas si no existen.
+// COMO ACTUALIZARLO:
+//   1. Extensiones -> Apps Script -> pegá TODO este archivo (reemplazando).
+//   2. Implementar -> Gestionar implementaciones -> editá la implementación
+//      que usa la app (la que termina en ...HcoA3kBuK2rD7dWqdYZGw) -> Version:
+//      "Nueva version" -> Implementar. Asi la URL /exec no cambia.
 
-// Si el script NO esta pegado dentro de la planilla, poné el ID aca:
-var SHEET_ID = ''; // dejalo vacio si lo pegaste desde la planilla
+const SHEET_ID         = '1gvv0pL42qzu8L8gx2KlDvNkY87C6YCezyukGSAlq5fs';
+const PEDIDOS_SHEET_ID = '1u7UOSYBziInDMKJfgL1VmeTipzTCRTQA60qfQ4YSO3A';
+const BACKUP_FOLDER_ID = '1XsSdilbUH2V9FRSvXx7VtnMc1KqZmG3l';
+const GITHUB_RAW_URL   = 'https://raw.githubusercontent.com/jorko45/kiosco-online/main/index.html';
+const MAX_BACKUPS = 10;
 
-function _ss() {
-  return SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+// Hoja de cuentas para el login (usuario + contrasena). Se crea sola.
+const CUENTAS_HEADERS = ['Fecha','Usuario','PassHash','Nombre','Telefono','Email','Direccion','Piso','Barrio','Referencia','Coords','Foto','Carrito','Deseos'];
+
+function _jsonOut(o){
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
+function _norm(s){ return String(s||'').trim().toLowerCase(); }
+function _parse(s){ try{ return s ? JSON.parse(s) : null; }catch(e){ return null; } }
 
-function _hoja(nombre, headers) {
-  var ss = _ss();
-  var sh = ss.getSheetByName(nombre);
-  if (!sh) {
-    sh = ss.insertSheet(nombre);
-    sh.appendRow(headers);
-    sh.setFrozenRows(1);
-  }
+function _hojaCuentas(){
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sh = ss.getSheetByName('Cuentas');
+  if(!sh){ sh = ss.insertSheet('Cuentas'); sh.appendRow(CUENTAS_HEADERS); sh.setFrozenRows(1); }
   return sh;
 }
-
-function _json(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function _filaPorUsuario(sh, usuario){
+  var u=_norm(usuario); if(!u) return -1;
+  var d=sh.getDataRange().getValues();
+  for(var i=1;i<d.length;i++){ if(_norm(d[i][1])===u) return i+1; }
+  return -1;
 }
-
-// Encabezados de la hoja Usuarios (Usuario y PassHash al final para no romper
-// planillas viejas que ya tenian las 11 primeras columnas).
-var USUARIOS_HEADERS = [
-  'Fecha', 'Nombre', 'Telefono', 'Email', 'Direccion',
-  'Barrio', 'Referencia', 'Evento', 'Carrito', 'Deseos', 'Foto',
-  'Usuario', 'PassHash'
-];
-var COL_USUARIO = 11;   // indice 0-based
-var COL_PASSHASH = 12;
-
-function _hojaUsuarios() {
-  var sh = _hoja('Usuarios', USUARIOS_HEADERS);
-  if (sh.getLastColumn() < USUARIOS_HEADERS.length) {
-    sh.getRange(1, 1, 1, USUARIOS_HEADERS.length).setValues([USUARIOS_HEADERS]);
-  }
-  return sh;
-}
-
-function _norm(s) { return String(s || '').trim().toLowerCase(); }
-
-// POST: registrar usuario / login / check / guardar pedido
-function doPost(e) {
-  try {
-    var body = JSON.parse(e.postData.contents);
-    var action = body.action || body.tipo || '';
-    if (action === 'guardar_pedido' || action === 'pedido') return _guardarPedido(body);
-    if (action === 'login') return _login(body);
-    if (action === 'check_usuario') return _checkUsuario(body);
-    return _guardarUsuario(body);
-  } catch (err) {
-    return _json({ ok: false, error: String(err) });
-  }
-}
-
-// Busca la fila (1-based de la hoja) de un usuario por nombre de usuario, o -1.
-function _buscarPorUsuario(sh, usuario) {
-  var u = _norm(usuario);
-  if (!u) return -1;
-  var datos = sh.getDataRange().getValues();
-  for (var i = 1; i < datos.length; i++) {
-    if (_norm(datos[i][COL_USUARIO]) === u) return i + 1;
+function _filaPorContacto(sh, tel, email){
+  tel=String(tel||'').trim(); email=_norm(email);
+  if(!tel && !email) return -1;
+  var d=sh.getDataRange().getValues();
+  for(var i=1;i<d.length;i++){
+    if(tel && String(d[i][4]).trim()===tel) return i+1;
+    if(email && _norm(d[i][5])===email) return i+1;
   }
   return -1;
 }
-
-// Disponibilidad de un nombre de usuario.
-function _checkUsuario(b) {
-  var sh = _hojaUsuarios();
-  return _json({ ok: true, disponible: _buscarPorUsuario(sh, b.usuario) === -1 });
+function _cuentaObj(r){
+  return {
+    perfil:{ usuario:r[1], nombre:r[3], telefono:r[4], email:r[5], direccion:r[6], piso:r[7], barrio:r[8], referencia:r[9], foto:r[11]||'' },
+    carrito:_parse(r[12]),
+    deseos:_parse(r[13])
+  };
 }
 
-// Login: valida usuario + passHash. Devuelve el perfil para sincronizar.
-function _login(b) {
-  var sh = _hojaUsuarios();
-  var fila = _buscarPorUsuario(sh, b.usuario);
-  if (fila === -1) return _json({ ok: true, encontrado: false });
-  var r = sh.getRange(fila, 1, 1, USUARIOS_HEADERS.length).getValues()[0];
-  var hashGuardado = String(r[COL_PASSHASH] || '');
-  if (!hashGuardado || hashGuardado !== String(b.passHash || '')) {
-    return _json({ ok: true, encontrado: true, auth: false });
-  }
-  return _json({
-    ok: true, encontrado: true, auth: true,
-    perfil: {
-      usuario: r[COL_USUARIO], nombre: r[1], telefono: r[2], email: r[3],
-      direccion: r[4], barrio: r[5], referencia: r[6], foto: r[10] || ''
-    },
-    carrito: _parse(r[8]),
-    deseos: _parse(r[9])
-  });
-}
-
-// Usuarios: 1 fila por usuario (o telefono si no hay usuario).
-function _guardarUsuario(b) {
-  var sh = _hojaUsuarios();
-  var tel = String(b.telefono || '').trim();
-  var usuario = String(b.usuario || '').trim();
-  var fila = [
-    b.fecha || new Date().toISOString(),
-    b.nombre || '', tel, b.email || '', b.direccion || '',
-    b.barrio || '', b.referencia || '', b.evento || 'registro',
-    b.carrito ? JSON.stringify(b.carrito) : '',
-    b.deseos ? JSON.stringify(b.deseos) : '',
-    b.foto || '',
-    usuario,
-    String(b.passHash || '')
+// Alta/actualizacion de una cuenta. Preserva PassHash y Foto si no vienen.
+function _guardarCuenta(data){
+  var sh=_hojaCuentas();
+  var usuario=String(data.usuario||'').trim();
+  var fila=[
+    new Date().toLocaleString('es-AR'),
+    usuario, String(data.passHash||''),
+    data.nombre||'', data.telefono||'', data.email||'', data.direccion||'',
+    data.piso||'', data.barrio||'', data.referencia||'',
+    data.coords ? (data.coords.lat+','+data.coords.lng) : '',
+    data.foto||'',
+    data.carrito ? JSON.stringify(data.carrito) : '',
+    data.deseos ? JSON.stringify(data.deseos) : ''
   ];
-  var datos = sh.getDataRange().getValues();
-  for (var i = 1; i < datos.length; i++) {
-    var matchU = usuario !== '' && _norm(datos[i][COL_USUARIO]) === _norm(usuario);
-    var matchT = usuario === '' && tel !== '' && String(datos[i][2]).trim() === tel;
-    if (matchU || matchT) {
-      if (!b.foto) fila[10] = datos[i][10] || '';                 // preservar foto
-      if (!b.passHash) fila[COL_PASSHASH] = datos[i][COL_PASSHASH] || '';  // preservar clave
-      if (!usuario) fila[COL_USUARIO] = datos[i][COL_USUARIO] || '';
-      sh.getRange(i + 1, 1, 1, fila.length).setValues([fila]);
-      return _json({ ok: true, updated: true });
-    }
+  var f = usuario ? _filaPorUsuario(sh, usuario) : _filaPorContacto(sh, data.telefono, data.email);
+  if(f!==-1){
+    var actual=sh.getRange(f,1,1,CUENTAS_HEADERS.length).getValues()[0];
+    if(!data.passHash) fila[2]=actual[2]||'';   // preservar clave
+    if(!data.foto)     fila[11]=actual[11]||''; // preservar foto
+    if(!usuario)       fila[1]=actual[1]||'';   // preservar usuario
+    sh.getRange(f,1,1,fila.length).setValues([fila]);
+    return _jsonOut({ok:true, updated:true});
   }
-  // Registro nuevo: si el usuario ya existe, rechazar
-  if (usuario !== '' && _buscarPorUsuario(sh, usuario) !== -1) {
-    return _json({ ok: false, motivo: 'usuario_ocupado' });
+  if(usuario && _filaPorUsuario(sh,usuario)!==-1){
+    return _jsonOut({ok:false, motivo:'usuario_ocupado'});
   }
   sh.appendRow(fila);
-  return _json({ ok: true, created: true });
+  return _jsonOut({ok:true, created:true});
 }
 
-// Pedidos: una fila por compra (historial)
-function _guardarPedido(b) {
-  var sh = _hoja('Pedidos', [
-    'Fecha', 'Nombre', 'Telefono', 'Direccion', 'Barrio',
-    'Productos', 'Total', 'Canal', 'Notas'
-  ]);
-  sh.appendRow([
-    b.fecha || new Date().toISOString(),
-    b.nombre || '', b.telefono || '', b.direccion || '', b.barrio || '',
-    b.productos || b.detalle || '', b.total || '',
-    b.canal || (String(b.notas || '').indexOf('MercadoPago') >= 0 ? 'mercadopago' : 'whatsapp'),
-    b.notas || ''
-  ]);
-  return _json({ ok: true });
-}
-
-// GET: obtener estado (perfil + carrito + deseos) por telefono o email
-//   .../exec?action=estado&telefono=3510000000
-function doGet(e) {
+function doPost(e) {
   try {
-    var p = e.parameter || {};
-    if ((p.action || '') !== 'estado') {
-      return _json({ ok: true, msg: 'K24 backend activo' });
+    var data = JSON.parse(e.postData.contents);
+
+    // Guardar pedido en hoja Pedidos K24 (numero correlativo)
+    if (data.action === 'guardar_pedido') {
+      var sheet = SpreadsheetApp.openById(PEDIDOS_SHEET_ID).getActiveSheet();
+      var numPedido = sheet.getLastRow();
+      sheet.appendRow([
+        new Date().toLocaleString('es-AR'),
+        numPedido,
+        'NUEVO',
+        data.nombre || '',
+        data.telefono || '',
+        data.direccion || '',
+        data.barrio || '',
+        data.productos || '',
+        data.total || '',
+        'WhatsApp',
+        data.notas || ''
+      ]);
+      return _jsonOut({ ok:true });
     }
-    var tel = String(p.telefono || '').trim();
-    var email = String(p.email || '').trim().toLowerCase();
-    var sh = _ss().getSheetByName('Usuarios');
-    if (!sh) return _json({ ok: true, encontrado: false });
-    var datos = sh.getDataRange().getValues();
-    for (var i = 1; i < datos.length; i++) {
-      var r = datos[i];
-      var matchTel = tel && String(r[2]).trim() === tel;
-      var matchMail = email && String(r[3]).trim().toLowerCase() === email;
-      if (matchTel || matchMail) {
-        return _json({
-          ok: true, encontrado: true,
-          perfil: {
-            usuario: r[COL_USUARIO] || '',
-            nombre: r[1], telefono: r[2], email: r[3],
-            direccion: r[4], barrio: r[5], referencia: r[6],
-            foto: r[10] || ''
-          },
-          carrito: _parse(r[8]),
-          deseos: _parse(r[9])
-        });
-      }
+
+    // Login: valida usuario + passHash contra la hoja Cuentas
+    if (data.action === 'login') {
+      var shl=_hojaCuentas();
+      var fl=_filaPorUsuario(shl, data.usuario);
+      if(fl===-1) return _jsonOut({ok:true, encontrado:false});
+      var rl=shl.getRange(fl,1,1,CUENTAS_HEADERS.length).getValues()[0];
+      var hash=String(rl[2]||'');
+      if(!hash || hash!==String(data.passHash||'')) return _jsonOut({ok:true, encontrado:true, auth:false});
+      var ol=_cuentaObj(rl); ol.ok=true; ol.encontrado=true; ol.auth=true;
+      return _jsonOut(ol);
     }
-    return _json({ ok: true, encontrado: false });
-  } catch (err) {
-    return _json({ ok: false, error: String(err) });
+
+    // Disponibilidad de nombre de usuario
+    if (data.action === 'check_usuario') {
+      var shc=_hojaCuentas();
+      return _jsonOut({ok:true, disponible:_filaPorUsuario(shc, data.usuario)===-1});
+    }
+
+    // Registro / actualizacion de cuenta (login con usuario/contrasena)
+    if (data.action === 'registrar') {
+      return _guardarCuenta(data);
+    }
+
+    // ── Registro de usuario (accion por defecto — LOG historico, sin tocar) ──
+    var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    var coords = data.coords ? 'https://maps.google.com/?q=' + data.coords.lat + ',' + data.coords.lng : '';
+    sheet.appendRow([new Date().toLocaleString('es-AR'), data.nombre||'', data.telefono||'', data.direccion||'', data.piso||'', data.barrio||'', data.referencia||'', coords]);
+    // Si el cliente ya tiene login (manda usuario), mantenemos su cuenta al dia
+    if (data.usuario) { _guardarCuenta(data); }
+    return _jsonOut({ ok:true });
+
+  } catch(err) {
+    return _jsonOut({ ok:false, error:err.message });
   }
 }
 
-function _parse(s) {
-  try { return s ? JSON.parse(s) : null; } catch (e) { return null; }
+// GET: estado para sincronizar entre dispositivos (perfil + carrito + deseos)
+//   .../exec?action=estado&telefono=3510000000   (o &email=...)
+function doGet(e) {
+  try {
+    var p = (e && e.parameter) || {};
+    if ((p.action||'') !== 'estado') {
+      return _jsonOut({ ok:true, msg:'K24 backend activo' });
+    }
+    var sh=_hojaCuentas();
+    var f=_filaPorContacto(sh, p.telefono, p.email);
+    if(f===-1) return _jsonOut({ ok:true, encontrado:false });
+    var r=sh.getRange(f,1,1,CUENTAS_HEADERS.length).getValues()[0];
+    var o=_cuentaObj(r); o.ok=true; o.encontrado=true;
+    return _jsonOut(o);
+  } catch(err) {
+    return _jsonOut({ ok:false, encontrado:false, error:err.message });
+  }
+}
+
+function testBasic() {
+  return 'OK: ' + new Date().toISOString();
+}
+
+function backupIndexHtml() {
+  var response = UrlFetchApp.fetch(GITHUB_RAW_URL);
+  var content = response.getContentText('UTF-8');
+
+  var now = new Date();
+  var timestamp = Utilities.formatDate(now, 'America/Argentina/Cordoba', 'yyyy-MM-dd_HH-mm');
+  var filename = 'index_' + timestamp + '.html';
+
+  var folder = DriveApp.getFolderById(BACKUP_FOLDER_ID);
+  folder.createFile(filename, content, MimeType.HTML);
+
+  // Borrar backups viejos si hay mas de MAX_BACKUPS
+  var files = folder.getFilesByType(MimeType.HTML);
+  var fileList = [];
+  while (files.hasNext()) fileList.push(files.next());
+  fileList.sort(function(a,b){ return a.getDateCreated() - b.getDateCreated(); });
+  while (fileList.length > MAX_BACKUPS) {
+    fileList.shift().setTrashed(true);
+  }
+  Logger.log('Backup OK: ' + filename);
 }

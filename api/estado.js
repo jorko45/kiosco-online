@@ -3,7 +3,7 @@
 // Devuelve { encontrado, perfil, carrito, deseos } para sincronizar entre
 // dispositivos.
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHw92ciow84P-SFFgABT4i04OH21qbaTuOsXM0PPbG2pxA6BcoA3kBuK2rD7dWqdYZGw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz48Hs8pcO-ewcmnxaHrS-eBrcVk-llMdaCxjNyCXOdP99SahO7X84w-97bs_JvuzOL/exec';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
