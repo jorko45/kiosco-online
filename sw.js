@@ -1,7 +1,7 @@
 // K24 Service Worker — navegación network-first (precios siempre frescos),
 // imágenes stale-while-revalidate, offline sirve el último catálogo visto.
-const SHELL = 'k24-shell-v1';
-const IMGS = 'k24-imgs-v1';
+const SHELL = 'k24-shell-v2';
+const IMGS = 'k24-imgs-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => c.add('/')).then(() => self.skipWaiting()));

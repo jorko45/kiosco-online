@@ -1,6 +1,6 @@
 {
-  "name": "K24 — Tu kiosco en tu celular",
-  "short_name": "K24",
+  "name": "k24hs — Tu kiosco en tu celular",
+  "short_name": "k24hs",
   "description": "Kiosco online 24hs con delivery en Córdoba. Bebidas, golosinas, almacén y más.",
   "start_url": "/",
   "scope": "/",
