@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>k24hs — Tu kiosco en tu celular</title>
   <link rel="manifest" href="/manifest.json">
+  <script>
+    /* Capturar el evento de instalación lo antes posible (si esperamos al script del final, a veces ya se disparó y se pierde) */
+    window._deferredInstall = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window._deferredInstall = e;
+      var b = document.getElementById('btnInstalar');
+      if (b) { try { b.style.display = 'flex'; } catch (_) {} }
+    });
+  </script>
   <meta name="theme-color" content="#0a0f16">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1275,7 +1285,7 @@
           <div class="pago-item">💳 MercadoPago (tarjetas y QR)</div>
           <div class="pago-item">🏦 Transferencia bancaria</div>
           <div class="pago-item">🌙 Comprá 24hs — enviamos desde las 8:00</div>
-          <button class="btn-install-cta" id="btnInstalar" style="display:none">📲 Instalar la app K24 · acceso directo</button>
+          <button class="btn-install-cta" id="btnInstalar" style="display:none">📲 Instalar la app k24hs · acceso directo</button>
         </div>
       </div>
     </div>
@@ -6262,7 +6272,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(function(){});
   });
 }
-var _deferredInstall = null;
 function _isStandalone() {
   return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
 }
@@ -6278,11 +6287,11 @@ function _showInstallBtn() {
 window.addEventListener('load', _showInstallBtn);
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
-  _deferredInstall = e;
+  window._deferredInstall = e;
   _showInstallBtn();
 });
 window.addEventListener('appinstalled', function() {
-  _deferredInstall = null;
+  window._deferredInstall = null;
   var b = document.getElementById('btnInstalar');
   if (b) b.style.display = 'none';
 });
@@ -6295,7 +6304,7 @@ function _instruccionesInstalar() {
   ov.onclick = function(e) { if (e.target === ov) document.body.removeChild(ov); };
   ov.innerHTML =
     '<div style="background:#0f1722;border:1px solid rgba(255,90,90,.5);border-radius:16px;max-width:340px;padding:22px;color:#fff;font-family:Rajdhani,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">' +
-      '<div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:17px;margin-bottom:12px">📲 Instalar K24</div>' +
+      '<div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:17px;margin-bottom:12px">📲 Instalar k24hs</div>' +
       '<div style="font-size:15px;line-height:1.6;color:#cfe0ee">' + pasos + '</div>' +
       '<button style="margin-top:18px;width:100%;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;letter-spacing:1px;padding:11px;border-radius:10px;cursor:pointer">Entendido</button>' +
     '</div>';
@@ -6304,9 +6313,9 @@ function _instruccionesInstalar() {
 }
 document.addEventListener('click', function(ev) {
   if (ev.target && ev.target.id === 'btnInstalar') {
-    if (_deferredInstall) {
-      _deferredInstall.prompt();
-      _deferredInstall.userChoice.then(function() { _deferredInstall = null; });
+    if (window._deferredInstall) {
+      window._deferredInstall.prompt();
+      window._deferredInstall.userChoice.then(function() { window._deferredInstall = null; });
     } else {
       _instruccionesInstalar();
     }

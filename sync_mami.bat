@@ -13,7 +13,7 @@ echo === Subiendo cambios ===
 if exist ".git\index.lock" del ".git\index.lock"
 git add index.html
 git commit -m "sync: precios y golosinas desde SuperMami"
-git push origin master:main
+git push origin HEAD:main
 echo.
 echo Listo. Presiona cualquier tecla para cerrar.
 pause

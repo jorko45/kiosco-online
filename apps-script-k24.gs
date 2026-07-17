@@ -25,9 +25,23 @@ function _norm(s){ return String(s||'').trim().toLowerCase(); }
 function _parse(s){ try{ return s ? JSON.parse(s) : null; }catch(e){ return null; } }
 
 function _hojaCuentas(){
-  var ss = SpreadsheetApp.openById(SHEET_ID);
+  // Planilla propia para las cuentas. Se crea sola la primera vez (queda en el
+  // Drive de la cuenta como "K24 Cuentas") y su ID se guarda en las propiedades
+  // del script, para no depender de IDs hardcodeados.
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('CUENTAS_SHEET_ID');
+  var ss = null;
+  if (id) { try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; } }
+  if (!ss) {
+    ss = SpreadsheetApp.create('K24 Cuentas');
+    props.setProperty('CUENTAS_SHEET_ID', ss.getId());
+  }
   var sh = ss.getSheetByName('Cuentas');
-  if(!sh){ sh = ss.insertSheet('Cuentas'); sh.appendRow(CUENTAS_HEADERS); sh.setFrozenRows(1); }
+  if (!sh) {
+    sh = ss.getSheets()[0];
+    sh.setName('Cuentas');
+  }
+  if (sh.getLastRow() === 0) { sh.appendRow(CUENTAS_HEADERS); sh.setFrozenRows(1); }
   return sh;
 }
 function _filaPorUsuario(sh, usuario){

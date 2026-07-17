@@ -12,7 +12,7 @@ echo === Subiendo cambios ===
 if exist ".git\index.lock" del ".git\index.lock"
 git add index.html img/cigarrillos
 git commit -m "feat: fotos de cigarrillos descargadas en local (sin hotlink a pedix)"
-git push origin master:main
+git push origin HEAD:main
 echo.
 echo Listo. Presiona cualquier tecla para cerrar.
 pause
