@@ -98,9 +98,58 @@ function _guardarCuenta(data){
   return _jsonOut({ok:true, created:true});
 }
 
+// ── PLANILLA DE PRECIOS (costo / margen / MP / precio venta) ──
+var PRECIOS_HEADERS = ['ID','Sección','Categoría','Producto','Costo','Margen %','MP %','Precio Sugerido','Precio Venta','Activo'];
+function _hojaPrecios(){
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('PRECIOS_SHEET_ID');
+  var ss = null;
+  if (id) { try { ss = SpreadsheetApp.openById(id); } catch(e) { ss = null; } }
+  if (!ss) { ss = SpreadsheetApp.create('precios editable google'); props.setProperty('PRECIOS_SHEET_ID', ss.getId()); }
+  try{ if(ss.getName()!=='precios editable google') ss.rename('precios editable google'); }catch(e){} // renombrar planilla precios
+  var sh = ss.getSheets()[0];
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(PRECIOS_HEADERS);
+    sh.getRange(1,1,1,PRECIOS_HEADERS.length).setFontWeight('bold').setBackground('#cc0000').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(1,110); sh.setColumnWidth(4,320);
+  }
+  return sh;
+}
+
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
+
+    // Vaciar la planilla de precios (deja el encabezado)
+    if (data.action === 'precios_reset') {
+      var spr = _hojaPrecios();
+      var lr0 = spr.getLastRow();
+      if (lr0 > 1) spr.getRange(2,1,lr0-1,PRECIOS_HEADERS.length).clearContent();
+      return _jsonOut({ ok:true, cleared:true });
+    }
+
+    // Cargar un lote de productos a la planilla de precios
+    // data.rows = [[id,seccion,categoria,producto,costo,margen,mp,precioVenta], ...]
+    if (data.action === 'precios_append') {
+      var spa = _hojaPrecios();
+      var rows = data.rows || [];
+      if (rows.length) {
+        var start = spa.getLastRow() + 1;
+        var vals = rows.map(function(r){
+          return [ r[0], r[1], r[2], r[3],
+            (r[4]===''||r[4]==null)?'':Number(r[4]),
+            (r[5]===''||r[5]==null)?'':Number(r[5]),
+            (r[6]===''||r[6]==null)?'':Number(r[6]),
+            '', Number(r[7])||0, 'SI' ];
+        });
+        spa.getRange(start,1,vals.length,PRECIOS_HEADERS.length).setValues(vals);
+        var fs = [];
+        for (var i=0;i<vals.length;i++){ var rr=start+i; fs.push(['=IF(E'+rr+'>0,MROUND(E'+rr+'*(1+F'+rr+'/100)*(1+G'+rr+'/100),50),"")']); }
+        spa.getRange(start,8,fs.length,1).setFormulas(fs);
+      }
+      return _jsonOut({ ok:true, total: spa.getLastRow()-1 });
+    }
 
     // Guardar pedido en hoja Pedidos K24 (numero correlativo)
     if (data.action === 'guardar_pedido') {
@@ -163,6 +212,23 @@ function doPost(e) {
 function doGet(e) {
   try {
     var p = (e && e.parameter) || {};
+
+    // Catálogo de precios para la web: [id, precioVenta, precioSugerido, activo]
+    if ((p.action||'') === 'precios') {
+      var spg = _hojaPrecios();
+      var lrg = spg.getLastRow();
+      if (lrg < 2) return _jsonOut({ ok:true, items:[] });
+      var vg = spg.getRange(2,1,lrg-1,PRECIOS_HEADERS.length).getValues();
+      var items = [];
+      for (var i=0;i<vg.length;i++){
+        var r = vg[i]; var id = r[0]; if (id==='' || id==null) continue;
+        var act = String(r[9]||'').toUpperCase().trim();
+        var activo = (act===''||act==='SI'||act==='TRUE'||act==='1'||act==='VERDADERO') ? 1 : 0;
+        items.push([ String(id), Number(r[8])||0, Number(r[7])||0, activo ]);
+      }
+      return _jsonOut({ ok:true, items:items });
+    }
+
     if ((p.action||'') !== 'estado') {
       return _jsonOut({ ok:true, msg:'K24 backend activo' });
     }
