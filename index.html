@@ -1055,6 +1055,7 @@
       padding: 14px 16px 24px;
     }
     .gon-card {
+      position: relative;
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.09);
       border-radius: 14px;
@@ -1062,6 +1063,28 @@
       cursor: pointer;
       transition: transform .18s, box-shadow .18s;
     }
+    .gon-fav {
+      position: absolute; top: 6px; right: 6px; z-index: 3;
+      width: 30px; height: 30px; border-radius: 50%;
+      border: none; background: rgba(0,0,0,.45); backdrop-filter: blur(2px);
+      font-size: 15px; line-height: 1; cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .12s;
+    }
+    .gon-fav:active { transform: scale(.85); }
+    .gon-fav.on { background: rgba(204,16,16,.85); }
+    /* Buzón de avisos en el header */
+    .buzon-btn {
+      position: relative; background: none; border: none; cursor: pointer;
+      font-size: 20px; line-height: 1; padding: 4px; color: var(--text);
+    }
+    .buzon-dot {
+      position: absolute; top: 1px; right: 1px; width: 9px; height: 9px;
+      background: #ff2d2d; border: 1.5px solid #fff; border-radius: 50%; display: none;
+    }
+    .buzon-dot.on { display: block; }
+    .ml-acc { position: relative; }
+    .ml-acc .buzon-dot { top: 8px; right: 14px; }
     .gon-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 24px rgba(0,0,0,.5);
@@ -1466,6 +1489,7 @@
     <div class="header-right">
       <button class="btn-inicio" onclick="volverInicio()">← Inicio</button>
       <span class="badge-open">● Abierto</span>
+      <button class="buzon-btn" id="btnBuzon" onclick="abrirBuzon()" title="Avisos y promos">📬<span class="buzon-dot" id="buzonDot"></span></button>
       <button class="btn-perfil" id="btnPerfil" onclick="abrirPerfil()">👤 <span id="headerNombre">Mi cuenta</span></button>
       <button class="cart-btn" onclick="toggleCart()">
         🛒 Carrito <span class="cart-count" id="cartCount">0</span>
@@ -2889,7 +2913,25 @@ function verDeseos() {
 }
 function abrirDeseo(id, shelfKey) {
   _cerrarOverlays();
+  if (shelfKey === 'gon') {
+    var w = wishlist.find(function (x) { return x.id === id; });
+    if (w) addGonToCart(w.id, w.name, w.price, w.img);
+    return;
+  }
   if (shelfKey) { try { openModal(id, shelfKey); } catch (e) {} }
+}
+// Favorito desde las tarjetas de producto (Góndola, Golosinas, Fiambrería...)
+function toggleFavProducto(item, btn) {
+  if (inWishlist(item.id)) {
+    wishlist = wishlist.filter(function (w) { return w.id !== item.id; });
+    if (btn) { btn.classList.remove('on'); btn.innerHTML = '🤍'; }
+    showToast('♡ Quitado de tus favoritos');
+  } else {
+    wishlist.unshift({ id: item.id, shelfKey: 'gon', name: item.name, price: item.price, img: item.img });
+    if (btn) { btn.classList.add('on'); btn.innerHTML = '❤️'; }
+    showToast('❤️ Agregado a tus favoritos');
+  }
+  saveWishlist();
 }
 function quitarDeseo(id, btn) {
   wishlist = wishlist.filter(function (w) { return w.id !== id; });
@@ -3527,6 +3569,47 @@ function ayudaWhatsApp() {
   var msg = 'Hola K24 👋 necesito ayuda' + (nombre ? ' (soy ' + nombre + ')' : '');
   window.open('https://wa.me/5493513260094?text=' + encodeURIComponent(msg), '_blank');
 }
+
+// ── Buzón / Bandeja de avisos ──
+// Para mandar un aviso nuevo: agregá un objeto arriba de todo en esta lista
+// (id único, fecha, titulo, texto). El puntito rojo aparece solo hasta que lo abran.
+const AVISOS = [
+  { id:'2026-07-17-fiambreria', fecha:'17/07/2026', titulo:'🧀 Nueva sección: Fiambrería & Lácteos', texto:'Sumamos más de 600 productos: quesos, fiambres, leche, yogur y pizzas. Entrá desde la portada del kiosco.' },
+  { id:'2026-07-17-bienvenida', fecha:'17/07/2026', titulo:'¡Bienvenido a k24hs! 🎉', texto:'Tu kiosco 24hs con envíos inmediatos en Córdoba. Guardá tus productos con el corazón ❤️ y pedí cuando quieras.' }
+];
+function _avisosLeidos() { try { return JSON.parse(localStorage.getItem('k24_avisos_leidos') || '[]') || []; } catch (e) { return []; } }
+function avisosNoLeidos() { var l = _avisosLeidos(); return AVISOS.filter(function (a) { return l.indexOf(a.id) === -1; }).length; }
+function pintarBuzonBadge() {
+  var n = avisosNoLeidos();
+  var dot = document.getElementById('buzonDot'); if (dot) dot.classList.toggle('on', n > 0);
+  var adot = document.getElementById('accAvisosDot'); if (adot) adot.classList.toggle('on', n > 0);
+}
+function abrirBuzon() {
+  _cerrarOverlays();
+  var body;
+  if (!AVISOS.length) {
+    body = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">No tenés avisos por ahora. Cuando haya promos o novedades te avisamos acá.</div>';
+  } else {
+    body = AVISOS.map(function (a) {
+      return '<div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+        + '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;color:#fff">' + a.titulo + '</div>'
+        + '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin:3px 0 4px">' + a.texto + '</div>'
+        + '<div style="font-size:11px;color:#7f95a8">' + a.fecha + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  var soporta = ('Notification' in window);
+  var granted = soporta && Notification.permission === 'granted' && localStorage.getItem('k24_notif') === '1';
+  if (soporta && !granted && Notification.permission !== 'denied') {
+    body += '<button onclick="activarNotif()" style="width:100%;margin-top:14px;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔔 Activar avisos en el teléfono</button>';
+  } else if (granted) {
+    body += '<div style="color:#bfffce;font-size:12.5px;text-align:center;margin-top:12px">🔔 Avisos en el teléfono activados</div>';
+  }
+  _overlay('📬 Buzón de avisos', body);
+  try { localStorage.setItem('k24_avisos_leidos', JSON.stringify(AVISOS.map(function (a) { return a.id; }))); } catch (e) {}
+  pintarBuzonBadge();
+}
+window.addEventListener('load', pintarBuzonBadge);
 
 // ── Notificaciones del navegador ──
 function verNotificaciones() {
@@ -5948,6 +6031,13 @@ function renderGonItems(items, gridEl) {
         <div class="gon-card-name">${item.name}</div>
         <div class="gon-card-price">$${item.price.toLocaleString('es-AR')}</div>
       </div>`;
+    const fav = document.createElement('button');
+    const favOn = inWishlist(item.id);
+    fav.className = 'gon-fav' + (favOn ? ' on' : '');
+    fav.innerHTML = favOn ? '❤️' : '🤍';
+    fav.setAttribute('aria-label', 'Favorito');
+    fav.onclick = (e) => { e.stopPropagation(); toggleFavProducto(item, fav); };
+    d.appendChild(fav);
     gridEl.appendChild(d);
   });
 }
@@ -6372,7 +6462,7 @@ document.addEventListener('click', function(ev) {
         <button type="button" class="ml-acc" onclick="verPedidos()"><span class="ml-acc-ico">🧾</span><span>Mis compras</span></button>
         <button type="button" class="ml-acc" onclick="verDirecciones()"><span class="ml-acc-ico">📍</span><span>Mis direcciones</span></button>
         <button type="button" class="ml-acc" onclick="verDeseos()"><span class="ml-acc-ico">❤️</span><span>Favoritos</span></button>
-        <button type="button" class="ml-acc" onclick="verNotificaciones()"><span class="ml-acc-ico">🔔</span><span>Notificaciones</span></button>
+        <button type="button" class="ml-acc" onclick="abrirBuzon()"><span class="buzon-dot" id="accAvisosDot"></span><span class="ml-acc-ico">📬</span><span>Avisos</span></button>
         <button type="button" class="ml-acc" onclick="ayudaWhatsApp()"><span class="ml-acc-ico">💬</span><span>Ayuda</span></button>
         <button type="button" class="ml-acc" onclick="cerrarSesion()"><span class="ml-acc-ico">🚪</span><span>Salir</span></button>
       </div>
