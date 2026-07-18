@@ -229,6 +229,22 @@ function doGet(e) {
       return _jsonOut({ ok:true, items:items });
     }
 
+    // Rellenar Costo/Margen/MP a partir del Precio Venta actual (costo hacia atrás:
+    // costo = precio / (1+margen)/(1+MP) con margen 25% y MP 6.6%). Solo se corre 1 vez.
+    if ((p.action||'') === 'rellenar_costos') {
+      var spc = _hojaPrecios();
+      var lrc = spc.getLastRow();
+      if (lrc < 2) return _jsonOut({ ok:true, filled:0 });
+      var ventas = spc.getRange(2,9,lrc-1,1).getValues(); // col I (Precio Venta)
+      var egm = [];
+      for (var i=0;i<ventas.length;i++){
+        var v = Number(ventas[i][0])||0;
+        egm.push([ v>0?Math.round(v/1.3325):'', v>0?25:'', v>0?6.6:'' ]);
+      }
+      spc.getRange(2,5,egm.length,3).setValues(egm); // cols E(Costo) F(Margen) G(MP)
+      return _jsonOut({ ok:true, filled: egm.length });
+    }
+
     if ((p.action||'') !== 'estado') {
       return _jsonOut({ ok:true, msg:'K24 backend activo' });
     }

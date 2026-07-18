@@ -4248,7 +4248,7 @@ function _aplicarPreciosSheet(data){
   if (_preciosAplicadas || !data || !data.items || data.items.length < 500) return;
   _preciosAplicadas = true;
   var precio = {}, activo = {};
-  for (var i=0;i<data.items.length;i++){ var it=data.items[i]; var id=String(it[0]); precio[id]=(it[1]>0?it[1]:it[2])||0; activo[id]=(String(it[3])==='1'); }
+  for (var i=0;i<data.items.length;i++){ var it=data.items[i]; var id=String(it[0]); precio[id]=(it[2]>0?it[2]:it[1])||0; activo[id]=(String(it[3])==='1'); }
   function proc(O){ if(!O) return; Object.keys(O).forEach(function(k){ var arr=O[k]; if(!Array.isArray(arr)) return;
     O[k] = arr.filter(function(item){ if(!item) return false;
       if (item.variants){ item.variants = item.variants.filter(function(v){ var id=item.id+'__'+v.vid; if(!(id in activo)||!activo[id]) return false; if(precio[id]>0) v.price=precio[id]; return true; }); return item.variants.length>0; }
