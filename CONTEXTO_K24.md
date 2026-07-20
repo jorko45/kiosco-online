@@ -10,7 +10,8 @@ K24 — Kiosco online 24hs con delivery rápido (~20-30 min) en Córdoba Capital
 - Archivo principal: `C:\Users\joe\Claude\Projects\k24\index.html` — single-file SPA (HTML/CSS/JS, ~660KB)
 - **Git push: siempre `git push origin master:main`** vía archivos `.bat` (el usuario los corre; la IA no tiene credenciales)
 - Vercel: deploy automático al pushear a `main`. ⚠️ A veces Vercel se pierde el webhook: un commit vacío + push lo destraba.
-- Cuenta Google del proyecto: k24hsonline@gmail.com
+- ⭐ Cuenta Google del proyecto: **k24hsonline@gmail.com** — TODO lo de Google (planillas, Drive, Apps Script, backups) va acá. NO usar montagna@gmail.com (personal de Joe). El mail k24hsonline se creó para que la IA maneje las herramientas de Google del proyecto.
+  - ⚠️ Estado actual (18-jul-2026): el Apps Script backend (exec .../AKfycbz48Hs8...) está corriendo bajo **montagna** por error histórico, así que las planillas que crea (K24 Cuentas, Pedidos K24, "precios editable google") cayeron en el Drive de montagna. Pendiente: consolidar todo en k24hsonline (transferir propiedad de las planillas y/o migrar el proyecto Apps Script a k24hsonline). montagna está casi sin espacio (90/100 GB).
 - MercadoPago: token en env `MP_ACCESS_TOKEN` de Vercel; endpoint `api/crear-pago.js` (back_urls a k24hs.com, picture_url = logo K24, statement_descriptor "K24 KIOSCO"). Falta que Joe suba el logo en su cuenta MP (Configuración → Datos de tu negocio, archivo `img/k24-logo.png`).
 - **PWA activa**: manifest.json + sw.js (navegación network-first, imágenes cache, offline muestra último catálogo) + íconos en img/icon-*.png + botón "Instalar la app" en el inicio.
 

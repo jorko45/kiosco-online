@@ -1,0 +1,26 @@
+LOGOS PENDIENTES — K24 (segunda tanda)
+Guardar en img/logos/ con EXACTAMENTE este nombre de archivo (extension .png o .jpg da igual):
+
+pepsi-black.png
+mirinda.png
+paso-de-los-toros.png
+crush.png
+villavicencio.png
+villa-del-sur.png
+h2oh.png
+brahma.png
+patagonia.png
+budweiser.png
+schneider.png
+amstel.png
+miller.png
+speed.png
+rockstar.png
+frizze.png
+du-champan.png
+cana-legui.png
+granadina-cusenier.png
+granadina-dellepiane.png
+
+YA RESUELTOS (no hace falta bajarlos):
+aquarius, baggio/ades, brio, arcor, sernova, skyy, fernet branca, dr lemon
