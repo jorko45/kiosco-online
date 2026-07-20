@@ -844,6 +844,36 @@
       margin-top:9px; font-family:'Rajdhani',sans-serif; font-size:11px;
       line-height:1.45; color:rgba(255,255,255,.55); text-align:left;
     }
+    /* Red de comercios */
+    .red-box {
+      max-width:1000px; margin:26px auto 0; padding:24px 22px;
+      background:linear-gradient(135deg, rgba(10,125,60,.16), rgba(10,80,140,.16));
+      border:1px solid rgba(120,220,160,.32); border-radius:18px;
+    }
+    .red-titulo {
+      font-family:'Orbitron',sans-serif; font-weight:900; font-size:17px;
+      color:#bdf5d2; letter-spacing:1px; margin-bottom:8px;
+    }
+    .red-bajada {
+      font-family:'Rajdhani',sans-serif; font-size:15px; line-height:1.55;
+      color:#dbe9f5; margin-bottom:16px;
+    }
+    .red-benes { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px; margin-bottom:18px; }
+    .red-bene {
+      display:flex; gap:10px; align-items:flex-start;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
+      border-radius:12px; padding:11px 13px;
+      font-family:'Rajdhani',sans-serif; font-size:13.5px; line-height:1.4; color:#cfe0ee;
+    }
+    .red-bene span { font-size:20px; line-height:1; }
+    .red-bene b { color:#fff; }
+    .btn-red {
+      width:100%; background:#0a7d3c; border:none; color:#fff; cursor:pointer;
+      font-family:'Orbitron',sans-serif; font-weight:900; font-size:14px; letter-spacing:1px;
+      padding:14px; border-radius:12px; transition:background .2s, transform .1s;
+    }
+    .btn-red:hover { background:#0c9648; }
+    .btn-red:active { transform:scale(.99); }
     .btn-install-cta:active { transform:scale(.98); }
     @keyframes instalarPulse {
       0%,100% { box-shadow:0 8px 22px rgba(224,24,24,.4); }
@@ -1145,8 +1175,8 @@
   <!-- Ticker animado -->
   <div class="ticker-wrap">
     <div class="ticker-track">
-      <span class="ticker-item">⚡ ABIERTO LAS 24 HORAS &nbsp;·&nbsp; DELIVERY EN 20-30 MIN &nbsp;·&nbsp; ENVÍO $5.000 &nbsp;·&nbsp; GRATIS EN TUS PRIMERAS 10 COMPRAS DE $50.000+ &nbsp;·&nbsp; CÓRDOBA CAPITAL &nbsp;·&nbsp; PAGÁS AL RECIBIR &nbsp;·&nbsp; &nbsp;</span>
-      <span class="ticker-item">⚡ ABIERTO LAS 24 HORAS &nbsp;·&nbsp; DELIVERY EN 20-30 MIN &nbsp;·&nbsp; ENVÍO $5.000 &nbsp;·&nbsp; GRATIS EN TUS PRIMERAS 10 COMPRAS DE $50.000+ &nbsp;·&nbsp; CÓRDOBA CAPITAL &nbsp;·&nbsp; PAGÁS AL RECIBIR &nbsp;·&nbsp; &nbsp;</span>
+      <span class="ticker-item">⚡ ABIERTO LAS 24 HORAS &nbsp;·&nbsp; DELIVERY INMEDIATO &nbsp;·&nbsp; ENVÍO $5.000 &nbsp;·&nbsp; GRATIS EN TUS PRIMERAS 10 COMPRAS DE $50.000+ &nbsp;·&nbsp; CÓRDOBA CAPITAL &nbsp;·&nbsp; PAGÁS AL RECIBIR &nbsp;·&nbsp; &nbsp;</span>
+      <span class="ticker-item">⚡ ABIERTO LAS 24 HORAS &nbsp;·&nbsp; DELIVERY INMEDIATO &nbsp;·&nbsp; ENVÍO $5.000 &nbsp;·&nbsp; GRATIS EN TUS PRIMERAS 10 COMPRAS DE $50.000+ &nbsp;·&nbsp; CÓRDOBA CAPITAL &nbsp;·&nbsp; PAGÁS AL RECIBIR &nbsp;·&nbsp; &nbsp;</span>
     </div>
   </div>
 
@@ -1328,7 +1358,20 @@
       </div>
     </div>
 
-    <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery en 20-30 min</span></div>
+    <!-- Red de comercios -->
+    <div class="red-box">
+      <div class="red-titulo">🤝 SUMATE A NUESTRA RED DE COMERCIOS</div>
+      <div class="red-bajada">Comprando juntos conseguimos mejores precios. Sumá tu kiosco, almacén o despensa a la red k24hs y accedé a <b>ofertas constantes</b> y precios de compra que solo se consiguen comprando en volumen.</div>
+      <div class="red-benes">
+        <div class="red-bene"><span>📉</span><div><b>Mejores precios</b><br>Compra conjunta: más volumen, menos costo.</div></div>
+        <div class="red-bene"><span>🔁</span><div><b>Ofertas constantes</b><br>Promos rotativas todas las semanas.</div></div>
+        <div class="red-bene"><span>🚚</span><div><b>Entrega en tu comercio</b><br>Sin que muevas el auto ni cierres el local.</div></div>
+        <div class="red-bene"><span>🤝</span><div><b>Sin costo de ingreso</b><br>Sumarse no te cuesta nada.</div></div>
+      </div>
+      <button class="btn-red" onclick="abrirRedComercios()">Quiero sumar mi comercio</button>
+    </div>
+
+    <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery inmediato</span></div>
       <div class="feat"><span class="feat-icon">🕗</span><span class="feat-text">Comprá 24hs · Reparto 8 a 21hs</span></div>
       <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 gratis con pedidos +$50.000</span></div>
       <div class="feat"><span class="feat-icon">📲</span><span class="feat-text">Pedido por WhatsApp</span></div>
@@ -6482,6 +6525,49 @@ function _avisoMayor18(){
 // ── BOTÓN DE ARREPENTIMIENTO (Res. 424/2020 Defensa del Consumidor) ───────
 // Visible en el inicio sin necesidad de registrarse. Se envía por WhatsApp y
 // queda registrado en la planilla del kiosco.
+// ── Red de comercios: alta de interesados ────────────────────────────────
+function abrirRedComercios(){
+  _cerrarOverlays();
+  var inp='width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);'
+        + 'color:#fff;font-family:Rajdhani,sans-serif;font-size:14px;padding:10px 11px;border-radius:9px;margin-bottom:9px';
+  var lbl='font-family:Rajdhani,sans-serif;font-size:12px;color:#9fb4c8;margin-bottom:3px';
+  var body =
+      '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin-bottom:14px">'
+    + 'Dejanos los datos de tu comercio y te contactamos para explicarte cómo funciona la red y qué precios podés conseguir.</div>'
+    + '<div style="'+lbl+'">Nombre del comercio *</div><input id="rcNombre" style="'+inp+'" placeholder="Ej: Kiosco La Esquina">'
+    + '<div style="'+lbl+'">Rubro</div><select id="rcRubro" style="'+inp+'">'
+    + '<option>Kiosco</option><option>Almacén / Despensa</option><option>Autoservicio</option>'
+    + '<option>Fiambrería</option><option>Bar / Restó</option><option>Otro</option></select>'
+    + '<div style="'+lbl+'">Zona o barrio *</div><input id="rcZona" style="'+inp+'" placeholder="Ej: Nueva Córdoba">'
+    + '<div style="'+lbl+'">WhatsApp *</div><input id="rcTel" style="'+inp+'" placeholder="Ej: 351 555 5555" inputmode="tel">'
+    + '<div style="'+lbl+'">Tu nombre</div><input id="rcContacto" style="'+inp+'" placeholder="Con quién hablamos">'
+    + '<div style="'+lbl+'">¿Qué comprás más? (opcional)</div><textarea id="rcMsg" rows="2" style="'+inp+'" placeholder="Ej: gaseosas, cigarrillos, golosinas"></textarea>'
+    + '<button onclick="enviarRedComercios()" style="width:100%;background:#0a7d3c;border:none;color:#fff;'
+    + 'font-family:Orbitron,sans-serif;font-weight:900;font-size:13px;padding:13px;border-radius:10px;cursor:pointer;margin-top:5px">'
+    + 'Enviar mis datos</button>';
+  _overlay('🤝 Sumate a la red de comercios', body);
+}
+function enviarRedComercios(){
+  function v(id){ var e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; }
+  var comercio=v('rcNombre'), zona=v('rcZona'), tel=v('rcTel');
+  if (!comercio || !zona || !tel) { showToast('⚠️ Completá comercio, zona y WhatsApp'); return; }
+  var datos = { action:'comercio', comercio:comercio, rubro:v('rcRubro'), zona:zona,
+                telefono:tel, contacto:v('rcContacto'), mensaje:v('rcMsg') };
+  try {
+    fetch('/api/cuenta', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(datos) }).catch(function(){});
+  } catch(e) {}
+  var msg = '🤝 *Quiero sumarme a la red de comercios k24hs*\n\n'
+          + '🏪 Comercio: ' + comercio + '\n'
+          + '🏷️ Rubro: ' + datos.rubro + '\n'
+          + '📍 Zona: ' + zona + '\n'
+          + '📱 WhatsApp: ' + tel
+          + (datos.contacto ? '\n👤 Contacto: ' + datos.contacto : '')
+          + (datos.mensaje ? '\n🛒 Compra habitual: ' + datos.mensaje : '');
+  _cerrarOverlays();
+  showToast('✅ ¡Gracias! Te contactamos a la brevedad.');
+  try { window.open('https://wa.me/5493513260094?text=' + encodeURIComponent(msg), '_blank'); } catch(e) {}
+}
 function abrirArrepentimiento(){
   _cerrarOverlays();
   var p = userProfile || {};

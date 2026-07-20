@@ -228,6 +228,58 @@ function doPost(e) {
       return _jsonOut({ ok:true, total: spa.getLastRow()-1 });
     }
 
+    // Actualizar SOLO la columna Costo desde las paginas de los proveedores.
+    // Los margenes (col F) no se tocan: el Precio Sugerido se recalcula solo.
+    // data.rows = [[id, costo], ...]
+    if (data.action === 'precios_costos') {
+      var shc = _hojaPrecios(), lrc = shc.getLastRow();
+      if (lrc < 2) return _jsonOut({ ok:true, actualizados:0 });
+      var idsc = shc.getRange(2,1,lrc-1,1).getValues(), posc = {};
+      for (var ic=0; ic<idsc.length; ic++){ var kc = String(idsc[ic][0]||'').trim(); if (kc) posc[kc] = ic; }
+      var costos = shc.getRange(2,5,lrc-1,1).getValues();
+      var rowsc = data.rows || [], nAct = 0, nSin = 0, nIgual = 0, tocadas = {};
+      for (var jc=0; jc<rowsc.length; jc++){
+        var idc = String(rowsc[jc][0]||'').trim(), cc = Number(rowsc[jc][1]) || 0;
+        if (!(idc in posc) || cc <= 0) { nSin++; continue; }
+        var fc = posc[idc];
+        if (Number(costos[fc][0]) === cc) { nIgual++; continue; }
+        costos[fc][0] = cc; tocadas[fc] = 1; nAct++;
+      }
+      if (nAct) {
+        shc.getRange(2,5,lrc-1,1).setValues(costos);
+        // Si a alguna fila le falta la formula del Precio Sugerido, se la reponemos.
+        // (No pisamos las que tengan un valor puesto a mano.)
+        var fH = shc.getRange(2,8,lrc-1,1).getFormulas(), vH = shc.getRange(2,8,lrc-1,1).getValues();
+        Object.keys(tocadas).forEach(function(k){
+          var i2 = Number(k);
+          if (!fH[i2][0] && (vH[i2][0] === '' || vH[i2][0] == null)) {
+            var rr = i2 + 2;
+            shc.getRange(rr,8).setFormula('=IF(E'+rr+'>0,MROUND(E'+rr+'*(1+F'+rr+'/100)*(1+G'+rr+'/100),50),"")');
+          }
+        });
+      }
+      return _jsonOut({ ok:true, actualizados:nAct, sinCambio:nIgual, sinFila:nSin });
+    }
+
+    // Marcar filas como Activo SI / NO. data.ids = [...], data.activo = 'SI'|'NO'
+    if (data.action === 'precios_activo') {
+      var sha = _hojaPrecios(), lra = sha.getLastRow();
+      if (lra < 2) return _jsonOut({ ok:true, marcados:0 });
+      var idsa = sha.getRange(2,1,lra-1,1).getValues(), posa = {};
+      for (var ia=0; ia<idsa.length; ia++){ var ka = String(idsa[ia][0]||'').trim(); if (ka) posa[ka] = ia; }
+      var cola = sha.getRange(2,10,lra-1,1).getValues();
+      var valor = (String(data.activo||'NO').toUpperCase() === 'SI') ? 'SI' : 'NO';
+      var lista = data.ids || [], nM = 0;
+      for (var ja=0; ja<lista.length; ja++){
+        var ida = String(lista[ja]||'').trim();
+        if (!(ida in posa)) continue;
+        if (String(cola[posa[ida]][0]).toUpperCase() === valor) continue;
+        cola[posa[ida]][0] = valor; nM++;
+      }
+      if (nM) sha.getRange(2,10,lra-1,1).setValues(cola);
+      return _jsonOut({ ok:true, marcados:nM });
+    }
+
     // Solicitud de arrepentimiento (Res. 424/2020) -> hoja "Arrepentimientos"
     if (data.action === 'arrepentimiento') {
       _hojaArrepentimientos().appendRow([
@@ -238,6 +290,25 @@ function doPost(e) {
       _buzonAgregar(data.usuario || data.telefono, 'cuenta',
         '↩️ Recibimos tu solicitud de arrepentimiento',
         'Pedido: ' + (data.pedido || '-') + '. Te contactamos para resolverlo. Tenés 10 días corridos desde que recibiste la compra (Res. 424/2020).');
+      return _jsonOut({ ok:true });
+    }
+
+    // Alta de comercio interesado en la red -> hoja "Comercios"
+    if (data.action === 'comercio') {
+      var ssx = _hojaCuentas().getParent();
+      var shx = ssx.getSheetByName('Comercios');
+      if (!shx) {
+        shx = ssx.insertSheet('Comercios');
+        shx.appendRow(['Fecha','Comercio','Rubro','Zona/Barrio','Telefono','Contacto','Mensaje','Estado']);
+        shx.getRange(1,1,1,8).setFontWeight('bold').setBackground('#0a7d3c').setFontColor('#ffffff');
+        shx.setFrozenRows(1);
+        shx.setColumnWidth(2,200); shx.setColumnWidth(7,320);
+      }
+      shx.appendRow([
+        new Date().toLocaleString('es-AR'),
+        data.comercio || '', data.rubro || '', data.zona || '',
+        data.telefono || '', data.contacto || '', data.mensaje || '', 'NUEVO'
+      ]);
       return _jsonOut({ ok:true });
     }
 
