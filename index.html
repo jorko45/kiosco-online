@@ -4425,7 +4425,56 @@ function _quitarRepetidos(){
     }
     if (quedan.length !== arr.length){ arr.length = 0; for (var j=0;j<quedan.length;j++) arr.push(quedan[j]); }
   });
+  fuera += _quitarRepetidosDeMarca();
   _repetidosQuitados = fuera;
+  return fuera;
+}
+// Un mismo producto puede estar como tarjeta de marca (heladera / botellas) y
+// además como ficha suelta traída del proveedor: ej "Fernet Branca 750ml" y
+// "FERNET BRANCA 750 XUN". Dejamos la tarjeta —con el precio más bajo de los
+// dos— y sacamos la ficha suelta.
+var _STOP18 = /^(gaseosa|bebida|aperitivo|botella|lata|pack|xun|un|unidad|unidades|ml|cc|cm3|gr|g|kg|lt|l|x|de|el|la|con|y|original|clasico|clasica)$/;
+function _tokProd(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
+    .replace(/(\d)([a-z])/g,'$1 $2').replace(/[^a-z0-9]+/g,' ')
+    .split(' ').filter(function(w){ return w && !_STOP18.test(w); });
+}
+function _claveTok(t){ return t.slice().sort().join(' '); }
+function _quitarRepetidosDeMarca(){
+  if (typeof catalog === 'undefined' || !catalog) return 0;
+  var idx = {};
+  Object.keys(catalog).forEach(function(sec){
+    (catalog[sec] || []).forEach(function(b){
+      if (!b || !b.variants) return;
+      b.variants.forEach(function(v){
+        var k = _claveTok(_tokProd(b.name).concat(_tokProd(v.size)));
+        if (k) { if (!idx[k]) idx[k] = []; idx[k].push(v); }
+      });
+    });
+  });
+  var listas = _listasCatalogo().concat([
+    (typeof catalogCervezas!=='undefined')&&catalogCervezas, (typeof catalogVinos!=='undefined')&&catalogVinos,
+    (typeof catalogLicores!=='undefined')&&catalogLicores, (typeof catalogEspumantes!=='undefined')&&catalogEspumantes
+  ].filter(Boolean));
+  var fuera = 0;
+  function limpiar(arr){
+    var quedan = [];
+    for (var i=0;i<arr.length;i++){
+      var it = arr[i];
+      if (!it || !it.name){ if (it) quedan.push(it); continue; }
+      var k = _claveTok(_tokProd(it.name));
+      var vs = k && idx[k];
+      if (!vs || !vs.length){ quedan.push(it); continue; }
+      var p = Number(it.price) || 0;
+      if (p > 0) vs.forEach(function(v){ if (p < (Number(v.price)||0)) v.price = p; }); // nos quedamos con el más barato
+      fuera++;                                                                          // y sacamos la ficha repetida
+    }
+    if (quedan.length !== arr.length){ arr.length = 0; for (var j=0;j<quedan.length;j++) arr.push(quedan[j]); }
+  }
+  listas.forEach(function(O){
+    if (Array.isArray(O)) { limpiar(O); return; }
+    Object.keys(O).forEach(function(k){ if (Array.isArray(O[k])) limpiar(O[k]); });
+  });
   return fuera;
 }
 try { fetch('/api/precios').then(function(r){return r.json();}).then(function(d){ try{ _aplicarPreciosSheet(d); }catch(e){} }).catch(function(){}); } catch(e){}
