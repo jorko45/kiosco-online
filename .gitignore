@@ -1,0 +1,23 @@
+# Basura de LibreOffice/Excel (archivos abiertos)
+.~lock.*#
+~$*
+
+# Python
+__pycache__/
+*.pyc
+
+# Backups y volcados de trabajo
+index.html.backup
+apps-script-actual.txt
+*.bak
+
+# Planillas y datos de trabajo (no van a la web)
+*.xlsx
+dino_products.json
+_precios_master.json
+
+# Imagenes sueltas de la raiz (las buenas viven en img/)
+/portada.png
+/Gemini_Generated_Image_*.png
+/Kiosco Interactivo.png
+/image_*.png
