@@ -3650,6 +3650,16 @@ function pintarBuzonBadge() {
   var adot = document.getElementById('accAvisosDot'); if (adot) adot.classList.toggle('on', n > 0);
 }
 var _BUZON_ICO = { pedido:'🛒', cuenta:'👤', promo:'🎁', aviso:'📣' };
+// La planilla devuelve las fechas en formato largo; las dejamos como 19/07/2026 11:05
+function _fechaCorta(s) {
+  s = String(s || '').trim();
+  if (!s) return '';
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
+  var d = new Date(s);
+  if (isNaN(d.getTime())) return s.split(',')[0];
+  var p = function (n) { return (n < 10 ? '0' : '') + n; };
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' · ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
 function _buzonHTML() {
   var items = buzonItems();
   var html = '';
@@ -3662,7 +3672,7 @@ function _buzonHTML() {
       return '<div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)' + (m.leido ? ';opacity:.72' : '') + '">'
         + '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;color:#fff">' + ico + ' ' + m.titulo + nuevo + '</div>'
         + '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin:3px 0 4px;white-space:pre-line">' + m.texto + '</div>'
-        + '<div style="font-size:11px;color:#7f95a8">' + m.fecha + '</div>'
+        + '<div style="font-size:11px;color:#7f95a8">' + _fechaCorta(m.fecha) + '</div>'
         + '</div>';
     }).join('');
   }
