@@ -4224,7 +4224,7 @@ function _makeBrandObjs(defs, flatCatalog, idPrefix, style) {
       if (!items.length) return;
       var slug = b.n.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       var obj = {
-        id: idPrefix + gi + '-' + slug, name: b.n, color: b.c, textColor: b.t || '#fff',
+        id: idPrefix + gi + '-' + slug, name: b.n, color: b.c, textColor: b.t || '#fff', _auto: true,
         logo: b.l || _mkWordmark(b.n, b.c, b.t || '#fff', style),
         _type: (items[0].name.split(' ')[0] || '').toLowerCase(),
         variants: items.map(function(it, i){ return {vid: i + 1, size: _sizeOf(it.name, b.n), price: it.price, img: it.img}; })
@@ -4249,6 +4249,9 @@ function renderBotellasAll() {
   var cavaEl = document.getElementById('cava-shelves');
   if (!cavaEl) return;
   renderBotellasAll._done = true;
+  // Saco los grupos que armó un render anterior, para poder rearmarlos con
+  // los precios nuevos de la planilla sin duplicar marcas.
+  catalog.botellas = (catalog.botellas || []).filter(function (b) { return !b._auto; });
 
   var vinoGroups  = _makeBrandObjs(vinosMarcas, catalogVinos, 'vm', 'vino');
   var licorGroups = _makeBrandObjs(licoresMarcas, catalogLicores, 'lm', 'licor');
@@ -4364,6 +4367,13 @@ function _aplicarPreciosSheet(data){
     (typeof catalogGaseosasExtra!=='undefined')&&catalogGaseosasExtra, (typeof catalogJugos!=='undefined')&&catalogJugos,
     (typeof catalogEspumantes!=='undefined')&&catalogEspumantes
   ].forEach(function(O){ if(O){ try{ proc(O); }catch(e){} } });
+  // Si la sección Botellas ya estaba dibujada, la rearmo con los precios nuevos
+  try {
+    if (typeof renderBotellasAll === 'function' && renderBotellasAll._done) {
+      renderBotellasAll._done = false;
+      renderBotellasAll();
+    }
+  } catch(e){}
 }
 try { fetch('/api/precios').then(function(r){return r.json();}).then(function(d){ try{ _aplicarPreciosSheet(d); }catch(e){} }).catch(function(){}); } catch(e){}
 
