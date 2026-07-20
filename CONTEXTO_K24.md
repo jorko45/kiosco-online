@@ -29,6 +29,20 @@ Scrapea SuperMami (dinoonline.com.ar) y actualiza index.html:
 - URL de categorías Mami: `/super/categoria/{slug}/_/{N-code}?No=0&Nrpp=500`; búsqueda: `/super/categoria?_dyncharset=utf-8&Dy=1&Nty=1&Nrpp=50&Ntt={query}`.
 - Imágenes Dino CDN: `https://statics.dinoonline.com.ar/imagenes/full_600x600_ma/{id}_f.jpg` (fallback runtime a `medium_150x150/{id}_m.jpg` vía `gonImgFallback()` — algunos productos de almacén solo tienen la mediana).
 
+## Planilla de precios dinámica (la fuente de verdad de los precios)
+- Planilla **"precios editable google"** (Drive). Columnas: ID · Sección · Categoría · Producto · **Costo** · **Margen %** · MP % · **Precio Sugerido** (fórmula `=MROUND(Costo*(1+Margen/100)*(1+MP/100),50)`) · Precio Venta · **Activo**.
+- La web lee `/api/precios` (proxy Vercel → Apps Script, caché 120s) y aplica **Precio Sugerido**; si una fila tiene Activo=NO, el producto **desaparece de la web**.
+- Cubre TODO el catálogo (5.207 filas), incluida la sección Botellas.
+- Formatos de ID: `3061097` / `prod2320444` / `dn-2140082` = Super Mami · `d-XXXX` = Distribuidora · `marca__N` = tarjetas de marca (sin ID de proveedor, se editan a mano en la planilla).
+
+## Actualizar precios desde los proveedores
+- **`actualizar_precios.bat`** → corre `actualizar_precios.py`. Scrapea el Mami (descubre las ~477 categorías solo) y la Distribuidora, y actualiza **solo la columna Costo**. Los márgenes no se tocan; el Precio Sugerido se recalcula solo.
+- **`actualizar_solo_distri.bat`** → lo mismo pero solo la Distribuidora (segundos).
+- Los productos que ya no están en la página quedan **Activo=NO**, con **salvaguarda**: si una fuente trae <60% de lo esperado, no desactiva nada de esa fuente (evita vaciar el catálogo si el proveedor se cae).
+- Deja reporte en `cambios_precios.csv`.
+- ⚠ **Mami**: los precios vienen en formato inglés (`1,234.50`). El parser soporta ambos formatos.
+- ⚠ **Distribuidora (Pedix)**: rehízo su catálogo y **los IDs cambiaron**, así que el cruce es **por nombre** (normalizado) contra el bloque `DISTRI-AUTOGEN` del index.html. El JSON está en `<script id="ng-state">`.
+
 ## Precios y márgenes (aplicado 10-jul-2026)
 - TODO el catálogo (~2.700 productos) tiene margen: 15% primeras marcas / 25% resto + 6.6% MP, redondeo $50. Marcador en el código: `// MARGEN-APPLIED v1`. **NO volver a aplicar márgenes sobre los precios actuales** (los de heladera/cigarrillos/góndola están margineados una vez; los del Mami se recalculan solos en cada sync desde el precio base).
 - Promos: sin margen (precio armado por Joe).

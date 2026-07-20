@@ -15,6 +15,7 @@ apps-script-actual.txt
 *.xlsx
 dino_products.json
 _precios_master.json
+cambios_precios.csv
 
 # Imagenes sueltas de la raiz (las buenas viven en img/)
 /portada.png
