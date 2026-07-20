@@ -2766,7 +2766,7 @@ function updateModalTotal() {
 function addFromModal() {
   const v = currentBrand.variants.find(x => x.vid === selectedVid);
   if (!v) return;
-  if (bloqueadoPorEdad(currentBrand && currentBrand.name, typeof currentShelfKey !== 'undefined' ? currentShelfKey : '')) return;
+  if (bloqueadoPorEdad(currentBrand && currentBrand.name, typeof currentShelfKey !== 'undefined' ? currentShelfKey : '', v.vid)) return;
   const key = `${currentBrand.id}_${v.vid}`;
   if (cart[key]) {
     cart[key].qty += modalQty;
@@ -6238,16 +6238,35 @@ function renderGaseosasExt() {
 // El cliente declara su edad al registrarse. Si no la confirmó, VE los productos
 // pero no puede agregarlos al carrito.
 var _SECCIONES_18 = ['cervezas','botellas','cigarrillos','vinos','licores','espumantes','cervezasext'];
-var _RX_18 = /(vino|cerveza|whisky|whiskey|vodka|licor|fernet|aperitivo|aperol|campari|cynar|gancia|martini|cinzano|champagne|champan|espumante|sidra|tequila|smirnoff|absolut|jameson|chivas|ballantine|bacardi|skyy|johnnie|petacon|brandy|cognac|vermouth|vermut|cigarr|tabaco|habanito|\bron\b|\bgin\b|ginebra)/i;
+var _RX_18 = /(vino|cerveza|whisky|whiskey|vodka|licor|fernet|aperitivo|aperol|campari|cynar|gancia|martini|cinzano|champagne|champan|espumante|sidra|tequila|smirnoff|absolut|jameson|chivas|ballantine|bacardi|skyy|johnnie|petacon|brandy|cognac|vermouth|vermut|cigarr|tabaco|habanito|\bron\b|\bgin\b|ginebra|quilmes|brahma|heineken|budweiser|stella artois|amstel|schneider|andes origen|miller genuine|marlboro|chesterfield|philip morris|lucky strike|parliament|rothmans|parisienne|dolchester|sernova|cusenier|frizze|grappa|blenders|jack daniel|criadores)/i;
 function _norm18(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
 function esMayor18(){ return !!(userProfile && userProfile.mayor18); }
-function requiereMayor18(nombre, seccion){
+// Set exacto de IDs que pertenecen a secciones +18 (marcas como Quilmes o
+// Marlboro no dicen "cerveza"/"cigarrillo" en el nombre, asi que no alcanza el texto).
+var _ids18 = null;
+function _getIds18(){
+  if (_ids18) return _ids18;
+  _ids18 = {};
+  try {
+    var P = getAllSearchableProducts();
+    for (var i=0;i<P.length;i++){
+      var k = P[i].sectionKey || '';
+      if (_SECCIONES_18.indexOf(String(k)) !== -1){
+        if (P[i].id  != null) _ids18[String(P[i].id)]  = 1;
+        if (P[i].vid != null) _ids18[String(P[i].vid)] = 1;
+      }
+    }
+  } catch(e){}
+  return _ids18;
+}
+function requiereMayor18(nombre, seccion, id){
   if (seccion && _SECCIONES_18.indexOf(String(seccion)) !== -1) return true;
+  if (id != null && _getIds18()[String(id)]) return true;
   return _RX_18.test(_norm18(nombre));
 }
 // Devuelve true si hay que BLOQUEAR el agregado al carrito
-function bloqueadoPorEdad(nombre, seccion){
-  if (!requiereMayor18(nombre, seccion)) return false;
+function bloqueadoPorEdad(nombre, seccion, id){
+  if (!requiereMayor18(nombre, seccion, id)) return false;
   if (esMayor18()) return false;
   _avisoMayor18();
   return true;
@@ -6305,7 +6324,7 @@ function enviarArrepentimiento(){
 }
 
 function addGonToCart(id, name, price, img) {
-  if (bloqueadoPorEdad(name, '')) return;
+  if (bloqueadoPorEdad(name, '', id)) return;
   const key = 'gon_' + id;
   if (cart[key]) {
     cart[key].qty++;
@@ -6526,7 +6545,7 @@ function _pdToggleFav() {
 }
 
 function searchAdd(p) {
-  if (bloqueadoPorEdad(p.brandName || p.name, p.sectionKey)) return;
+  if (bloqueadoPorEdad(p.brandName || p.name, p.sectionKey, p.id != null ? p.id : p.vid)) return;
   if (p.isBrand && p.vid) {
     const key = `${p.id}_${p.vid}`;
     if (cart[key]) { cart[key].qty++; }
