@@ -32,6 +32,59 @@ function _hojaArrepentimientos(){
   return sh;
 }
 
+// ===== BUZON DEL CLIENTE ==================================================
+// Hoja "Buzon": mensajes que le quedan guardados a cada cliente.
+// Destinatario = usuario o telefono del cliente, o "*" para todos.
+// Para mandarle un mensaje a alguien, escribi una fila a mano en la planilla
+// (Fecha, Destinatario, Tipo, Titulo, Texto) — el Id se genera solo.
+const BUZON_HEADERS = ['Fecha','Destinatario','Tipo','Titulo','Texto','Id','LeidoPor'];
+function _hojaBuzon(){
+  var ss = _hojaCuentas().getParent();
+  var sh = ss.getSheetByName('Buzon');
+  if (!sh) {
+    sh = ss.insertSheet('Buzon');
+    sh.appendRow(BUZON_HEADERS);
+    sh.getRange(1,1,1,BUZON_HEADERS.length).setFontWeight('bold').setBackground('#1a73e8').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(4, 260); sh.setColumnWidth(5, 420);
+  }
+  return sh;
+}
+function _buzonAgregar(destinatario, tipo, titulo, texto){
+  try {
+    var id = 'm' + new Date().getTime() + Math.floor(Math.random()*1000);
+    _hojaBuzon().appendRow([
+      new Date().toLocaleString('es-AR'),
+      String(destinatario || '*'), tipo || 'aviso',
+      titulo || '', texto || '', id, ''
+    ]);
+    return id;
+  } catch(e){ return ''; }
+}
+// Devuelve los mensajes de un cliente (los suyos + los generales), mas nuevos primero.
+function _buzonLeer(usuario, telefono){
+  var sh = _hojaBuzon();
+  var n = sh.getLastRow();
+  if (n < 2) return [];
+  var vals = sh.getRange(2,1,n-1,BUZON_HEADERS.length).getValues();
+  var yo = [String(usuario||'').trim().toLowerCase(), String(telefono||'').trim().toLowerCase()]
+             .filter(function(x){ return x; });
+  var out = [];
+  for (var i=0;i<vals.length;i++){
+    var v = vals[i];
+    var dest = String(v[1]||'*').trim().toLowerCase();
+    var mio = (dest === '*' || dest === '' || yo.indexOf(dest) !== -1);
+    if (!mio) continue;
+    var id = String(v[5]||'') || ('r' + (i+2));
+    var leidoPor = String(v[6]||'').toLowerCase();
+    var leido = false;
+    for (var j=0;j<yo.length;j++){ if (leidoPor.indexOf(yo[j]) !== -1) leido = true; }
+    out.push({ id:id, fecha:String(v[0]||''), tipo:String(v[2]||'aviso'),
+               titulo:String(v[3]||''), texto:String(v[4]||''), leido:leido });
+  }
+  return out.reverse().slice(0, 120);
+}
+
 function _jsonOut(o){
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -116,6 +169,9 @@ function _guardarCuenta(data){
     return _jsonOut({ok:false, motivo:'usuario_ocupado'});
   }
   sh.appendRow(fila);
+  _buzonAgregar(usuario || data.telefono, 'cuenta',
+    '🎉 ¡Bienvenido a k24hs, ' + (data.nombre || '') + '!',
+    'Tu cuenta quedó creada. Acá te van a quedar guardados tus pedidos, promos y novedades. Guardá tus productos favoritos con el ❤️ y pedí las 24hs.');
   return _jsonOut({ok:true, created:true});
 }
 
@@ -179,6 +235,43 @@ function doPost(e) {
         data.nombre || '', data.telefono || '', data.email || '',
         data.pedido || '', data.motivo || '', 'PENDIENTE'
       ]);
+      _buzonAgregar(data.usuario || data.telefono, 'cuenta',
+        '↩️ Recibimos tu solicitud de arrepentimiento',
+        'Pedido: ' + (data.pedido || '-') + '. Te contactamos para resolverlo. Tenés 10 días corridos desde que recibiste la compra (Res. 424/2020).');
+      return _jsonOut({ ok:true });
+    }
+
+    // ===== BUZON =====
+    // Leer los mensajes guardados de un cliente
+    if (data.action === 'buzon') {
+      return _jsonOut({ ok:true, items: _buzonLeer(data.usuario, data.telefono) });
+    }
+    // Mandar un mensaje (a un cliente o a todos con destinatario "*")
+    if (data.action === 'buzon_enviar') {
+      var _mid = _buzonAgregar(data.destinatario, data.tipo || 'aviso', data.titulo, data.texto);
+      return _jsonOut({ ok:true, id:_mid });
+    }
+    // Marcar como leidos
+    if (data.action === 'buzon_leido') {
+      var quien = String(data.usuario || data.telefono || '').trim().toLowerCase();
+      var ids = data.ids || [];
+      if (quien && ids.length) {
+        var shb = _hojaBuzon(), nb = shb.getLastRow();
+        if (nb > 1) {
+          var rng = shb.getRange(2,1,nb-1,BUZON_HEADERS.length), vv = rng.getValues(), cambio = false;
+          for (var bi=0; bi<vv.length; bi++){
+            var bid = String(vv[bi][5]||'') || ('r' + (bi+2));
+            if (ids.indexOf(bid) === -1) continue;
+            var lp = String(vv[bi][6]||'');
+            if (lp.toLowerCase().indexOf(quien) === -1){
+              vv[bi][6] = lp ? (lp + ',' + quien) : quien;
+              if (!vv[bi][5]) vv[bi][5] = bid;
+              cambio = true;
+            }
+          }
+          if (cambio) rng.setValues(vv);
+        }
+      }
       return _jsonOut({ ok:true });
     }
 
@@ -199,7 +292,11 @@ function doPost(e) {
         'WhatsApp',
         data.notas || ''
       ]);
-      return _jsonOut({ ok:true });
+      _buzonAgregar(data.usuario || data.telefono, 'pedido',
+        '🛒 Pedido #' + numPedido + ' recibido',
+        'Total: $' + (data.total || '-') + '. ' + (data.productos || '') +
+        '\nTe avisamos cuando salga el reparto. Envíos de 8 a 21hs.');
+      return _jsonOut({ ok:true, pedido: numPedido });
     }
 
     // Login: valida usuario + passHash contra la hoja Cuentas

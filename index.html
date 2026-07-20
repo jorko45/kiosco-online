@@ -341,7 +341,7 @@
     .btn-wsp:hover { background:#1db854; }
 
     /* ── TOAST ── */
-    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--dark); color:#fff; padding:11px 22px; border-radius:30px; font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:1px; z-index:1200; transition:transform .3s cubic-bezier(.4,0,.2,1); white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.25); }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--dark); color:#fff; padding:11px 22px; border-radius:30px; font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:1px; z-index:2700; transition:transform .3s cubic-bezier(.4,0,.2,1); white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.25); }
     .toast.show { transform:translateX(-50%) translateY(0); }
 
     footer { background:var(--dark); text-align:center; padding:22px; font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:500; letter-spacing:3px; color:rgba(255,255,255,.22); text-transform:uppercase; }
@@ -2854,7 +2854,7 @@ function recordarCompra(canal) {
             total:     '$' + (subtotal + envio).toLocaleString('es-AR'),
             notas:     (userProfile.referencia || '') + ' [MercadoPago]',
           }),
-        }).catch(function(){});
+        }).then(function(){ setTimeout(sincronizarBuzon, 1200); }).catch(function(){});
       }
     }
   } catch (e) {}
@@ -2898,7 +2898,7 @@ function _cerrarOverlays() {
 function _overlay(titulo, innerHtml) {
   const ov = document.createElement('div');
   ov.className = 'k24-ov';
-  ov.style.cssText = 'position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px';
   ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
   const box = document.createElement('div');
   box.style.cssText = 'background:#0f1722;border:1px solid rgba(120,180,255,.25);border-radius:16px;max-width:420px;width:100%;max-height:82vh;overflow:auto;padding:20px;color:#fff;font-family:Rajdhani,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)';
@@ -3568,6 +3568,8 @@ async function iniciarSesion() {
       data.deseos.forEach(function (w) { if (w && w.id && !wishlist.some(function (x) { return x.id === w.id; })) wishlist.unshift(w); });
       saveWishlist();
     }
+    try { localStorage.removeItem('k24_buzon'); } catch (e) {}
+    sincronizarBuzon();
     cargarPerfil();
     showToast('👋 ¡Hola de nuevo, ' + ((userProfile.nombre || usuario).split(' ')[0]) + '!');
     _setVal('lPass', '');
@@ -3604,38 +3606,106 @@ const AVISOS = [
   { id:'2026-07-17-bienvenida', fecha:'17/07/2026', titulo:'¡Bienvenido a k24hs! 🎉', texto:'Tu kiosco 24hs con envíos inmediatos en Córdoba. Guardá tus productos con el corazón ❤️ y pedí cuando quieras.' }
 ];
 function _avisosLeidos() { try { return JSON.parse(localStorage.getItem('k24_avisos_leidos') || '[]') || []; } catch (e) { return []; } }
-function avisosNoLeidos() { var l = _avisosLeidos(); return AVISOS.filter(function (a) { return l.indexOf(a.id) === -1; }).length; }
+function _marcarLeidos(ids) {
+  var l = _avisosLeidos();
+  ids.forEach(function (id) { if (l.indexOf(id) === -1) l.push(id); });
+  try { localStorage.setItem('k24_avisos_leidos', JSON.stringify(l.slice(-400))); } catch (e) {}
+}
+// --- Mensajes guardados del cliente (viven en la planilla, cache local para verlos al toque)
+function _buzonCache() { try { return JSON.parse(localStorage.getItem('k24_buzon') || '[]') || []; } catch (e) { return []; } }
+function _buzonGuardarCache(items) { try { localStorage.setItem('k24_buzon', JSON.stringify(items.slice(0, 120))); } catch (e) {} }
+// Todo el historial: lo del servidor + los avisos generales de la app
+function buzonItems() {
+  var leidos = _avisosLeidos();
+  var srv = _buzonCache().map(function (m) {
+    return { id: m.id, fecha: m.fecha, tipo: m.tipo || 'aviso', titulo: m.titulo, texto: m.texto,
+             leido: !!m.leido || leidos.indexOf(m.id) !== -1 };
+  });
+  var vistos = {};
+  srv.forEach(function (m) { vistos[m.id] = 1; });
+  AVISOS.forEach(function (a) {
+    if (vistos[a.id]) return;
+    srv.push({ id: a.id, fecha: a.fecha, tipo: 'aviso', titulo: a.titulo, texto: a.texto,
+               leido: leidos.indexOf(a.id) !== -1 });
+  });
+  return srv;
+}
+function avisosNoLeidos() { return buzonItems().filter(function (m) { return !m.leido; }).length; }
+// Trae de la planilla los mensajes guardados del cliente logueado
+async function sincronizarBuzon() {
+  if (!userProfile || (!userProfile.usuario && !userProfile.telefono)) return false;
+  try {
+    const r = await fetch('/api/cuenta', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'buzon', usuario: userProfile.usuario || '', telefono: userProfile.telefono || '' })
+    });
+    const d = await r.json();
+    if (d && d.ok && Array.isArray(d.items)) { _buzonGuardarCache(d.items); pintarBuzonBadge(); return true; }
+  } catch (e) {}
+  return false;
+}
 function pintarBuzonBadge() {
   var n = avisosNoLeidos();
   var dot = document.getElementById('buzonDot'); if (dot) dot.classList.toggle('on', n > 0);
   var adot = document.getElementById('accAvisosDot'); if (adot) adot.classList.toggle('on', n > 0);
 }
-function abrirBuzon() {
-  _cerrarOverlays();
-  var body;
-  if (!AVISOS.length) {
-    body = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">No tenés avisos por ahora. Cuando haya promos o novedades te avisamos acá.</div>';
+var _BUZON_ICO = { pedido:'🛒', cuenta:'👤', promo:'🎁', aviso:'📣' };
+function _buzonHTML() {
+  var items = buzonItems();
+  var html = '';
+  if (!items.length) {
+    html = '<div style="color:#9fb4c8;font-size:15px;padding:8px 0">Todavía no tenés mensajes. Acá te van a quedar guardados tus pedidos, promos y novedades.</div>';
   } else {
-    body = AVISOS.map(function (a) {
-      return '<div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
-        + '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;color:#fff">' + a.titulo + '</div>'
-        + '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin:3px 0 4px">' + a.texto + '</div>'
-        + '<div style="font-size:11px;color:#7f95a8">' + a.fecha + '</div>'
+    html = items.map(function (m) {
+      var ico = _BUZON_ICO[m.tipo] || '📣';
+      var nuevo = m.leido ? '' : '<span style="background:#cc1010;color:#fff;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:7px;vertical-align:middle">NUEVO</span>';
+      return '<div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)' + (m.leido ? ';opacity:.72' : '') + '">'
+        + '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;color:#fff">' + ico + ' ' + m.titulo + nuevo + '</div>'
+        + '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin:3px 0 4px;white-space:pre-line">' + m.texto + '</div>'
+        + '<div style="font-size:11px;color:#7f95a8">' + m.fecha + '</div>'
         + '</div>';
     }).join('');
+  }
+  if (!userProfile) {
+    html += '<div style="color:#9fb4c8;font-size:12px;text-align:center;margin-top:12px;line-height:1.5">Iniciá sesión para que tus mensajes queden guardados en tu cuenta y los veas desde cualquier teléfono.</div>';
   }
   var soporta = ('Notification' in window);
   var granted = soporta && Notification.permission === 'granted' && localStorage.getItem('k24_notif') === '1';
   if (soporta && !granted && Notification.permission !== 'denied') {
-    body += '<button onclick="activarNotif()" style="width:100%;margin-top:14px;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔔 Activar avisos en el teléfono</button>';
+    html += '<button onclick="activarNotif()" style="width:100%;margin-top:14px;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:13px;padding:11px;border-radius:10px;cursor:pointer">🔔 Activar avisos en el teléfono</button>';
   } else if (granted) {
-    body += '<div style="color:#bfffce;font-size:12.5px;text-align:center;margin-top:12px">🔔 Avisos en el teléfono activados</div>';
+    html += '<div style="color:#bfffce;font-size:12.5px;text-align:center;margin-top:12px">🔔 Avisos en el teléfono activados</div>';
   }
-  _overlay('📬 Buzón de avisos', body);
-  try { localStorage.setItem('k24_avisos_leidos', JSON.stringify(AVISOS.map(function (a) { return a.id; }))); } catch (e) {}
+  return '<div id="buzonLista">' + html + '</div>';
+}
+async function abrirBuzon() {
+  _cerrarOverlays();
+  _overlay('📬 Mis mensajes', _buzonHTML());          // primero lo que ya tengo (instantáneo)
+  var pendientes = buzonItems().filter(function (m) { return !m.leido; }).map(function (m) { return m.id; });
+  if (await sincronizarBuzon()) {                      // después refresco desde la planilla
+    var cont = document.getElementById('buzonLista');
+    if (cont) {
+      var nuevos = buzonItems().filter(function (m) { return !m.leido; }).map(function (m) { return m.id; });
+      pendientes = pendientes.concat(nuevos.filter(function (i) { return pendientes.indexOf(i) === -1; }));
+      cont.outerHTML = _buzonHTML();
+    }
+  }
+  if (pendientes.length) {
+    _marcarLeidos(pendientes);
+    if (userProfile) {
+      try {
+        fetch('/api/cuenta', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ action:'buzon_leido', usuario:userProfile.usuario || '',
+                                 telefono:userProfile.telefono || '', ids:pendientes }) }).catch(function(){});
+      } catch (e) {}
+    }
+  }
   pintarBuzonBadge();
 }
-window.addEventListener('load', pintarBuzonBadge);
+window.addEventListener('load', function () {
+  pintarBuzonBadge();
+  setTimeout(function () { sincronizarBuzon(); }, 1500);
+});
 
 // ── Notificaciones del navegador ──
 function verNotificaciones() {
@@ -6397,7 +6467,7 @@ async function pedirWSP() {
       total: '$' + total.toLocaleString('es-AR'),
       notas: userProfile.referencia || ''
     })
-  }).catch(() => {});
+  }).then(() => { setTimeout(sincronizarBuzon, 1200); }).catch(() => {});
 
   window.open(`https://wa.me/5493513260094?text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -6612,7 +6682,7 @@ function _instruccionesInstalar() {
     ? 'En iPhone / iPad (Safari):<br>1) Tocá el botón <b>Compartir</b> (el cuadrado con la flecha ↑).<br>2) Elegí <b>“Agregar a inicio”</b>.<br>3) Confirmá <b>Agregar</b>.'
     : 'En tu teléfono:<br>1) Abrí el menú <b>⋮</b> del navegador (arriba a la derecha).<br>2) Tocá <b>“Instalar app”</b> o <b>“Agregar a pantalla de inicio”</b>.';
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:1300;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:24px';
   ov.onclick = function(e) { if (e.target === ov) document.body.removeChild(ov); };
   ov.innerHTML =
     '<div style="background:#0f1722;border:1px solid rgba(255,90,90,.5);border-radius:16px;max-width:340px;padding:22px;color:#fff;font-family:Rajdhani,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.6)">' +
