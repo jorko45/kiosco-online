@@ -1,5 +1,14 @@
 @echo off
 REM ===  EL UNICO BAT QUE NECESITAS PARA SUBIR CAMBIOS  ===
+REM Se ejecuta desde una copia en %TEMP% porque el "git pull" puede
+REM modificar este mismo archivo mientras corre, y ahi cmd.exe se
+REM desalinea y tira errores raros tipo "rigin no se reconoce".
+if /i "%~1"=="RUN" goto :run
+copy /y "%~f0" "%TEMP%\k24_subir_run.bat" >nul
+call "%TEMP%\k24_subir_run.bat" RUN
+exit /b
+
+:run
 cd /d "C:\Users\joe\Claude\Projects\k24"
 if exist ".git\index.lock" del ".git\index.lock"
 
