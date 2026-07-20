@@ -831,6 +831,19 @@
       animation:instalarPulse 2.2s ease-in-out infinite;
     }
     .btn-install-cta:hover { filter:brightness(1.08); }
+    /* Botón de arrepentimiento (Res. 424/2020) — visible sin registrarse */
+    .btn-arrep {
+      width:100%; margin-top:10px; background:rgba(255,255,255,.08);
+      border:1.5px solid rgba(255,255,255,.35); color:#fff;
+      font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px;
+      letter-spacing:.5px; padding:11px 12px; border-radius:10px; cursor:pointer;
+      transition:all .15s;
+    }
+    .btn-arrep:hover { background:rgba(255,255,255,.16); border-color:#fff; }
+    .arrep-legal {
+      margin-top:9px; font-family:'Rajdhani',sans-serif; font-size:11px;
+      line-height:1.45; color:rgba(255,255,255,.55); text-align:left;
+    }
     .btn-install-cta:active { transform:scale(.98); }
     @keyframes instalarPulse {
       0%,100% { box-shadow:0 8px 22px rgba(224,24,24,.4); }
@@ -1309,6 +1322,8 @@
           <div class="pago-item">🏦 Transferencia bancaria</div>
           <div class="pago-item">🌙 Comprá 24hs — enviamos desde las 8:00</div>
           <button class="btn-install-cta" id="btnInstalar" style="display:none">📲 Instalar la app k24hs · acceso directo</button>
+          <button class="btn-arrep" onclick="abrirArrepentimiento()">↩️ Botón de arrepentimiento</button>
+          <div class="arrep-legal">Podés arrepentirte de tu compra dentro de los 10 días corridos de recibirla (Res. 424/2020). Venta de bebidas alcohólicas y cigarrillos prohibida a menores de 18 años (Ley 24.788 / 27.350).</div>
         </div>
       </div>
     </div>
@@ -2751,6 +2766,7 @@ function updateModalTotal() {
 function addFromModal() {
   const v = currentBrand.variants.find(x => x.vid === selectedVid);
   if (!v) return;
+  if (bloqueadoPorEdad(currentBrand && currentBrand.name, typeof currentShelfKey !== 'undefined' ? currentShelfKey : '')) return;
   const key = `${currentBrand.id}_${v.vid}`;
   if (cart[key]) {
     cart[key].qty += modalQty;
@@ -3410,6 +3426,8 @@ function abrirPerfil() {
     _setVal('pPiso', base.piso);
     _setVal('pBarrio', base.barrio);
     _setVal('pReferencia', base.referencia);
+    var _c18 = document.getElementById('pMayor18');
+    if (_c18) _c18.checked = !!base.mayor18;
     _setVal('pUsuario', base.usuario);
     _setVal('lUsuario', base.usuario);
     if (base.coords) {
@@ -3713,13 +3731,15 @@ async function guardarPerfil() {
     var barrio = document.getElementById('pBarrio').value.trim();
     var referencia = document.getElementById('pReferencia').value.trim();
     var foto = _fotoData || (userProfile && userProfile.foto) || '';
+    var _chk18 = document.getElementById('pMayor18');
+    var mayor18 = _chk18 ? !!_chk18.checked : !!(userProfile && userProfile.mayor18);
 
     // Guardar/verificar en Google Sheets (a través del proxy /api/cuenta)
     var payload = {
       action: 'registrar', evento: esRegistro ? 'registro' : 'actualizacion',
       usuario: usuario, passHash: passHash,
       nombre: nombre, telefono: telefono, email: email, direccion: direccion,
-      barrio: barrio, referencia: referencia, foto: foto,
+      barrio: barrio, referencia: referencia, foto: foto, mayor18: mayor18,
       carrito: cart, deseos: wishlist, fecha: new Date().toISOString()
     };
     var resp = await fetch('/api/cuenta', {
@@ -3739,7 +3759,7 @@ async function guardarPerfil() {
     userProfile = {
       usuario: usuario, nombre: nombre, telefono: telefono, email: email,
       direccion: direccion, piso: piso, barrio: barrio, referencia: referencia,
-      coords: coordsCapturadas, foto: foto,
+      coords: coordsCapturadas, foto: foto, mayor18: mayor18,
     };
     _perfilGuardado = userProfile;
     localStorage.setItem('k24_perfil', JSON.stringify(userProfile));
@@ -6213,7 +6233,79 @@ function renderGaseosasExt() {
   renderTabSection(catalogGaseosasExtra, document.getElementById('gaseosasext-tabs'), document.getElementById('gaseosasext-grid'));
 }
 
+// ── CONTROL +18: alcohol y tabaco ─────────────────────────────────────────
+// Ley 24.788 (alcohol) y 27.350/26.687 (tabaco): prohibida la venta a menores.
+// El cliente declara su edad al registrarse. Si no la confirmó, VE los productos
+// pero no puede agregarlos al carrito.
+var _SECCIONES_18 = ['cervezas','botellas','cigarrillos','vinos','licores','espumantes','cervezasext'];
+var _RX_18 = /(vino|cerveza|whisky|whiskey|vodka|licor|fernet|aperitivo|aperol|campari|cynar|gancia|martini|cinzano|champagne|champan|espumante|sidra|tequila|smirnoff|absolut|jameson|chivas|ballantine|bacardi|skyy|johnnie|petacon|brandy|cognac|vermouth|vermut|cigarr|tabaco|habanito|\bron\b|\bgin\b|ginebra)/i;
+function _norm18(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+function esMayor18(){ return !!(userProfile && userProfile.mayor18); }
+function requiereMayor18(nombre, seccion){
+  if (seccion && _SECCIONES_18.indexOf(String(seccion)) !== -1) return true;
+  return _RX_18.test(_norm18(nombre));
+}
+// Devuelve true si hay que BLOQUEAR el agregado al carrito
+function bloqueadoPorEdad(nombre, seccion){
+  if (!requiereMayor18(nombre, seccion)) return false;
+  if (esMayor18()) return false;
+  _avisoMayor18();
+  return true;
+}
+function _avisoMayor18(){
+  _cerrarOverlays();
+  var logueado = !!userProfile;
+  var body = '<div style="color:#cfe0ee;font-size:15px;line-height:1.6">'
+    + 'Este producto es de <b>venta exclusiva a mayores de 18 años</b> (bebidas alcohólicas y tabaco).<br><br>'
+    + (logueado
+        ? 'Para comprarlo confirmá tu edad: entrá a <b>Mi cuenta → Editar mis datos</b> y tildá <b>“Soy mayor de 18 años”</b>.'
+        : 'Para comprarlo creá tu cuenta y tildá <b>“Soy mayor de 18 años”</b> al registrarte.')
+    + '</div>'
+    + '<button onclick="_cerrarOverlays();abrirPerfil()" style="width:100%;margin-top:16px;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:14px;padding:12px;border-radius:10px;cursor:pointer">'
+    + (logueado ? 'Ir a mi cuenta' : 'Crear cuenta') + '</button>';
+  _overlay('🔞 Solo para mayores de 18', body);
+}
+
+// ── BOTÓN DE ARREPENTIMIENTO (Res. 424/2020 Defensa del Consumidor) ───────
+// Visible en el inicio sin necesidad de registrarse. Se envía por WhatsApp y
+// queda registrado en la planilla del kiosco.
+function abrirArrepentimiento(){
+  _cerrarOverlays();
+  var p = userProfile || {};
+  var inp = 'width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:10px;color:#fff;font-family:Rajdhani,sans-serif;font-size:14px;margin-bottom:9px;box-sizing:border-box';
+  var body = '<div style="color:#9fb4c8;font-size:13.5px;line-height:1.55;margin-bottom:13px">'
+    + 'Podés arrepentirte de tu compra dentro de los <b>10 días corridos</b> de recibido el producto, sin costo y sin dar explicaciones. Completá los datos y te contactamos para coordinar la devolución y el reintegro.'
+    + '</div>'
+    + '<input id="arrNombre" placeholder="Nombre y apellido *" value="' + (p.nombre||'') + '" style="' + inp + '">'
+    + '<input id="arrTel" placeholder="Teléfono *" value="' + (p.telefono||'') + '" style="' + inp + '">'
+    + '<input id="arrEmail" placeholder="Email" value="' + (p.email||'') + '" style="' + inp + '">'
+    + '<input id="arrPedido" placeholder="N° de pedido o fecha de compra *" style="' + inp + '">'
+    + '<textarea id="arrMotivo" placeholder="Motivo (opcional)" style="' + inp + ';height:70px;resize:vertical"></textarea>'
+    + '<button onclick="enviarArrepentimiento()" style="width:100%;margin-top:4px;background:#cc1010;border:none;color:#fff;font-family:Rajdhani,sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;padding:13px;border-radius:10px;cursor:pointer">Enviar solicitud</button>';
+  _overlay('↩️ Botón de arrepentimiento', body);
+}
+function enviarArrepentimiento(){
+  var g = function(id){ var e=document.getElementById(id); return e ? e.value.trim() : ''; };
+  var nombre=g('arrNombre'), tel=g('arrTel'), email=g('arrEmail'), pedido=g('arrPedido'), motivo=g('arrMotivo');
+  if (!nombre || !tel || !pedido) { showToast('Completá nombre, teléfono y N° de pedido'); return; }
+  // 1) Queda registrado en la planilla del kiosco
+  try {
+    fetch('https://script.google.com/macros/s/AKfycbz48Hs8pcO-ewcmnxaHrS-eBrcVk-llMdaCxjNyCXOdP99SahO7X84w-97bs_JvuzOL/exec', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'arrepentimiento', nombre:nombre, telefono:tel, email:email, pedido:pedido, motivo:motivo })
+    }).catch(function(){});
+  } catch(e) {}
+  // 2) Aviso inmediato por WhatsApp
+  var msg = '↩️ *SOLICITUD DE ARREPENTIMIENTO*\n\n👤 ' + nombre + '\n📱 ' + tel
+    + (email ? ('\n✉️ ' + email) : '') + '\n🧾 Pedido: ' + pedido
+    + (motivo ? ('\n📝 ' + motivo) : '') + '\n\n(Enviado desde k24hs.com)';
+  window.open('https://wa.me/5493513260094?text=' + encodeURIComponent(msg), '_blank');
+  _cerrarOverlays();
+  showToast('✅ Solicitud enviada. Te contactamos a la brevedad.');
+}
+
 function addGonToCart(id, name, price, img) {
+  if (bloqueadoPorEdad(name, '')) return;
   const key = 'gon_' + id;
   if (cart[key]) {
     cart[key].qty++;
@@ -6434,6 +6526,7 @@ function _pdToggleFav() {
 }
 
 function searchAdd(p) {
+  if (bloqueadoPorEdad(p.brandName || p.name, p.sectionKey)) return;
   if (p.isBrand && p.vid) {
     const key = `${p.id}_${p.vid}`;
     if (cart[key]) { cart[key].qty++; }
@@ -6635,6 +6728,11 @@ document.addEventListener('click', function(ev) {
         <label>Referencia</label>
         <input type="text" id="pReferencia" placeholder="Ej: Portón verde, esquina con Bv. San Juan"/>
       </div>
+
+      <label style="display:flex;align-items:flex-start;gap:9px;margin:4px 0 14px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13.5px;color:#cfe0ee;line-height:1.45">
+        <input type="checkbox" id="pMayor18" style="margin-top:2px;width:17px;height:17px;accent-color:#cc1010;flex-shrink:0"/>
+        <span>Soy <b>mayor de 18 años</b>. Necesario para comprar bebidas alcohólicas y cigarrillos (Ley 24.788 / 27.350).</span>
+      </label>
 
       <button class="btn-ubicacion" id="btnUbicacion" onclick="obtenerUbicacion()">
         📍 Usar mi ubicación actual

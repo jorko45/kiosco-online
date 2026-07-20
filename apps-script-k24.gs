@@ -16,7 +16,21 @@ const GITHUB_RAW_URL   = 'https://raw.githubusercontent.com/jorko45/kiosco-onlin
 const MAX_BACKUPS = 10;
 
 // Hoja de cuentas para el login (usuario + contrasena). Se crea sola.
-const CUENTAS_HEADERS = ['Fecha','Usuario','PassHash','Nombre','Telefono','Email','Direccion','Piso','Barrio','Referencia','Coords','Foto','Carrito','Deseos'];
+const CUENTAS_HEADERS = ['Fecha','Usuario','PassHash','Nombre','Telefono','Email','Direccion','Piso','Barrio','Referencia','Coords','Foto','Carrito','Deseos','Mayor18'];
+
+// Hoja donde quedan registradas las solicitudes de arrepentimiento (Res. 424/2020)
+const ARREP_HEADERS = ['Fecha','Nombre','Telefono','Email','Pedido','Motivo','Estado'];
+function _hojaArrepentimientos(){
+  var ss = _hojaCuentas().getParent();           // misma planilla que Cuentas
+  var sh = ss.getSheetByName('Arrepentimientos');
+  if (!sh) {
+    sh = ss.insertSheet('Arrepentimientos');
+    sh.appendRow(ARREP_HEADERS);
+    sh.getRange(1,1,1,ARREP_HEADERS.length).setFontWeight('bold').setBackground('#cc0000').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
 
 function _jsonOut(o){
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
@@ -42,6 +56,10 @@ function _hojaCuentas(){
     sh.setName('Cuentas');
   }
   if (sh.getLastRow() === 0) { sh.appendRow(CUENTAS_HEADERS); sh.setFrozenRows(1); }
+  // Si se agregaron columnas nuevas (ej: Mayor18), completar el encabezado
+  try { if (sh.getLastColumn() < CUENTAS_HEADERS.length) {
+    sh.getRange(1,1,1,CUENTAS_HEADERS.length).setValues([CUENTAS_HEADERS]);
+  } } catch(e) {}
   return sh;
 }
 function _filaPorUsuario(sh, usuario){
@@ -62,7 +80,8 @@ function _filaPorContacto(sh, tel, email){
 }
 function _cuentaObj(r){
   return {
-    perfil:{ usuario:r[1], nombre:r[3], telefono:r[4], email:r[5], direccion:r[6], piso:r[7], barrio:r[8], referencia:r[9], foto:r[11]||'' },
+    perfil:{ usuario:r[1], nombre:r[3], telefono:r[4], email:r[5], direccion:r[6], piso:r[7], barrio:r[8], referencia:r[9], foto:r[11]||'',
+             mayor18: (r[14]===true || String(r[14]||'').toUpperCase()==='SI') },
     carrito:_parse(r[12]),
     deseos:_parse(r[13])
   };
@@ -80,13 +99,15 @@ function _guardarCuenta(data){
     data.coords ? (data.coords.lat+','+data.coords.lng) : '',
     data.foto||'',
     data.carrito ? JSON.stringify(data.carrito) : '',
-    data.deseos ? JSON.stringify(data.deseos) : ''
+    data.deseos ? JSON.stringify(data.deseos) : '',
+    data.mayor18 ? 'SI' : 'NO'
   ];
   var f = usuario ? _filaPorUsuario(sh, usuario) : _filaPorContacto(sh, data.telefono, data.email);
   if(f!==-1){
     var actual=sh.getRange(f,1,1,CUENTAS_HEADERS.length).getValues()[0];
     if(!data.passHash) fila[2]=actual[2]||'';   // preservar clave
     if(!data.foto)     fila[11]=actual[11]||''; // preservar foto
+    if(data.mayor18===undefined || data.mayor18===null) fila[14]=actual[14]||''; // preservar +18
     if(!usuario)       fila[1]=actual[1]||'';   // preservar usuario
     sh.getRange(f,1,1,fila.length).setValues([fila]);
     return _jsonOut({ok:true, updated:true});
@@ -149,6 +170,16 @@ function doPost(e) {
         spa.getRange(start,8,fs.length,1).setFormulas(fs);
       }
       return _jsonOut({ ok:true, total: spa.getLastRow()-1 });
+    }
+
+    // Solicitud de arrepentimiento (Res. 424/2020) -> hoja "Arrepentimientos"
+    if (data.action === 'arrepentimiento') {
+      _hojaArrepentimientos().appendRow([
+        new Date().toLocaleString('es-AR'),
+        data.nombre || '', data.telefono || '', data.email || '',
+        data.pedido || '', data.motivo || '', 'PENDIENTE'
+      ]);
+      return _jsonOut({ ok:true });
     }
 
     // Guardar pedido en hoja Pedidos K24 (numero correlativo)
