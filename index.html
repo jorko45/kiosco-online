@@ -771,6 +771,59 @@
       animation:fadeUp .3s ease both;
     }
     #fabCaja:active { transform:scale(.96); }
+    /* ── Bot de consultas ── */
+    #botFab {
+      position:fixed; bottom:86px; right:16px; z-index:96;
+      width:58px; height:58px; border-radius:50%;
+      background:linear-gradient(135deg,#0a7d3c,#0c9648); color:#fff; border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; font-size:27px;
+      box-shadow:0 8px 24px rgba(10,125,60,.5); animation:fadeUp .3s ease both;
+    }
+    #botFab:active { transform:scale(.94); }
+    #botFab .bot-punto {
+      position:absolute; top:-2px; right:-2px; width:15px; height:15px; border-radius:50%;
+      background:#e02020; border:2px solid #0a1420;
+    }
+    #botPanel {
+      position:fixed; z-index:2650; right:16px; bottom:16px;
+      width:min(380px, calc(100vw - 32px)); height:min(72vh, 560px);
+      background:#0f1722; border:1px solid rgba(120,180,255,.25); border-radius:18px;
+      display:none; flex-direction:column; overflow:hidden;
+      box-shadow:0 24px 70px rgba(0,0,0,.6); animation:fadeUp .25s ease both;
+    }
+    #botPanel.open { display:flex; }
+    .bot-head {
+      background:linear-gradient(135deg,#0a7d3c,#0c9648); color:#fff; padding:13px 15px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .bot-head .bot-ava { font-size:22px; }
+    .bot-head .bot-nom { font-family:'Orbitron',sans-serif; font-weight:900; font-size:14px; }
+    .bot-head .bot-sub { font-family:'Rajdhani',sans-serif; font-size:11px; opacity:.85; }
+    .bot-head .bot-x { margin-left:auto; background:none; border:none; color:#fff; font-size:20px; cursor:pointer; }
+    #botMsgs { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:9px; }
+    .bot-msg { max-width:82%; font-family:'Rajdhani',sans-serif; font-size:14px; line-height:1.45; padding:9px 12px; border-radius:13px; white-space:pre-line; }
+    .bot-msg.b { align-self:flex-start; background:rgba(255,255,255,.08); color:#eaf2fa; border-bottom-left-radius:4px; }
+    .bot-msg.u { align-self:flex-end; background:#0a7d3c; color:#fff; border-bottom-right-radius:4px; }
+    .bot-prod { display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:11px; padding:8px; margin-top:4px; }
+    .bot-prod img { width:38px; height:38px; object-fit:contain; background:#fff; border-radius:7px; }
+    .bot-prod .bp-info { flex:1; font-family:'Rajdhani',sans-serif; font-size:13px; color:#eaf2fa; line-height:1.25; }
+    .bot-prod .bp-precio { font-weight:800; color:#bdf5d2; }
+    .bot-prod .bp-add { background:#cc1010; border:none; color:#fff; font-size:18px; width:32px; height:32px; border-radius:8px; cursor:pointer; }
+    .bot-chips { display:flex; flex-wrap:wrap; gap:7px; padding:0 14px 12px; }
+    .bot-chip {
+      background:rgba(120,220,160,.12); border:1px solid rgba(120,220,160,.35); color:#cfe9d8;
+      font-family:'Rajdhani',sans-serif; font-size:12.5px; font-weight:700; padding:7px 11px;
+      border-radius:999px; cursor:pointer; white-space:nowrap;
+    }
+    .bot-chip:active { transform:scale(.96); }
+    .bot-input { display:flex; gap:8px; padding:10px 12px; border-top:1px solid rgba(255,255,255,.08); }
+    .bot-input input {
+      flex:1; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); color:#fff;
+      font-family:'Rajdhani',sans-serif; font-size:14px; padding:10px 12px; border-radius:10px; outline:none;
+    }
+    .bot-input button {
+      background:#0a7d3c; border:none; color:#fff; font-size:18px; width:44px; border-radius:10px; cursor:pointer;
+    }
     /* botón flotante de volver al inicio (visible dentro de una sección) */
     #fabHome {
       position:fixed; bottom:calc(20px + env(safe-area-inset-bottom,0px)); left:16px; z-index:1010;
@@ -1536,6 +1589,26 @@
 
 <!-- Botón flotante volver al inicio (visible dentro de una sección) -->
 <button id="fabHome" onclick="volverInicio()">← <span>Volver</span></button>
+
+<!-- Bot de consultas -->
+<button id="botFab" onclick="abrirBot()" title="¿Necesitás ayuda?">💬<span class="bot-punto"></span></button>
+<div id="botPanel">
+  <div class="bot-head">
+    <span class="bot-ava">🤖</span>
+    <div>
+      <div class="bot-nom">Asistente k24hs</div>
+      <div class="bot-sub">Consultá precios, envíos y horarios</div>
+    </div>
+    <button class="bot-x" onclick="cerrarBot()">✕</button>
+  </div>
+  <div id="botMsgs"></div>
+  <div class="bot-chips" id="botChips"></div>
+  <div class="bot-input">
+    <input id="botInput" type="text" placeholder="Escribí tu consulta…" autocomplete="off"
+           onkeydown="if(event.key==='Enter')botEnviar()">
+    <button onclick="botEnviar()">➤</button>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header>
@@ -6683,6 +6756,151 @@ async function pedirWSP() {
 }
 
 // ── BUSCADOR ──────────────────────────────────────────────────────────────
+// ══════════════════ BOT DE CONSULTAS ══════════════════
+var _botIniciado = false;
+function abrirBot() {
+  var p = document.getElementById('botPanel'); if (!p) return;
+  p.classList.add('open');
+  var punto = document.querySelector('#botFab .bot-punto'); if (punto) punto.style.display = 'none';
+  if (!_botIniciado) {
+    _botIniciado = true;
+    _botDecir('¡Hola! 👋 Soy el asistente de k24hs. Puedo ayudarte con precios, envíos, horarios y formas de pago. ¿Qué necesitás?');
+    _botChips(['🛵 ¿Cuánto sale el envío?', '🕗 ¿Están abiertos?', '💳 Formas de pago', '🔎 Buscar un producto']);
+  }
+  setTimeout(function(){ var i=document.getElementById('botInput'); if(i) i.focus(); }, 120);
+}
+function cerrarBot() { var p=document.getElementById('botPanel'); if(p) p.classList.remove('open'); }
+function _botDecir(html) {
+  var m = document.getElementById('botMsgs'); if (!m) return;
+  var d = document.createElement('div'); d.className = 'bot-msg b'; d.innerHTML = html;
+  m.appendChild(d); m.scrollTop = m.scrollHeight;
+}
+function _botUsuario(txt) {
+  var m = document.getElementById('botMsgs'); if (!m) return;
+  var d = document.createElement('div'); d.className = 'bot-msg u'; d.textContent = txt;
+  m.appendChild(d); m.scrollTop = m.scrollHeight;
+}
+function _botChips(arr) {
+  var c = document.getElementById('botChips'); if (!c) return;
+  c.innerHTML = '';
+  (arr || []).forEach(function(t) {
+    var b = document.createElement('button'); b.className = 'bot-chip'; b.textContent = t;
+    b.onclick = function(){ _botProcesar(t); };
+    c.appendChild(b);
+  });
+}
+function botEnviar() {
+  var i = document.getElementById('botInput'); if (!i) return;
+  var t = String(i.value || '').trim(); if (!t) return;
+  i.value = '';
+  _botProcesar(t);
+}
+function _botNorm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+function _botTiene(t, arr){ for (var i=0;i<arr.length;i++){ if (t.indexOf(arr[i])!==-1) return true; } return false; }
+
+function _botProcesar(txt) {
+  _botUsuario(txt);
+  var t = _botNorm(txt);
+  document.getElementById('botChips').innerHTML = '';
+  setTimeout(function(){ _botResponder(t); }, 250);
+}
+
+function _botResponder(t) {
+  // Saludo
+  if (_botTiene(t, ['hola','buenas','buen dia','buenos dias','buenas tardes','buenas noches','que tal']) && t.length < 22) {
+    _botDecir('¡Hola! ¿En qué te ayudo? Podés preguntarme por un producto, el envío, los horarios o las formas de pago.');
+    _botChips(['🛵 Envío', '🕗 Horarios', '💳 Pagos', '🍺 ¿Venden bebidas?']); return;
+  }
+  // Envío / delivery / zonas
+  if (_botTiene(t, ['envio','enví','delivery','reparto','cuanto sale el envio','llega','llegan','mandan','zona','domicilio'])) {
+    _botDecir('🛵 <b>Envíos</b>\n• Costo: <b>$5.000</b>\n• <b>Gratis</b> en tus primeras 10 compras de $50.000 o más\n• Entrega inmediata dentro de <b>Córdoba Capital</b>\n• Repartimos de 8 a 21 hs (fuera de ese horario el pedido queda registrado y sale a las 8).');
+    _botChips(['🕗 Horarios', '💳 Pagos', '🔎 Buscar producto']); return;
+  }
+  // Horario / abierto / 24hs
+  if (_botTiene(t, ['horario','abierto','abren','cierran','cerrado','hora','24','atienden','ahora'])) {
+    _botDecir('🕗 <b>Estamos abiertos las 24 horas</b> para que pidas cuando quieras.\nEl reparto sale de <b>8 a 21 hs</b>. Si comprás de madrugada, tu pedido queda registrado y sale apenas arranca el reparto.');
+    _botChips(['🛵 Envío', '💳 Pagos']); return;
+  }
+  // Pagos
+  if (_botTiene(t, ['pago','paga','pagar','mercado','tarjeta','efectivo','transfer','qr','debito','credito','como abono'])) {
+    _botDecir('💳 <b>Formas de pago</b>\n• 💵 Efectivo al recibir\n• 💳 MercadoPago (tarjetas y QR)\n• 🏦 Transferencia bancaria');
+    _botChips(['🛵 Envío', '🕗 Horarios']); return;
+  }
+  // Cómo comprar
+  if (_botTiene(t, ['como compro','como pido','como hago','como funciona','hacer un pedido','comprar'])) {
+    _botDecir('🛒 <b>Es fácil:</b>\n1. Buscá los productos y agregalos a la caja.\n2. Tocá la caja y confirmá el pedido.\n3. Elegís cómo pagar y a dónde te lo llevamos.\n¡Y listo, sale para tu casa!');
+    _botChips(['🔎 Buscar producto', '🛵 Envío']); return;
+  }
+  // Si preguntan un PRECIO puntual, busco el producto aunque sea bebida/tabaco
+  var _preguntaPrecio = _botTiene(t, ['precio','cuanto sale','cuanto cuesta','cuanto vale','que precio','a cuanto']);
+  // +18 / alcohol / cigarrillos (salvo que pregunten precio)
+  if (!_preguntaPrecio && _botTiene(t, ['+18','mayor de','edad','alcohol','cerveza','vino','fernet','whisky','cigarr','tabaco','bebida'])) {
+    _botDecir('🔞 Vendemos bebidas alcohólicas y cigarrillos, pero <b>solo a mayores de 18 años</b>. Al registrarte marcás la casilla de +18 y podés comprarlos.\n¿Querés que busque alguna bebida en particular?');
+    _botChips(['🍺 Cervezas', '🍷 Vinos', '🥃 Botellas']); return;
+  }
+  // Arrepentimiento / devolución
+  if (_botTiene(t, ['arrepent','devol','cancel','reclamo','equivoc','anular'])) {
+    _botDecir('↩️ Podés arrepentirte de tu compra dentro de los <b>10 días corridos</b> de recibirla (Res. 424/2020). En el inicio tenés el <b>Botón de arrepentimiento</b> para gestionarlo, o escribinos por WhatsApp.');
+    _botChips(['💬 Hablar con una persona']); return;
+  }
+  // Comercios / mayorista / red
+  if (_botTiene(t, ['comercio','mayorista','revend','kiosco propio','sumar mi','red de comercio','al por mayor'])) {
+    _botDecir('🤝 ¡Buenísimo! Tenemos la <b>Red de comercios</b>: comprando en volumen accedés a mejores precios y ofertas constantes. En el inicio está el botón <b>“Quiero sumar mi comercio”</b> para dejarnos tus datos.');
+    _botChips(['💬 Hablar con una persona']); return;
+  }
+  // Contacto humano
+  if (_botTiene(t, ['persona','humano','hablar','telefono','whatsapp','contacto','llamar','duda'])) {
+    _botDecir('💬 Te paso con nosotros por WhatsApp: <a href="https://wa.me/5493513260094" target="_blank" style="color:#7fe0a2;font-weight:800">Abrir chat</a>');
+    return;
+  }
+  // Buscar producto (chip o pedido explícito)
+  if (_botTiene(t, ['buscar','busca','tenes','tienen','hay','precio de','cuanto sale','cuanto cuesta','vale','quiero'])
+      || t.indexOf('producto') !== -1) {
+    var limpio = t.replace(/buscar|busca|un producto|producto|tenes|tienen|hay|precio de|precio|cuanto sale|cuanto cuesta|cuanto|sale|vale|quiero|de|el|la|los|las/g,' ').trim();
+    if (limpio.length < 2) { _botDecir('🔎 Decime qué producto buscás y te digo el precio. Por ejemplo: <i>coca 2 litros</i>, <i>quilmes</i>, <i>alfajor</i>.'); return; }
+    return _botBuscarProducto(limpio);
+  }
+  // Fallback → intento buscarlo como producto igual
+  _botBuscarProducto(t, true);
+}
+
+function _botBuscarProducto(consulta, esFallback) {
+  var pals = consulta.split(/\s+/).filter(function(w){ return w.length >= 3; });
+  var P;
+  try { P = getAllSearchableProducts(); } catch(e) { P = []; }
+  var res = [];
+  for (var i=0;i<P.length;i++) {
+    var nom = _botNorm((P[i].brandName||'') + ' ' + (P[i].size||''));
+    var hit = pals.length ? pals.every(function(w){ return nom.indexOf(w) !== -1; }) : false;
+    if (hit) { res.push(P[i]); if (res.length >= 4) break; }
+  }
+  if (!res.length) {
+    if (esFallback) {
+      _botDecir('Mmm, no encontré eso. 🤔 Puedo ayudarte con <b>precios de productos</b>, <b>envíos</b>, <b>horarios</b> y <b>pagos</b>. Si es otra cosa, te paso con una persona.');
+      _botChips(['🛵 Envío', '🕗 Horarios', '💬 Hablar con una persona']);
+    } else {
+      _botDecir('No encontré ese producto. 🤔 Probá con otro nombre, o fijate en las secciones del inicio.');
+      _botChips(['💬 Hablar con una persona']);
+    }
+    return;
+  }
+  _botDecir(res.length === 1 ? 'Encontré esto:' : 'Encontré estas opciones:');
+  var m = document.getElementById('botMsgs');
+  res.forEach(function(p) {
+    var d = document.createElement('div'); d.className = 'bot-prod';
+    var img = document.createElement('img'); img.src = p.img || ''; img.onerror = function(){ this.style.visibility='hidden'; };
+    var info = document.createElement('div'); info.className = 'bp-info';
+    info.innerHTML = (p.brandName||'') + (p.size ? ' · ' + p.size : '') +
+      '<br><span class="bp-precio">$' + Number(p.price||0).toLocaleString('es-AR') + '</span>';
+    var add = document.createElement('button'); add.className = 'bp-add'; add.textContent = '+';
+    add.onclick = function(){ try { searchAdd(p); showToast('✅ Agregado a la caja'); } catch(e){} };
+    d.appendChild(img); d.appendChild(info); d.appendChild(add);
+    m.appendChild(d);
+  });
+  m.scrollTop = m.scrollHeight;
+  _botChips(['🔎 Buscar otro', '🛵 Envío', '💳 Pagos']);
+}
+
 function getAllSearchableProducts() {
   const results = [];
   const sections = [

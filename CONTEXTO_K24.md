@@ -43,6 +43,12 @@ Scrapea SuperMami (dinoonline.com.ar) y actualiza index.html:
 - ⚠ **Mami**: los precios vienen en formato inglés (`1,234.50`). El parser soporta ambos formatos.
 - ⚠ **Distribuidora (Pedix)**: rehízo su catálogo y **los IDs cambiaron**, así que el cruce es **por nombre** (normalizado) contra el bloque `DISTRI-AUTOGEN` del index.html. El JSON está en `<script id="ng-state">`.
 
+## Bot de consultas (en la web)
+- Burbuja verde 💬 abajo a la derecha (`#botFab`) → panel `#botPanel`. Funciones `abrirBot`/`_botResponder`/`_botBuscarProducto`.
+- Es rule-based (sin IA/servidor): detecta intención por palabras clave y responde envíos, horarios, pagos, cómo comprar, +18, arrepentimiento, red de comercios y "hablar con una persona" (WhatsApp).
+- Para **precios de productos** reusa `getAllSearchableProducts()`: busca en el catálogo en vivo y muestra tarjetas con precio + botón para agregar a la caja. Si preguntan "precio de X" con X alcohol/tabaco, prioriza la búsqueda sobre el aviso +18.
+- Para editar respuestas: son textos dentro de `_botResponder`. Fase 2 sería el mismo bot por WhatsApp con la Cloud API (línea nueva dedicada, NO el 3513260094 que se usa a mano).
+
 ## Precios y márgenes (aplicado 10-jul-2026)
 - TODO el catálogo (~2.700 productos) tiene margen: 15% primeras marcas / 25% resto + 6.6% MP, redondeo $50. Marcador en el código: `// MARGEN-APPLIED v1`. **NO volver a aplicar márgenes sobre los precios actuales** (los de heladera/cigarrillos/góndola están margineados una vez; los del Mami se recalculan solos en cada sync desde el precio base).
 - Promos: sin margen (precio armado por Joe).
