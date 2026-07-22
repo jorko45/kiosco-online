@@ -330,6 +330,10 @@
     .cart-qty-num { font-weight:700; font-size:14px; min-width:18px; text-align:center; }
     .cart-item-price { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; color:var(--red); min-width:64px; text-align:right; }
     .cart-footer { padding:20px 24px; border-top:2px solid #f0f0f0; background:#fafafa; }
+    .cart-pagos { margin:2px 0 14px; }
+    .cart-pagos-titulo { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:7px; }
+    .cart-pagos-lista { display:flex; flex-wrap:wrap; gap:7px; }
+    .cart-pagos-lista span { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; color:#333; background:#fff; border:1px solid #e6e6e6; border-radius:999px; padding:6px 11px; }
     .cart-total-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .cart-total-label { font-family:'Rajdhani',sans-serif; font-weight:600; font-size:13px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
     .cart-total-amount { font-family:'Orbitron',sans-serif; font-weight:700; font-size:22px; }
@@ -1398,15 +1402,11 @@
 
     <div class="pago-box">
       <div class="pago-inner">
-        <div class="pago-title">💳 FORMAS DE PAGO &amp; INFO</div>
         <div class="pago-items">
-          <div class="pago-item">💵 Efectivo al recibir tu pedido</div>
-          <div class="pago-item">💳 MercadoPago (tarjetas y QR)</div>
-          <div class="pago-item">🏦 Transferencia bancaria</div>
-          <div class="pago-item">🌙 Comprá 24hs — enviamos desde las 8:00</div>
+          <!-- BENEFICIOS-PAGO: acá van los beneficios según forma de pago -->
           <button class="btn-install-cta" id="btnInstalar" style="display:none">📲 Instalar la app k24hs · acceso directo</button>
           <button class="btn-arrep" onclick="abrirArrepentimiento()">↩️ Botón de arrepentimiento</button>
-          <div class="arrep-legal">Podés arrepentirte de tu compra dentro de los 10 días corridos de recibirla (Res. 424/2020). Venta de bebidas alcohólicas y cigarrillos prohibida a menores de 18 años (Ley 24.788 / 27.350).</div>
+          <div class="arrep-legal">Podés arrepentirte de tu compra dentro de los 10 días corridos de recibirla (Res. 424/2020). Venta de bebidas alcohólicas y cigarrillos prohibida a menores de 18 años (Ley 24.788 / 27.350). Formas de pago: efectivo, MercadoPago o transferencia — las ves al confirmar tu pedido en la caja.</div>
         </div>
       </div>
     </div>
@@ -1703,6 +1703,14 @@
     <div class="cart-total-row" style="border-top:2px solid #eee;padding-top:12px;margin-top:4px;margin-bottom:16px">
       <span class="cart-total-label" style="font-size:14px;letter-spacing:3px">Total</span>
       <span class="cart-total-amount" id="cartTotal" style="color:var(--red)">$0</span>
+    </div>
+    <div class="cart-pagos">
+      <div class="cart-pagos-titulo">💳 Formas de pago</div>
+      <div class="cart-pagos-lista">
+        <span>💵 Efectivo al recibir</span>
+        <span>💳 MercadoPago (tarjetas y QR)</span>
+        <span>🏦 Transferencia</span>
+      </div>
     </div>
     <button class="btn-mp" id="btnMP" onclick="pagarMP()" disabled>💳 Pagar con MercadoPago</button>
     <button class="btn-wsp" id="btnWSP" onclick="pedirWSP()" disabled>💬 Enviar pedido por WhatsApp</button>
