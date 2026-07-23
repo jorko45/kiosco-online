@@ -781,7 +781,7 @@
       width:58px; height:58px; border-radius:50%;
       background:linear-gradient(135deg,#0a7d3c,#0c9648); color:#fff; border:none; cursor:pointer;
       display:flex; align-items:center; justify-content:center; font-size:27px;
-      box-shadow:0 8px 24px rgba(10,125,60,.5); animation:fadeUp .3s ease both;
+      box-shadow:0 8px 24px rgba(10,125,60,.5); opacity:1;
     }
     #botFab:active { transform:scale(.94); }
     #botFab .bot-punto {
@@ -931,6 +931,21 @@
     }
     .btn-red:hover { background:#0c9648; }
     .btn-red:active { transform:scale(.99); }
+    /* Fuera de cobertura */
+    .zona-box {
+      max-width:1000px; margin:16px auto 0; padding:20px 22px;
+      background:linear-gradient(135deg, rgba(26,115,232,.16), rgba(10,80,140,.14));
+      border:1px solid rgba(120,180,255,.3); border-radius:18px; text-align:center;
+    }
+    .zona-titulo { font-family:'Orbitron',sans-serif; font-weight:900; font-size:16px; color:#bcd8ff; letter-spacing:1px; margin-bottom:8px; }
+    .zona-bajada { font-family:'Rajdhani',sans-serif; font-size:14.5px; line-height:1.55; color:#dbe9f5; margin-bottom:16px; }
+    .btn-zona {
+      width:100%; max-width:420px; background:#1a73e8; border:none; color:#fff; cursor:pointer;
+      font-family:'Orbitron',sans-serif; font-weight:900; font-size:13.5px; letter-spacing:1px;
+      padding:14px; border-radius:12px; transition:background .2s, transform .1s;
+    }
+    .btn-zona:hover { background:#2f83f0; }
+    .btn-zona:active { transform:scale(.99); }
     .btn-install-cta:active { transform:scale(.98); }
     @keyframes instalarPulse {
       0%,100% { box-shadow:0 8px 22px rgba(224,24,24,.4); }
@@ -1422,6 +1437,13 @@
         <div class="red-bene"><span>🤝</span><div><b>Sin costo de ingreso</b><br>Sumarse no te cuesta nada.</div></div>
       </div>
       <button class="btn-red" onclick="abrirRedComercios()">Quiero sumar mi comercio</button>
+    </div>
+
+    <!-- Fuera de cobertura -->
+    <div class="zona-box">
+      <div class="zona-titulo">📍 ¿TODAVÍA NO LLEGAMOS A TU ZONA?</div>
+      <div class="zona-bajada">Si vivís o tenés un comercio en otra ciudad o pueblo, anotate. Cuantos más pedidos juntemos de un lugar, antes abrimos el reparto ahí. Te avisamos apenas lleguemos.</div>
+      <button class="btn-zona" onclick="abrirZonaPedida()">📩 Avisame cuando lleguen a mi zona</button>
     </div>
 
     <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery inmediato</span></div>
@@ -6606,6 +6628,39 @@ function _avisoMayor18(){
 // ── BOTÓN DE ARREPENTIMIENTO (Res. 424/2020 Defensa del Consumidor) ───────
 // Visible en el inicio sin necesidad de registrarse. Se envía por WhatsApp y
 // queda registrado en la planilla del kiosco.
+// ── Fuera de cobertura: registro de demanda por zona ─────────────────────
+function abrirZonaPedida() {
+  _cerrarOverlays();
+  var inp='width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);'
+        + 'color:#fff;font-family:Rajdhani,sans-serif;font-size:14px;padding:10px 11px;border-radius:9px;margin-bottom:9px';
+  var lbl='font-family:Rajdhani,sans-serif;font-size:12px;color:#9fb4c8;margin-bottom:3px';
+  var body =
+      '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin-bottom:14px">'
+    + 'Dejanos tu zona y te avisamos apenas lleguemos con el reparto. Nos ayuda a saber a dónde conviene expandirnos primero.</div>'
+    + '<div style="'+lbl+'">Ciudad o pueblo *</div><input id="zpLoc" style="'+inp+'" placeholder="Ej: Villa Carlos Paz">'
+    + '<div style="'+lbl+'">Sos…</div><select id="zpTipo" style="'+inp+'">'
+    + '<option>Cliente (quiero comprar)</option><option>Comercio (quiero revender)</option></select>'
+    + '<div style="'+lbl+'">Tu nombre</div><input id="zpNom" style="'+inp+'" placeholder="Cómo te llamás">'
+    + '<div style="'+lbl+'">WhatsApp *</div><input id="zpTel" style="'+inp+'" placeholder="Ej: 351 555 5555" inputmode="tel">'
+    + '<div style="'+lbl+'">Algo más (opcional)</div><textarea id="zpMsg" rows="2" style="'+inp+'" placeholder="Barrio, qué comprás, etc."></textarea>'
+    + '<button onclick="enviarZonaPedida()" style="width:100%;background:#1a73e8;border:none;color:#fff;'
+    + 'font-family:Orbitron,sans-serif;font-weight:900;font-size:13px;padding:13px;border-radius:10px;cursor:pointer;margin-top:5px">'
+    + 'Anotarme</button>';
+  _overlay('📍 Avisame cuando lleguen a mi zona', body);
+}
+function enviarZonaPedida() {
+  function v(id){ var e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; }
+  var loc=v('zpLoc'), tel=v('zpTel');
+  if (!loc || !tel) { showToast('⚠️ Completá tu ciudad y tu WhatsApp'); return; }
+  var datos = { action:'zona_pedida', localidad:loc, tipo:v('zpTipo'), nombre:v('zpNom'),
+                telefono:tel, mensaje:v('zpMsg') };
+  try {
+    fetch('/api/cuenta', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(datos) }).catch(function(){});
+  } catch(e) {}
+  _cerrarOverlays();
+  showToast('✅ ¡Anotado! Te avisamos apenas lleguemos a ' + loc + '.');
+}
 // ── Red de comercios: alta de interesados ────────────────────────────────
 function abrirRedComercios(){
   _cerrarOverlays();
@@ -6855,6 +6910,14 @@ function _botResponder(t) {
   if (_botTiene(t, ['comercio','mayorista','revend','kiosco propio','sumar mi','red de comercio','al por mayor'])) {
     _botDecir('🤝 ¡Buenísimo! Tenemos la <b>Red de comercios</b>: comprando en volumen accedés a mejores precios y ofertas constantes. En el inicio está el botón <b>“Quiero sumar mi comercio”</b> para dejarnos tus datos.');
     _botChips(['💬 Hablar con una persona']); return;
+  }
+  // Fuera de cobertura / ¿llegan a mi zona?
+  if (_botTiene(t, ['llegan a','llegas a','hacen envio a','envian a','mandan a','cobertura','mi ciudad','mi pueblo','mi localidad','otra ciudad','fuera de cordoba','afuera'])) {
+    _botDecir('📍 Por ahora repartimos en <b>Córdoba Capital</b>. Si estás en otra ciudad o pueblo, podés <b>anotarte</b> y te avisamos apenas lleguemos con el reparto: cuantos más pedidos juntemos de un lugar, antes abrimos ahí.');
+    _botChips(['📩 Anotarme para mi zona', '💬 Hablar con una persona']); return;
+  }
+  if (t.indexOf('anotarme') !== -1 || (t.indexOf('anotar') !== -1 && t.indexOf('zona') !== -1)) {
+    cerrarBot(); abrirZonaPedida(); return;
   }
   // Contacto humano
   if (_botTiene(t, ['persona','humano','hablar','telefono','whatsapp','contacto','llamar','duda'])) {

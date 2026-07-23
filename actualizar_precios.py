@@ -41,10 +41,26 @@ def log(*a):
     print(*a, flush=True)
 
 
-def fetch(url, timeout=45):
-    req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
-        return r.read().decode('utf-8', errors='replace')
+def Number_(x):
+    try:
+        return float(x) or 0
+    except (TypeError, ValueError):
+        return 0
+
+
+def fetch(url, timeout=45, reintentos=3):
+    """GET con reintentos: en la nube una falla de red puntual es normal."""
+    ultimo = None
+    for intento in range(reintentos):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
+                return r.read().decode('utf-8', errors='replace')
+        except Exception as e:
+            ultimo = e
+            if intento < reintentos - 1:
+                time.sleep(2 * (intento + 1))
+    raise ultimo
 
 
 def post(payload, timeout=180):
@@ -214,24 +230,48 @@ def scrapear_pedix():
 
 
 # ─────────────────────────── Principal ───────────────────────────
+def cargar_mapa_marcas():
+    """Tarjetas de marca (coca-cola__1, quilmes__2...) -> id del producto en el Mami.
+    Sin esto esas filas nunca se actualizarían, porque no tienen id de proveedor."""
+    p = Path(__file__).parent / 'mapa_marcas.json'
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding='utf-8'))
+    except Exception as e:
+        log('   (no pude leer mapa_marcas.json: %s)' % e)
+        return {}
+
+
+MAPA_MARCAS = {}
+
+
 def id_mami(fila_id):
     """Devuelve el id numérico de dinoonline, o None si no es del Mami."""
     s = str(fila_id)
     if re.fullmatch(r'\d+', s):
         return s
     m = re.fullmatch(r'(?:prod|dn-)(\d+)', s)
-    return m.group(1) if m else None
+    if m:
+        return m.group(1)
+    return MAPA_MARCAS.get(s)          # tarjetas de marca
 
 
 def main():
+    global MAPA_MARCAS
+    MAPA_MARCAS = cargar_mapa_marcas()
+
     log('Bajando la lista de productos de la planilla...')
     filas = json.loads(fetch(API_PRECIOS, timeout=90))['items']
     log('   %d filas en la planilla' % len(filas))
 
     esperados_mami = [f for f in filas if id_mami(f[0])]
     esperados_pedix = [f for f in filas if str(f[0]).startswith('d-')]
-    log('   %d del Mami · %d de la Distribuidora · %d tarjetas de marca (no se tocan)'
-        % (len(esperados_mami), len(esperados_pedix), len(filas) - len(esperados_mami) - len(esperados_pedix)))
+    tarjetas = sum(1 for f in filas if '__' in str(f[0]) and str(f[0]) in MAPA_MARCAS)
+    sin_tocar = len(filas) - len(esperados_mami) - len(esperados_pedix)
+    log('   %d del Mami (incluye %d tarjetas de marca) · %d de la Distribuidora'
+        % (len(esperados_mami), tarjetas, len(esperados_pedix)))
+    log('   %d filas sin proveedor (promos, cigarrillos, etc): no se tocan' % sin_tocar)
 
     solo_distri = '--solo-distri' in sys.argv
     if solo_distri:
@@ -273,7 +313,29 @@ def main():
             % (len(pp), len(esperados_pedix)))
 
     if not actualizar:
-        log('\nNo hay nada para actualizar. Reviso que las páginas estén andando y salgo.')
+        log('\nERROR: no se pudo leer ningún precio de las páginas de los proveedores.')
+        log('Puede ser que estén caídas o que hayan bloqueado el acceso. NO se tocó nada.')
+        sys.exit(1)   # falla visible: GitHub avisa por mail
+
+    # ── modo simulación: mostrar qué cambiaría, sin tocar nada ──
+    if '--simular' in sys.argv:
+        actual = {str(f[0]): (Number_(f[2]) or Number_(f[1])) for f in filas}
+        cambios = []
+        for fid, costo in actualizar:
+            hoy = actual.get(fid) or 0
+            if hoy > 0:
+                nuevo_aprox = costo * 1.3325            # margen 25% + MP, aproximado
+                d = round(100 * (nuevo_aprox - hoy) / hoy)
+                if abs(d) >= 10:
+                    cambios.append((abs(d), fid, hoy, round(nuevo_aprox), d))
+        cambios.sort(reverse=True)
+        log('\n===== SIMULACION (no se toco nada) =====')
+        log('%d productos cambiarian de precio mas de 10%%:' % len(cambios))
+        for _, fid, hoy, nue, d in cambios[:40]:
+            log('   %-28s $%-8s -> $%-8s (%+d%%)' % (fid[:28], hoy, nue, d))
+        if len(cambios) > 40:
+            log('   ... y %d mas' % (len(cambios) - 40))
+        log('\nPara aplicarlo de verdad, corre el script sin --simular.')
         return
 
     # ── escribir costos ──

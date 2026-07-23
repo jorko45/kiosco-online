@@ -312,6 +312,25 @@ function doPost(e) {
       return _jsonOut({ ok:true });
     }
 
+    // Pedido de cobertura desde una zona a la que todavia no llegamos -> hoja "Zonas pedidas"
+    if (data.action === 'zona_pedida') {
+      var ssz = _hojaCuentas().getParent();
+      var shz = ssz.getSheetByName('Zonas pedidas');
+      if (!shz) {
+        shz = ssz.insertSheet('Zonas pedidas');
+        shz.appendRow(['Fecha','Localidad','Tipo','Nombre','Telefono','Mensaje','Estado']);
+        shz.getRange(1,1,1,7).setFontWeight('bold').setBackground('#1a73e8').setFontColor('#ffffff');
+        shz.setFrozenRows(1);
+        shz.setColumnWidth(2,220); shz.setColumnWidth(6,320);
+      }
+      shz.appendRow([
+        new Date().toLocaleString('es-AR'),
+        data.localidad || '', data.tipo || '', data.nombre || '',
+        data.telefono || '', data.mensaje || '', 'NUEVO'
+      ]);
+      return _jsonOut({ ok:true });
+    }
+
     // ===== BUZON =====
     // Leer los mensajes guardados de un cliente
     if (data.action === 'buzon') {

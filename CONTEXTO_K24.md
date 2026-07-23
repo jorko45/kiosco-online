@@ -35,7 +35,29 @@ Scrapea SuperMami (dinoonline.com.ar) y actualiza index.html:
 - Cubre TODO el catálogo (5.207 filas), incluida la sección Botellas.
 - Formatos de ID: `3061097` / `prod2320444` / `dn-2140082` = Super Mami · `d-XXXX` = Distribuidora · `marca__N` = tarjetas de marca (sin ID de proveedor, se editan a mano en la planilla).
 
-## Actualizar precios desde los proveedores
+## Actualización AUTOMÁTICA de precios (Programador de tareas de Windows)
+- Tarea **"K24 - Actualizar precios"**, corre `correr_precios.ps1` → `actualizar_precios.py` **todos los días a las 23:00** en la PC de Joe.
+- Se instala con **`INSTALAR_ACTUALIZACION_DIARIA.bat`** (una sola vez). Se saca con `QUITAR_ACTUALIZACION_DIARIA.bat`.
+- **`PROBAR_ACTUALIZACION.bat`** la dispara al instante y muestra el resultado.
+- Opción **StartWhenAvailable**: si a las 23 la PC está apagada, corre sola al prenderla.
+- Corre en ventana oculta. Todo queda en **`log_precios.txt`** (se recorta solo a 500 líneas).
+- Si el scrapeo no trae nada, el script sale con error y lo deja escrito en el log; NO toca ningún precio.
+- Se descartó GitHub Actions porque el sitio del Mami necesita sesión y probablemente bloquee IPs de datacenter.
+
+## Registro de demanda fuera de cobertura
+- Sección en el inicio "📍 ¿Todavía no llegamos a tu zona?" (`abrirZonaPedida`/`enviarZonaPedida`) + el bot lo ofrece si preguntan "¿llegan a X?".
+- Guarda en hoja **"Zonas pedidas"** (Fecha, Localidad, Tipo cliente/comercio, Nombre, Teléfono, Mensaje) → sirve para ver dónde conviene expandir el reparto.
+- Backend: acción `zona_pedida` (Apps Script V13).
+- ⚠ El botón del bot (#botFab) tenía `animation:fadeUp` que lo dejaba en opacity 0 (invisible). Se cambió a `opacity:1` fijo.
+
+## mapa_marcas.json — tarjetas de marca ⇄ proveedor
+- Las tarjetas (`coca-cola__2`, `quilmes__1`…) no tienen ID de proveedor, así que **antes nunca se actualizaban**.
+- `mapa_marcas.json` mapea **222 variantes** a su producto equivalente del Mami (id numérico). `id_mami()` lo consulta, así que entran en la actualización diaria.
+- Se armó cruzando marca + volumen + zero/light + retornable + lata + sabor, exigiendo que no haya ambigüedad con variantes hermanas. Verificado: 0 volúmenes mal, 0 destinos repetidos.
+- Quedan **afuera a propósito**: promos (precio armado por Joe), cigarrillos (el Mami no vende) y ~110 variantes sin equivalente. Esas se editan a mano en la planilla.
+- Si se agregan tarjetas nuevas hay que sumarlas al JSON.
+
+## Actualizar precios desde los proveedores (manual)
 - **`actualizar_precios.bat`** → corre `actualizar_precios.py`. Scrapea el Mami (descubre las ~477 categorías solo) y la Distribuidora, y actualiza **solo la columna Costo**. Los márgenes no se tocan; el Precio Sugerido se recalcula solo.
 - **`actualizar_solo_distri.bat`** → lo mismo pero solo la Distribuidora (segundos).
 - Los productos que ya no están en la página quedan **Activo=NO**, con **salvaguarda**: si una fuente trae <60% de lo esperado, no desactiva nada de esa fuente (evita vaciar el catálogo si el proveedor se cae).
