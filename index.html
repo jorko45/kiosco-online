@@ -7038,6 +7038,24 @@ function getAllSearchableProducts() {
   return results;
 }
 
+// Registro de búsquedas: guarda la consulta ~1,2s después de que dejás de escribir,
+// con cuántos resultados dio (para ver lo más buscado y lo que se busca y NO hay).
+var _busqTimer = null, _busqUltima = '';
+function _logBusqueda(q, hits) {
+  q = String(q || '').trim();
+  if (q.length < 3) return;
+  clearTimeout(_busqTimer);
+  _busqTimer = setTimeout(function () {
+    if (q === _busqUltima) return;     // no repetir la misma seguida
+    _busqUltima = q;
+    try {
+      fetch('/api/cuenta', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'buscar_log', q: q, hits: hits })
+      }).catch(function () {});
+    } catch (e) {}
+  }, 1200);
+}
 function onSearch(q, inputEl) {
   const wrap = inputEl.closest('.search-wrap');
   const clearBtn = wrap.querySelector('.search-clear');
@@ -7046,10 +7064,12 @@ function onSearch(q, inputEl) {
   if (!q.trim()) { resultsEl.style.display = 'none'; return; }
   const terms = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').split(/\s+/).filter(Boolean);
   const all = getAllSearchableProducts();
-  const matches = all.filter(p => {
+  const _todos = all.filter(p => {
     const haystack = (p.brandName + ' ' + p.size).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
     return terms.every(t => haystack.includes(t));
-  }).slice(0, 30);
+  });
+  _logBusqueda(q, _todos.length);
+  const matches = _todos.slice(0, 30);
   if (!matches.length) {
     resultsEl.innerHTML = `<div class="search-no-results">No encontramos "${q}" en el catálogo</div>`;
     resultsEl.style.display = '';
@@ -7335,5 +7355,8 @@ document.addEventListener('click', function(ev) {
 </div>
 
 
+<!-- Vercel Web Analytics (contador de visitas, sin cookies) -->
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

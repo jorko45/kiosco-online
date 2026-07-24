@@ -345,6 +345,36 @@ function doPost(e) {
       return _jsonOut({ ok:true });
     }
 
+    // Registro de búsquedas -> hoja "Busquedas" (ranking, suma veces)
+    if (data.action === 'buscar_log') {
+      var q = String(data.q || '').trim().toLowerCase();
+      if (!q || q.length < 3) return _jsonOut({ ok:true });
+      var ssb = _hojaCuentas().getParent();
+      var shb = ssb.getSheetByName('Busquedas');
+      if (!shb) {
+        shb = ssb.insertSheet('Busquedas');
+        shb.appendRow(['Busqueda','Veces','Resultados','Ultima vez']);
+        shb.getRange(1,1,1,4).setFontWeight('bold').setBackground('#6a1b9a').setFontColor('#ffffff');
+        shb.setFrozenRows(1); shb.setColumnWidth(1,240);
+      }
+      var lr = shb.getLastRow();
+      var fila = 0;
+      if (lr > 1) {
+        var qs = shb.getRange(2,1,lr-1,1).getValues();
+        for (var i=0;i<qs.length;i++){ if (String(qs[i][0]).toLowerCase() === q) { fila = i+2; break; } }
+      }
+      var hits = Number(data.hits) || 0;
+      if (fila) {
+        var veces = (Number(shb.getRange(fila,2).getValue()) || 0) + 1;
+        shb.getRange(fila,2).setValue(veces);
+        shb.getRange(fila,3).setValue(hits);
+        shb.getRange(fila,4).setValue(new Date().toLocaleString('es-AR'));
+      } else {
+        shb.appendRow([q, 1, hits, new Date().toLocaleString('es-AR')]);
+      }
+      return _jsonOut({ ok:true });
+    }
+
     // ===== BUZON =====
     // Leer los mensajes guardados de un cliente
     if (data.action === 'buzon') {

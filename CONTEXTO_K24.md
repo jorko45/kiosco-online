@@ -52,6 +52,10 @@ Scrapea SuperMami (dinoonline.com.ar) y actualiza index.html:
 - Backend: acción `zona_pedida` (Apps Script V13).
 - ⚠ El botón del bot (#botFab) tenía `animation:fadeUp` que lo dejaba en opacity 0 (invisible). Se cambió a `opacity:1` fijo.
 
+## Analítica (23-jul)
+- **Visitas**: Vercel Web Analytics (script `/_vercel/insights/script.js` al final del index.html). ⚠ Hay que ACTIVARLO una vez en el panel de Vercel (proyecto → pestaña **Analytics** → Enable). Sin eso el script no reporta. Gratis, sin cookies.
+- **Búsquedas**: cada búsqueda (≥3 letras, con debounce de 1,2s) se registra vía `buscar_log` en la hoja **"Busquedas"** (Busqueda, Veces, Resultados, Ultima vez). Suma en la misma fila si se repite. `Resultados=0` = lo que buscan y NO tenemos (oportunidad de sumar productos). Apps Script V15.
+
 ## DECISIÓN (23-jul): bebidas = manuales
 - Las **tarjetas de marca (bebidas, cervezas, botellas, promos)** salieron del auto-update: `mapa_marcas.json` quedó **vacío `{}`**.
 - Motivo: no hay fuente de datos confiable para automatizarlas (costo del Mami volátil, mapeo se rompía, el Mami NO expone código de barras — probado con `probar_codigo_mami.py`). Cada intento metía errores en los productos más visibles.
