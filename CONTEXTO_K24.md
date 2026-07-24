@@ -42,6 +42,8 @@ Scrapea SuperMami (dinoonline.com.ar) y actualiza index.html:
 - Opción **StartWhenAvailable**: si a las 23 la PC está apagada, corre sola al prenderla.
 - Corre en ventana oculta. Todo queda en **`log_precios.txt`** (se recorta solo a 500 líneas).
 - Si el scrapeo no trae nada, el script sale con error y lo deja escrito en el log; NO toca ningún precio.
+- **Freno de seguridad (V14)**: `precios_costos` no aplica un costo si el Precio Sugerido saltaría más de **30%** (mapeo mal o producto que cambió en el proveedor). Los frenados quedan en `cambios_precios.csv` y en el log para revisar a mano. El tope se puede cambiar con `data.tope` (0 = sin freno).
+- **mapa_marcas.json**: se sacaron `fernet-branca__*` y `cepita__*` porque el Mami ya no tiene esos productos y agarraban precios raros. Quedan 216 tarjetas mapeadas; esas 6 se cargan a mano.
 - Se descartó GitHub Actions porque el sitio del Mami necesita sesión y probablemente bloquee IPs de datacenter.
 
 ## Registro de demanda fuera de cobertura
@@ -50,7 +52,13 @@ Scrapea SuperMami (dinoonline.com.ar) y actualiza index.html:
 - Backend: acción `zona_pedida` (Apps Script V13).
 - ⚠ El botón del bot (#botFab) tenía `animation:fadeUp` que lo dejaba en opacity 0 (invisible). Se cambió a `opacity:1` fijo.
 
-## mapa_marcas.json — tarjetas de marca ⇄ proveedor
+## DECISIÓN (23-jul): bebidas = manuales
+- Las **tarjetas de marca (bebidas, cervezas, botellas, promos)** salieron del auto-update: `mapa_marcas.json` quedó **vacío `{}`**.
+- Motivo: no hay fuente de datos confiable para automatizarlas (costo del Mami volátil, mapeo se rompía, el Mami NO expone código de barras — probado con `probar_codigo_mami.py`). Cada intento metía errores en los productos más visibles.
+- Esas ~250 se cargan/ajustan **a mano en la planilla**. El resto (almacén/góndola/golosinas, ~4.500) sigue automático con el freno del 30%.
+- El mapeo viejo quedó en `mapa_marcas.json.bak` por si algún día se retoma (ideal: lista de referencia CON código de barras).
+
+## mapa_marcas.json — tarjetas de marca ⇄ proveedor (HISTÓRICO, hoy vacío)
 - Las tarjetas (`coca-cola__2`, `quilmes__1`…) no tienen ID de proveedor, así que **antes nunca se actualizaban**.
 - `mapa_marcas.json` mapea **222 variantes** a su producto equivalente del Mami (id numérico). `id_mami()` lo consulta, así que entran en la actualización diaria.
 - Se armó cruzando marca + volumen + zero/light + retornable + lata + sabor, exigiendo que no haya ambigüedad con variantes hermanas. Verificado: 0 volúmenes mal, 0 destinos repetidos.

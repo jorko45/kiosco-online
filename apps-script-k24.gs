@@ -237,12 +237,26 @@ function doPost(e) {
       var idsc = shc.getRange(2,1,lrc-1,1).getValues(), posc = {};
       for (var ic=0; ic<idsc.length; ic++){ var kc = String(idsc[ic][0]||'').trim(); if (kc) posc[kc] = ic; }
       var costos = shc.getRange(2,5,lrc-1,1).getValues();
-      var rowsc = data.rows || [], nAct = 0, nSin = 0, nIgual = 0, tocadas = {};
+      var margenes = shc.getRange(2,6,lrc-1,1).getValues();   // col F (margen %)
+      var mps      = shc.getRange(2,7,lrc-1,1).getValues();   // col G (MP %)
+      var sugAct   = shc.getRange(2,8,lrc-1,1).getValues();   // col H (precio sugerido actual)
+      // Freno de seguridad: no aplicamos un costo si el precio saltaria mas de este %
+      var TOPE = (data.tope!==undefined) ? Number(data.tope) : 0.30;
+      var rowsc = data.rows || [], nAct = 0, nSin = 0, nIgual = 0, nFrenados = 0, tocadas = {}, frenados = [];
       for (var jc=0; jc<rowsc.length; jc++){
         var idc = String(rowsc[jc][0]||'').trim(), cc = Number(rowsc[jc][1]) || 0;
         if (!(idc in posc) || cc <= 0) { nSin++; continue; }
         var fc = posc[idc];
         if (Number(costos[fc][0]) === cc) { nIgual++; continue; }
+        // ¿cuanto cambiaria el precio de venta con este costo nuevo?
+        var margen = Number(margenes[fc][0]) || 0, mp = Number(mps[fc][0]) || 0;
+        var nuevoSug = Math.round(cc * (1 + margen/100) * (1 + mp/100) / 50) * 50;
+        var viejoSug = Number(sugAct[fc][0]) || 0;
+        if (TOPE > 0 && viejoSug > 0 && Math.abs(nuevoSug - viejoSug) / viejoSug > TOPE) {
+          nFrenados++;
+          if (frenados.length < 60) frenados.push({ id: idc, de: viejoSug, a: nuevoSug });
+          continue;   // NO tocamos el costo: queda como estaba
+        }
         costos[fc][0] = cc; tocadas[fc] = 1; nAct++;
       }
       if (nAct) {
@@ -258,7 +272,7 @@ function doPost(e) {
           }
         });
       }
-      return _jsonOut({ ok:true, actualizados:nAct, sinCambio:nIgual, sinFila:nSin });
+      return _jsonOut({ ok:true, actualizados:nAct, sinCambio:nIgual, sinFila:nSin, frenados:nFrenados, detalleFrenados:frenados });
     }
 
     // Marcar filas como Activo SI / NO. data.ids = [...], data.activo = 'SI'|'NO'

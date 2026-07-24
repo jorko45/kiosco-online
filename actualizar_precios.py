@@ -340,14 +340,19 @@ def main():
 
     # ── escribir costos ──
     log('\nActualizando la columna Costo...')
-    tot_act = tot_igual = 0
+    tot_act = tot_igual = tot_frenados = 0
+    frenados = []
     for i in range(0, len(actualizar), LOTE):
         r = post({'action': 'precios_costos', 'rows': actualizar[i:i + LOTE]})
         tot_act += r.get('actualizados', 0)
         tot_igual += r.get('sinCambio', 0)
+        tot_frenados += r.get('frenados', 0)
+        frenados += r.get('detalleFrenados', []) or []
         log('   %d/%d' % (min(i + LOTE, len(actualizar)), len(actualizar)))
         time.sleep(0.4)
     log('   %d costos cambiaron · %d ya estaban igual' % (tot_act, tot_igual))
+    if tot_frenados:
+        log('   ⚠ %d NO se aplicaron: el precio saltaba mas de 30%% (revisar a mano).' % tot_frenados)
 
     # ── desactivar faltantes ──
     a_desactivar = [fid for fid, fu in faltantes
@@ -368,7 +373,15 @@ def main():
         fh.write('\nID;Fuente;NO ENCONTRADO\n')
         for fid, fu in faltantes:
             fh.write('%s;%s;no aparece en la pagina\n' % (fid, fu))
+        if frenados:
+            fh.write('\nID;FRENADO (salto > 30%);PrecioActual;PrecioNuevo\n')
+            for f in frenados:
+                fh.write('%s;revisar a mano;%s;%s\n' % (f.get('id', ''), f.get('de', ''), f.get('a', '')))
     log('\nReporte: %s' % out)
+    if frenados:
+        log('%d productos frenados por salto grande (ver cambios_precios.csv):' % len(frenados))
+        for f in frenados[:15]:
+            log('   %-28s $%s -> $%s' % (str(f.get('id',''))[:28], f.get('de',''), f.get('a','')))
     log('Los precios nuevos se ven en k24hs.com en ~2 minutos.')
 
 
