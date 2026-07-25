@@ -330,6 +330,20 @@
     .cart-qty-num { font-weight:700; font-size:14px; min-width:18px; text-align:center; }
     .cart-item-price { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px; color:var(--red); min-width:64px; text-align:right; }
     .cart-footer { padding:20px 24px; border-top:2px solid #f0f0f0; background:#fafafa; }
+    .btn-ir-caja {
+      width:100%; background:var(--red); border:none; color:#fff; cursor:pointer;
+      font-family:'Orbitron',sans-serif; font-weight:900; font-size:15px; letter-spacing:1px;
+      padding:15px; border-radius:12px; transition:background .2s, transform .1s;
+    }
+    .btn-ir-caja:hover { filter:brightness(1.08); }
+    .btn-ir-caja:active { transform:scale(.99); }
+    .btn-ir-caja:disabled { background:#ccc; cursor:not-allowed; }
+    .caja-titulo { font-family:'Orbitron',sans-serif; font-weight:900; font-size:14px; color:#222; letter-spacing:1px; margin-bottom:10px; text-align:center; }
+    .btn-volver-carrito {
+      width:100%; margin-top:8px; background:none; border:none; color:#888; cursor:pointer;
+      font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; padding:8px;
+    }
+    .btn-volver-carrito:hover { color:#444; }
     .cart-pagos { margin:2px 0 14px; }
     .cart-pagos-titulo { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:7px; }
     .cart-pagos-lista { display:flex; flex-wrap:wrap; gap:7px; }
@@ -1726,16 +1740,23 @@
       <span class="cart-total-label" style="font-size:14px;letter-spacing:3px">Total</span>
       <span class="cart-total-amount" id="cartTotal" style="color:var(--red)">$0</span>
     </div>
-    <div class="cart-pagos">
-      <div class="cart-pagos-titulo">💳 Formas de pago</div>
-      <div class="cart-pagos-lista">
+
+    <!-- PASO 1: carrito -> botón para ir a la caja -->
+    <div id="pasoCarrito">
+      <button class="btn-ir-caja" id="btnIrCaja" onclick="irACaja()" disabled>🧾 Ir a pagar</button>
+    </div>
+
+    <!-- PASO 2: caja -> formas de pago -->
+    <div id="pasoCaja" style="display:none">
+      <div class="caja-titulo">💳 ¿Cómo querés pagar?</div>
+      <div class="cart-pagos-lista" style="margin-bottom:14px">
         <span>💵 Efectivo al recibir</span>
-        <span>💳 MercadoPago (tarjetas y QR)</span>
         <span>🏦 Transferencia</span>
       </div>
+      <button class="btn-mp" id="btnMP" onclick="pagarMP()">💳 Pagar con MercadoPago</button>
+      <button class="btn-wsp" id="btnWSP" onclick="pedirWSP()">💬 Enviar pedido por WhatsApp</button>
+      <button class="btn-volver-carrito" onclick="volverAlCarrito()">← Volver al carrito</button>
     </div>
-    <button class="btn-mp" id="btnMP" onclick="pagarMP()" disabled>💳 Pagar con MercadoPago</button>
-    <button class="btn-wsp" id="btnWSP" onclick="pedirWSP()" disabled>💬 Enviar pedido por WhatsApp</button>
   </div>
 </div>
 
@@ -3443,8 +3464,25 @@ function renderCart() {
         </div>`).join('');
 
   const has = items.length > 0;
-  document.getElementById('btnMP').disabled  = !has;
-  document.getElementById('btnWSP').disabled = !has;
+  var _bic = document.getElementById('btnIrCaja'); if (_bic) _bic.disabled = !has;
+  var _mp = document.getElementById('btnMP');  if (_mp)  _mp.disabled  = !has;
+  var _ws = document.getElementById('btnWSP'); if (_ws) _ws.disabled = !has;
+  if (!has) volverAlCarrito();   // si se vació el carrito, no quedarse en la caja
+}
+// Paso 1 (carrito) -> Paso 2 (caja con las formas de pago)
+function irACaja() {
+  if (!Object.keys(cart).length) { showToast('Tu carrito está vacío'); return; }
+  var pc = document.getElementById('pasoCarrito'), pj = document.getElementById('pasoCaja');
+  if (pc) pc.style.display = 'none';
+  if (pj) pj.style.display = '';
+  var h = document.querySelector('#cartSidebar .cart-header h2'); if (h) h.textContent = 'Caja';
+  var items = document.getElementById('cartItems'); if (items) items.scrollTop = items.scrollHeight;
+}
+function volverAlCarrito() {
+  var pc = document.getElementById('pasoCarrito'), pj = document.getElementById('pasoCaja');
+  if (pc) pc.style.display = '';
+  if (pj) pj.style.display = 'none';
+  var h = document.querySelector('#cartSidebar .cart-header h2'); if (h) h.textContent = 'Tu pedido';
 }
 
 function _updateFabCaja() {
@@ -3461,8 +3499,11 @@ function _updateFabCaja() {
   }
 }
 function toggleCart() {
-  document.getElementById('cartSidebar').classList.toggle('open');
+  var sb = document.getElementById('cartSidebar');
+  var abriendo = !sb.classList.contains('open');
+  sb.classList.toggle('open');
   document.getElementById('cartOverlay').classList.toggle('open');
+  if (abriendo) volverAlCarrito();   // siempre abrir en el paso "carrito"
 }
 
 function showToast(msg) {

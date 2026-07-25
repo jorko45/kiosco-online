@@ -475,6 +475,29 @@ function doGet(e) {
   try {
     var p = (e && e.parameter) || {};
 
+    // Pinta en la planilla de precios las filas que NO se actualizan solas
+    // (tarjetas de marca y promos: su ID lleva "__"). Naranja suave = manual.
+    if ((p.action||'') === 'pintar_manuales') {
+      var shp = _hojaPrecios(), lrp = shp.getLastRow();
+      if (lrp < 2) return _jsonOut({ ok:true, pintadas:0 });
+      var ids = shp.getRange(2,1,lrp-1,1).getValues();
+      var rango = shp.getRange(2,1,lrp-1,PRECIOS_HEADERS.length);
+      var colores = [], n = 0;
+      for (var i=0;i<ids.length;i++){
+        var id = String(ids[i][0]||'');
+        var manual = (id.indexOf('__') !== -1);   // marca/promo = manual
+        var fila = [];
+        for (var c=0;c<PRECIOS_HEADERS.length;c++) fila.push(manual ? '#FFE0B2' : null);
+        colores.push(fila);
+        if (manual) n++;
+      }
+      rango.setBackgrounds(colores);
+      // leyenda arriba de todo
+      try { shp.getRange(1, PRECIOS_HEADERS.length+2).setValue('Naranja = precio MANUAL (no se actualiza solo)')
+              .setBackground('#FFE0B2').setFontWeight('bold'); } catch(e2){}
+      return _jsonOut({ ok:true, pintadas:n });
+    }
+
     // Catálogo de precios para la web: [id, precioVenta, precioSugerido, activo]
     if ((p.action||'') === 'precios') {
       var spg = _hojaPrecios();
