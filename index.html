@@ -7396,6 +7396,27 @@ document.addEventListener('click', function(ev) {
 </div>
 
 
+<!-- Anti-autocompletado del navegador en los buscadores (saca sugerencias tipo "admin") -->
+<script>
+(function () {
+  function blindarBuscadores() {
+    document.querySelectorAll('.search-input').forEach(function (el) {
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+      // name aleatorio: Chrome no encuentra historial guardado para un name nuevo => no sugiere
+      el.setAttribute('name', 'q_' + Math.random().toString(36).slice(2));
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', blindarBuscadores);
+  } else {
+    blindarBuscadores();
+  }
+})();
+</script>
+
 <!-- Vercel Web Analytics (contador de visitas, sin cookies) -->
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
