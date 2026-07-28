@@ -3649,7 +3649,7 @@ async function pagarMP() {
   // Solo envíos dentro de Córdoba Capital (13 km del centro)
   const _zm = await validarZonaCordoba(userProfile.coords, userProfile.direccion);
   if (!_zm.ok) {
-    showToast('😕 Esa dirección está fuera de nuestra zona de envío (Córdoba, 13 km del centro).');
+    _bloqueoFueraZona(_zm.motivo);
     return;
   }
 
@@ -4094,17 +4094,13 @@ async function guardarPerfil() {
     if (pass !== pass2) { showToast('⚠️ Las contraseñas no coinciden'); return; }
   }
 
-  // Solo Córdoba Capital (13 km del centro)
-  const _zona = await validarZonaCordoba(coordsCapturadas, direccion);
-  if (!_zona.ok) {
-    if (_zona.motivo === 'sin_ubicacion') {
-      showToast('📍 Tocá "Usar mi ubicación actual" para confirmar que estás en Córdoba.');
-    } else {
-      showToast('😕 Estás fuera de nuestra zona: solo Córdoba Capital (hasta 13 km del centro).');
-    }
-    return;
-  }
-  if (_zona.coords) coordsCapturadas = _zona.coords;
+  // El registro está ABIERTO a todos. La zona (Córdoba Capital) se controla
+  // recién al momento de comprar. Si ya hay ubicación/dirección, guardamos las
+  // coords para agilizar el checkout, pero nunca bloqueamos el registro.
+  try {
+    const _zona = await validarZonaCordoba(coordsCapturadas, direccion);
+    if (_zona && _zona.coords) coordsCapturadas = _zona.coords;
+  } catch (e) {}
 
   var passHash = '';
   if (pass) passHash = await _hashPass(usuario, pass);
@@ -4218,6 +4214,16 @@ async function validarZonaCordoba(coords, direccion) {
   if (!c) return { ok: false, motivo: 'sin_ubicacion' };
   const dist = _distanciaKm(CBA_CENTRO, c);
   return { ok: dist <= RADIO_COBERTURA_KM, dist: dist, coords: c, motivo: dist <= RADIO_COBERTURA_KM ? 'ok' : 'fuera' };
+}
+
+// Aviso + registro de demanda cuando la compra queda fuera de Córdoba Capital
+function _bloqueoFueraZona(motivo) {
+  if (motivo === 'sin_ubicacion') {
+    showToast('📍 Confirmá tu ubicación en tu perfil (tocá "Usar mi ubicación actual") para poder comprar.');
+    return;
+  }
+  showToast('😕 Por ahora solo entregamos en Córdoba Capital (hasta 13 km del centro).');
+  setTimeout(function () { if (typeof abrirZonaPedida === 'function') abrirZonaPedida(); }, 1100);
 }
 
 function checkDeliveryHours() {
@@ -6930,7 +6936,7 @@ async function pedirWSP() {
   // Solo envíos dentro de Córdoba Capital (13 km del centro)
   const _zw = await validarZonaCordoba(userProfile.coords, userProfile.direccion);
   if (!_zw.ok) {
-    showToast('😕 Esa dirección está fuera de nuestra zona de envío (Córdoba, 13 km del centro).');
+    _bloqueoFueraZona(_zw.motivo);
     return;
   }
 
