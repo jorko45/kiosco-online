@@ -344,6 +344,30 @@
       font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; padding:8px;
     }
     .btn-volver-carrito:hover { color:#444; }
+    /* ── Caja como página aparte ── */
+    .caja-page {
+      position:fixed; inset:0; z-index:1200; background:#f4f6f8;
+      display:none; flex-direction:column; opacity:0; transition:opacity .22s;
+    }
+    .caja-page.open { display:flex; opacity:1; }
+    .caja-top {
+      display:flex; align-items:center; gap:12px; padding:15px 18px;
+      background:linear-gradient(135deg,#0a1420,#122236); color:#fff; box-shadow:0 2px 14px rgba(0,0,0,.25);
+    }
+    .caja-top h2 { font-family:'Orbitron',sans-serif; font-weight:900; font-size:17px; letter-spacing:1px; margin:0; }
+    .caja-top .caja-back { background:rgba(255,255,255,.12); border:none; color:#fff; cursor:pointer;
+      width:38px; height:38px; border-radius:10px; font-size:19px; display:flex; align-items:center; justify-content:center; }
+    .caja-top .caja-back:hover { background:rgba(255,255,255,.22); }
+    .caja-body { flex:1; overflow-y:auto; padding:16px; max-width:560px; width:100%; margin:0 auto; }
+    .caja-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.06); padding:16px 18px; margin-bottom:14px; }
+    .caja-card h3 { font-family:'Orbitron',sans-serif; font-weight:900; font-size:12.5px; letter-spacing:1.5px; color:#333; margin:0 0 12px; }
+    .caja-line { display:flex; justify-content:space-between; align-items:center; font-family:'Rajdhani',sans-serif; font-size:15px; padding:5px 0; color:#333; }
+    .caja-line .cl-name { flex:1; padding-right:10px; }
+    .caja-line .cl-price { font-weight:700; color:var(--red); white-space:nowrap; }
+    .caja-tot { border-top:2px solid #eee; margin-top:10px; padding-top:10px; }
+    .caja-tot .caja-line-tot { display:flex; justify-content:space-between; font-family:'Orbitron',sans-serif; font-weight:900; font-size:16px; color:#0a1420; }
+    .caja-tot .caja-line-tot span:last-child { color:var(--red); }
+    .caja-nota { font-family:'Rajdhani',sans-serif; font-size:12.5px; color:#667; line-height:1.5; margin-top:8px; }
     .cart-pagos { margin:2px 0 14px; }
     .cart-pagos-titulo { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:7px; }
     .cart-pagos-lista { display:flex; flex-wrap:wrap; gap:7px; }
@@ -801,6 +825,22 @@
     #botFab .bot-punto {
       position:absolute; top:-2px; right:-2px; width:15px; height:15px; border-radius:50%;
       background:#e02020; border:2px solid #0a1420;
+    }
+    /* botón para cerrar la burbuja del bot */
+    #botFabX {
+      position:fixed; bottom:132px; right:14px; z-index:2401;
+      width:22px; height:22px; border-radius:50%; border:2px solid #0a1420;
+      background:#4a5568; color:#fff; font-size:12px; line-height:1; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; padding:0;
+      box-shadow:0 2px 8px rgba(0,0,0,.4);
+    }
+    #botFabX:active { transform:scale(.9); }
+    /* pestañita para reabrir el bot cuando fue cerrado */
+    #botReabrir {
+      position:fixed; bottom:18px; right:0; z-index:2400; display:none;
+      align-items:center; gap:5px; background:#0a7d3c; color:#fff; border:none; cursor:pointer;
+      font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px;
+      padding:7px 11px 7px 12px; border-radius:999px 0 0 999px; box-shadow:0 4px 14px rgba(10,125,60,.5);
     }
     #botPanel {
       position:fixed; z-index:2650; right:16px; bottom:16px;
@@ -1628,6 +1668,8 @@
 
 <!-- Bot de consultas -->
 <button id="botFab" onclick="abrirBot()" title="¿Necesitás ayuda?">💬<span class="bot-punto"></span></button>
+<button id="botFabX" onclick="cerrarBotFab(event)" title="Ocultar el asistente">✕</button>
+<button id="botReabrir" onclick="reabrirBotFab()" title="Mostrar el asistente">💬 Ayuda</button>
 <div id="botPanel">
   <div class="bot-head">
     <span class="bot-ava">🤖</span>
@@ -1741,15 +1783,27 @@
       <span class="cart-total-amount" id="cartTotal" style="color:var(--red)">$0</span>
     </div>
 
-    <!-- PASO 1: carrito -> botón para ir a la caja -->
-    <div id="pasoCarrito">
-      <button class="btn-ir-caja" id="btnIrCaja" onclick="irACaja()" disabled>🧾 Ir a pagar</button>
-    </div>
+    <!-- Ir a la caja (página aparte) -->
+    <button class="btn-ir-caja" id="btnIrCaja" onclick="irACaja()" disabled>🧾 Ir a pagar</button>
+  </div>
+</div>
 
-    <!-- PASO 2: caja -> formas de pago -->
-    <div id="pasoCaja" style="display:none">
-      <div class="caja-titulo">💳 ¿Cómo querés pagar?</div>
-      <div class="cart-pagos-lista" style="margin-bottom:14px">
+<!-- CAJA (página aparte) -->
+<div class="caja-page" id="cajaPage">
+  <div class="caja-top">
+    <button class="caja-back" onclick="volverAlCarrito()" title="Volver al carrito">←</button>
+    <h2>🧾 Caja</h2>
+  </div>
+  <div class="caja-body">
+    <div class="caja-card">
+      <h3>TU PEDIDO</h3>
+      <div id="cajaItems"></div>
+      <div class="caja-tot" id="cajaTotales"></div>
+      <div class="caja-nota" id="cajaNota"></div>
+    </div>
+    <div class="caja-card">
+      <h3>¿CÓMO QUERÉS PAGAR?</h3>
+      <div class="cart-pagos-lista" style="margin-bottom:14px;display:flex;gap:14px;flex-wrap:wrap;font-family:'Rajdhani',sans-serif;color:#445">
         <span>💵 Efectivo al recibir</span>
         <span>🏦 Transferencia</span>
       </div>
@@ -3467,22 +3521,60 @@ function renderCart() {
   var _bic = document.getElementById('btnIrCaja'); if (_bic) _bic.disabled = !has;
   var _mp = document.getElementById('btnMP');  if (_mp)  _mp.disabled  = !has;
   var _ws = document.getElementById('btnWSP'); if (_ws) _ws.disabled = !has;
-  if (!has) volverAlCarrito();   // si se vació el carrito, no quedarse en la caja
+  // si la caja está abierta, mantenerla sincronizada; si se vació, volver
+  var _cp = document.getElementById('cajaPage');
+  if (_cp && _cp.classList.contains('open')) {
+    if (has) renderCaja(); else volverAlCarrito();
+  }
 }
 // Paso 1 (carrito) -> Paso 2 (caja con las formas de pago)
+// Rellena la página de caja con el resumen del pedido y los totales.
+function renderCaja() {
+  var items = Object.values(cart);
+  var info = getDeliveryInfo();
+  var envio = info.costo, gratis = info.gratis, subtotal = info.subtotal;
+  var total = subtotal + envio;
+  var ci = document.getElementById('cajaItems');
+  if (ci) {
+    ci.innerHTML = items.length === 0
+      ? '<div class="caja-line"><span class="cl-name" style="color:#999">Tu carrito está vacío</span></div>'
+      : Object.entries(cart).map(function(e){
+          var it = e[1];
+          return '<div class="caja-line"><span class="cl-name">'
+            + it.qty + '× ' + it.name + (it.size ? ' <span style="color:#889">'+it.size+'</span>' : '')
+            + '</span><span class="cl-price">$' + (it.price*it.qty).toLocaleString('es-AR') + '</span></div>';
+        }).join('');
+  }
+  var ct = document.getElementById('cajaTotales');
+  if (ct) {
+    ct.innerHTML =
+      '<div class="caja-line"><span class="cl-name">Subtotal</span><span>$' + subtotal.toLocaleString('es-AR') + '</span></div>'
+      + '<div class="caja-line"><span class="cl-name">Envío</span><span>' + (gratis ? '<b style="color:#00aa00">GRATIS 🎉</b>' : '$'+envio.toLocaleString('es-AR')) + '</span></div>'
+      + '<div class="caja-line-tot" style="margin-top:8px"><span>TOTAL</span><span>$' + total.toLocaleString('es-AR') + '</span></div>';
+  }
+  var cn = document.getElementById('cajaNota');
+  if (cn) cn.innerHTML = '🛵 Entrega inmediata · 🌙 Comprá a cualquier hora: fuera de horario tu pedido sale apenas empieza el reparto (8:00)';
+}
 function irACaja() {
   if (!Object.keys(cart).length) { showToast('Tu carrito está vacío'); return; }
-  var pc = document.getElementById('pasoCarrito'), pj = document.getElementById('pasoCaja');
-  if (pc) pc.style.display = 'none';
-  if (pj) pj.style.display = '';
-  var h = document.querySelector('#cartSidebar .cart-header h2'); if (h) h.textContent = 'Caja';
-  var items = document.getElementById('cartItems'); if (items) items.scrollTop = items.scrollHeight;
+  renderCaja();
+  // cerrar el carrito y abrir la caja como página aparte
+  var sb = document.getElementById('cartSidebar');
+  if (sb) sb.classList.remove('open');
+  var ov = document.getElementById('cartOverlay'); if (ov) ov.classList.remove('open');
+  var cp = document.getElementById('cajaPage');
+  if (cp) { cp.classList.add('open'); cp.scrollTop = 0; }
+  _syncBotFab();
 }
 function volverAlCarrito() {
-  var pc = document.getElementById('pasoCarrito'), pj = document.getElementById('pasoCaja');
-  if (pc) pc.style.display = '';
-  if (pj) pj.style.display = 'none';
-  var h = document.querySelector('#cartSidebar .cart-header h2'); if (h) h.textContent = 'Tu pedido';
+  var cp = document.getElementById('cajaPage');
+  if (cp) cp.classList.remove('open');
+  // reabrir el carrito solo si hay algo; si se vació, dejar todo cerrado
+  if (Object.keys(cart).length) {
+    var sb = document.getElementById('cartSidebar'); if (sb) sb.classList.add('open');
+    var ov = document.getElementById('cartOverlay'); if (ov) ov.classList.add('open');
+  }
+  _syncBotFab();
 }
 
 function _updateFabCaja() {
@@ -3501,9 +3593,36 @@ function _updateFabCaja() {
 function toggleCart() {
   var sb = document.getElementById('cartSidebar');
   var abriendo = !sb.classList.contains('open');
+  // si venís de la caja, cerrala al volver al carrito
+  var cp = document.getElementById('cajaPage'); if (cp) cp.classList.remove('open');
   sb.classList.toggle('open');
   document.getElementById('cartOverlay').classList.toggle('open');
-  if (abriendo) volverAlCarrito();   // siempre abrir en el paso "carrito"
+  _syncBotFab();
+}
+
+// ── Burbuja del bot: ocultar cuando molesta / poder cerrarla ──
+var _botFabCerrado = false;
+function _syncBotFab() {
+  var fab = document.getElementById('botFab'), x = document.getElementById('botFabX');
+  if (!fab) return;
+  var sb = document.getElementById('cartSidebar');
+  var cp = document.getElementById('cajaPage');
+  var tapado = (sb && sb.classList.contains('open')) || (cp && cp.classList.contains('open'));
+  var mostrar = !_botFabCerrado && !tapado;
+  fab.style.display = mostrar ? 'flex' : 'none';
+  if (x) x.style.display = mostrar ? 'flex' : 'none';
+  var re = document.getElementById('botReabrir');
+  if (re) re.style.display = (_botFabCerrado && !tapado) ? 'flex' : 'none';
+}
+function cerrarBotFab(ev) {
+  if (ev) ev.stopPropagation();
+  _botFabCerrado = true;
+  cerrarBot();
+  _syncBotFab();
+}
+function reabrirBotFab() {
+  _botFabCerrado = false;
+  _syncBotFab();
 }
 
 function showToast(msg) {
