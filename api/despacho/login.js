@@ -6,11 +6,37 @@
 import { rpc, json, cors, cuerpo, dbConfigurada } from '../_lib/db.js';
 import { crearToken, claveValida, frenarIntentos, limpiarIntentos } from '../_lib/auth.js';
 
+/** Devuelve la lista de variables de entorno que faltan, para poder decirlo. */
+function faltantes(rol) {
+  const f = [];
+  if (!process.env.DESPACHO_SECRET || process.env.DESPACHO_SECRET.length < 16) {
+    f.push('DESPACHO_SECRET (minimo 16 caracteres)');
+  }
+  if (rol === 'panel' && !process.env.ADMIN_PASSWORD) f.push('ADMIN_PASSWORD');
+  if (rol === 'repartidor') {
+    if (!process.env.SUPABASE_URL) f.push('SUPABASE_URL');
+    if (!process.env.SUPABASE_SERVICE_KEY) f.push('SUPABASE_SERVICE_KEY');
+  }
+  return f;
+}
+
 export default async function handler(req, res) {
   if (cors(req, res, 'POST, OPTIONS')) return;
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Metodo no permitido' });
 
   const b = cuerpo(req);
+
+  // Antes de nada: si falta configuracion, decirlo claro en vez de un 500 opaco.
+  // Los nombres de las variables no son secretos; los valores nunca se exponen.
+  const falta = faltantes(b.rol);
+  if (falta.length) {
+    return json(res, 503, {
+      ok: false,
+      sin_configurar: true,
+      error: 'Falta configurar en Vercel: ' + falta.join(', '),
+      faltantes: falta,
+    });
+  }
   const ip =
     (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
     req.socket?.remoteAddress ||
