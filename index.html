@@ -7625,10 +7625,18 @@ document.addEventListener('click', function(ev) {
 
   /* ─── 4. HELPERS ────────────────────────────────────────────────────── */
 
+  // OJO: en este sitio el carrito se declara con "let cart", asi que vive en
+  // el ambito lexico global y NO existe como window.cart (a diferencia de las
+  // funciones, que si quedan en window). Leerlo por window devuelve undefined
+  // y el tracking reportaria compras con valor $0.
+  function leerCarrito() {
+    try { return cart || {}; } catch (e) { return window.cart || {}; }
+  }
+
   // Valor del carrito en el momento de la llamada.
   function valorCarrito() {
     try {
-      var items = Object.values(window.cart || {});
+      var items = Object.values(leerCarrito());
       var total = items.reduce(function (a, i) { return a + (i.qty || 0) * (i.price || 0); }, 0);
       return {
         valor: Math.round(total),
@@ -7801,15 +7809,26 @@ document.addEventListener('click', function(ev) {
   var original = window.recordarCompra;
   if (typeof original !== 'function') return;
 
+  // OJO: "cart" y "userProfile" se declaran con let/const en el ambito lexico
+  // global, asi que NO son window.cart ni window.userProfile (eso devuelve
+  // undefined). Hay que referenciarlos directo. El fallback a window queda
+  // por si en el futuro se mueven a variables globales clasicas.
+  function leerCarrito() {
+    try { return cart || {}; } catch (e) { return window.cart || {}; }
+  }
+  function leerPerfil() {
+    try { return userProfile || null; } catch (e) { return window.userProfile || null; }
+  }
+
   function armarPedido(canal) {
-    var items = Object.values(window.cart || {});
+    var items = Object.values(leerCarrito());
     if (!items.length) return null;
 
     var info = (typeof getDeliveryInfo === 'function')
       ? getDeliveryInfo()
       : { costo: 0, gratis: true, subtotal: 0 };
 
-    var p = window.userProfile || {};
+    var p = leerPerfil() || {};
     var direccion = [p.direccion, p.piso].filter(Boolean).join(', ');
     if (!direccion) return null;   // sin direccion no hay pedido que despachar
 
