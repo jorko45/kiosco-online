@@ -9,7 +9,9 @@ USUARIO Y CLAVE DE FORTI.txt
 
 # Material de campana publicitaria — NO debe publicarse en el sitio
 # (Vercel sirve la raiz del repo, asi que todo lo que se commitea queda online)
-campana/
+# La barra inicial ancla el patron a la raiz: sin ella tambien se excluiria
+# cualquier carpeta "campana" anidada.
+/campana/
 
 # Basura de LibreOffice/Excel (archivos abiertos)
 .~lock.*#

@@ -1,18 +1,28 @@
 # Archivos que estan en el repo pero NO deben publicarse en k24hs.com.
 # Vercel sirve la raiz del proyecto, asi que sin esto quedarian descargables.
 
-# Material de campana publicitaria
-campana/
+# ⚠ OJO CON LA BARRA INICIAL.
+# Este archivo usa la sintaxis de .gitignore: un patron SIN barra inicial
+# matchea una carpeta con ese nombre en CUALQUIER nivel de profundidad.
+# Escribir "despacho/" excluye tambien "api/despacho/" y deja al sitio
+# sin las funciones serverless. La barra inicial ancla el patron a la raiz.
 
-# SQL y documentacion del sistema de despacho
-# (el esquema de la base no tiene por que ser publico)
-despacho/
+# Material de campana publicitaria (solo la carpeta de la raiz)
+/campana/
 
-# Scripts de trabajo local
+# SQL y documentacion del sistema de despacho (solo la carpeta de la raiz).
+# NO tocar /api/despacho/, que son las funciones serverless.
+/despacho/
+
+# Scripts de trabajo local (estos si conviene que matcheen en cualquier nivel)
 *.py
 *.bat
 *.ps1
 __pycache__/
+
+# Salvaguarda explicita: las funciones serverless SIEMPRE se publican
+!/api/
+!/api/**
 
 # Planillas y volcados
 *.xlsx
