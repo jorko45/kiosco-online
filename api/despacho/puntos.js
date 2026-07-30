@@ -23,14 +23,37 @@ export default async function handler(req, res) {
 
       // Sin pedido: la lista completa para administrar
       if (!pedidoId) {
-        const [puntos, abiertos] = await Promise.all([
+        const [puntos, abiertos, horarios] = await Promise.all([
           seleccionar('puntos_preparacion', { order: 'nombre.asc' }),
           seleccionar('v_puntos_abiertos', { select: 'id,abierto_ahora' }),
+          seleccionar('punto_horarios', { select: 'punto_id,dia_semana,desde,hasta' }),
         ]);
         const estado = new Map(abiertos.map((a) => [a.id, a.abierto_ahora]));
+
+        // Para el formulario de edicion alcanza con el tramo del lunes.
+        // Si un punto tiene horarios distintos por dia, lo avisamos para no
+        // pisarlos sin querer desde el panel.
+        const porPunto = new Map();
+        for (const h of horarios) {
+          if (!porPunto.has(h.punto_id)) porPunto.set(h.punto_id, []);
+          porPunto.get(h.punto_id).push(h);
+        }
+
         return json(res, 200, {
           ok: true,
-          puntos: puntos.map((p) => ({ ...p, abierto_ahora: estado.get(p.id) ?? false })),
+          puntos: puntos.map((p) => {
+            const hs = porPunto.get(p.id) || [];
+            const tramos = new Set(hs.map((h) => `${h.desde}-${h.hasta}`));
+            const primero = hs[0] || null;
+            return {
+              ...p,
+              abierto_ahora: estado.get(p.id) ?? false,
+              desde: primero ? String(primero.desde).slice(0, 5) : null,
+              hasta: primero ? String(primero.hasta).slice(0, 5) : null,
+              horario_uniforme: tramos.size <= 1,
+              es_24h: primero ? String(primero.desde) === String(primero.hasta) : false,
+            };
+          }),
         });
       }
 
@@ -81,10 +104,22 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const b = cuerpo(req);
 
-      // Edicion
+      // ── Edicion ────────────────────────────────────────────────
       if (b.id) {
         const cambios = {};
+
         if (b.activo !== undefined) cambios.activo = Boolean(b.activo);
+        if (b.nombre !== undefined) {
+          const n = String(b.nombre).trim();
+          if (!n) return json(res, 400, { ok: false, error: 'El nombre no puede quedar vacío' });
+          cambios.nombre = n.slice(0, 120);
+        }
+        if (b.tipo !== undefined) {
+          if (!TIPOS.includes(b.tipo)) {
+            return json(res, 400, { ok: false, error: `Tipo inválido. Debe ser: ${TIPOS.join(', ')}` });
+          }
+          cambios.tipo = b.tipo;
+        }
         if (b.radio_km !== undefined) {
           const r = Number(b.radio_km);
           if (!Number.isFinite(r) || r <= 0) {
@@ -97,11 +132,56 @@ export default async function handler(req, res) {
         if (b.contacto !== undefined) cambios.contacto = String(b.contacto).slice(0, 120) || null;
         if (b.notas !== undefined) cambios.notas = String(b.notas).slice(0, 500) || null;
 
-        if (!Object.keys(cambios).length) {
+        // Cambio de direccion: hay que volver a ubicarla, si no las
+        // coordenadas quedan apuntando al domicilio anterior y la
+        // sugerencia por cercania miente sin que nadie lo note.
+        if (b.direccion !== undefined) {
+          const d = String(b.direccion).trim();
+          if (d.length < 5) return json(res, 400, { ok: false, error: 'Dirección demasiado corta' });
+          cambios.direccion = d.slice(0, 300);
+
+          if (Number.isFinite(Number(b.lat)) && Number.isFinite(Number(b.lng))) {
+            cambios.lat = Number(b.lat);
+            cambios.lng = Number(b.lng);
+          } else {
+            const { geocodificar } = await import('../_lib/geo.js');
+            const g = await geocodificar(d);
+            if (!g) {
+              return json(res, 400, {
+                ok: false,
+                error: 'No pudimos ubicar esa dirección. Revisala o cargá lat/lng a mano.',
+              });
+            }
+            cambios.lat = g.lat;
+            cambios.lng = g.lng;
+          }
+        }
+
+        // ── Horarios ──
+        // Se reemplazan los 7 dias con el mismo tramo. Si el punto tenia
+        // horarios distintos por dia, el panel avisa antes de pisarlos.
+        let horarioCambiado = false;
+        if (b.desde !== undefined && b.hasta !== undefined) {
+          const hora = /^([01]\d|2[0-3]):[0-5]\d$/;
+          const desde = String(b.desde).slice(0, 5);
+          const hasta = String(b.hasta).slice(0, 5);
+          if (!hora.test(desde) || !hora.test(hasta)) {
+            return json(res, 400, { ok: false, error: 'Horario inválido. Usá formato HH:MM.' });
+          }
+          await rpc('reemplazar_horario', { p_punto_id: b.id, p_desde: desde, p_hasta: hasta });
+          horarioCambiado = true;
+        }
+
+        if (!Object.keys(cambios).length && !horarioCambiado) {
           return json(res, 400, { ok: false, error: 'No se indicó ningún cambio' });
         }
-        const r = await actualizar('puntos_preparacion', { id: `eq.${b.id}` }, cambios);
-        return json(res, 200, { ok: true, punto: r[0] });
+
+        let punto = null;
+        if (Object.keys(cambios).length) {
+          const r = await actualizar('puntos_preparacion', { id: `eq.${b.id}` }, cambios);
+          punto = r[0];
+        }
+        return json(res, 200, { ok: true, punto, horario_actualizado: horarioCambiado });
       }
 
       // Alta

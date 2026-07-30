@@ -119,8 +119,13 @@ begin
     select 1 from punto_horarios h
      where h.punto_id = p_punto_id
        and (
+         -- ABIERTO 24 HORAS: desde = hasta (ej: 00:00 a 00:00).
+         -- Es la forma natural de escribirlo y hay que contemplarla explicitamente:
+         -- sin esta linea no entra en ninguno de los otros casos y el punto
+         -- queda cerrado siempre, sin que nada avise.
+         (h.hasta = h.desde and h.dia_semana = v_dow)
          -- tramo normal dentro del mismo dia
-         (h.hasta > h.desde and h.dia_semana = v_dow and v_hora >= h.desde and v_hora < h.hasta)
+         or (h.hasta > h.desde and h.dia_semana = v_dow and v_hora >= h.desde and v_hora < h.hasta)
          -- tramo que cruza medianoche: cuenta el final de hoy...
          or (h.hasta < h.desde and h.dia_semana = v_dow and v_hora >= h.desde)
          -- ...y la madrugada del dia siguiente
@@ -247,6 +252,26 @@ end $$;
 
 revoke all on function crear_punto(text,text,text,double precision,double precision,time,time,numeric)
   from anon, authenticated;
+
+-- Reemplaza el horario completo de un punto por un mismo tramo los 7 dias.
+-- Es lo que usa el boton de editar del panel. Para horarios distintos por
+-- dia (sabados corto, domingo cerrado) hay que insertar en punto_horarios
+-- a mano; el panel avisa cuando detecta que un punto ya los tiene.
+--
+-- Para 24 horas: desde = hasta (ej: 00:00 y 00:00).
+create or replace function reemplazar_horario(
+  p_punto_id uuid, p_desde time, p_hasta time
+) returns void language plpgsql security definer as $$
+declare d smallint;
+begin
+  delete from punto_horarios where punto_id = p_punto_id;
+  for d in 0..6 loop
+    insert into punto_horarios (punto_id, dia_semana, desde, hasta)
+    values (p_punto_id, d, p_desde, p_hasta);
+  end loop;
+end $$;
+
+revoke all on function reemplazar_horario(uuid, time, time) from anon, authenticated;
 
 -- Que puntos hay abiertos ahora mismo. Util para el panel y para detectar
 -- el hueco nocturno: si esto devuelve 0 filas a las 3 AM, no hay con que

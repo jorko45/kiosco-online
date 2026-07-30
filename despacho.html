@@ -178,10 +178,10 @@
   </div>
 </div>
 
-<!-- ── Modal: alta de punto ── -->
+<!-- ── Modal: alta y edición de punto ── -->
 <div class="modal" id="mPunto">
   <div class="modal-caja">
-    <h3>Nuevo punto de preparación</h3>
+    <h3 id="tituloPunto">Nuevo punto de preparación</h3>
     <label>Nombre</label>
     <input id="pNombre" placeholder="Mami Nueva Córdoba">
     <label>Tipo</label>
@@ -192,10 +192,17 @@
     </select>
     <label>Dirección (la ubicamos sola)</label>
     <input id="pDir" placeholder="Bv. Chacabuco 500">
-    <div class="dos">
+
+    <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer">
+      <input type="checkbox" id="p24" style="width:auto;margin:0">
+      <span style="color:var(--txt);font-size:14px">Abierto las 24 horas</span>
+    </label>
+    <div class="dos" id="horarioNormal">
       <div><label>Abre</label><input id="pDesde" type="time" value="08:00"></div>
       <div><label>Cierra</label><input id="pHasta" type="time" value="21:00"></div>
     </div>
+    <div class="sug" id="avisoHorario"></div>
+
     <div class="dos">
       <div><label>Radio que cubre (km)</label><input id="pRadio" type="number" step="0.5" value="5"></div>
       <div><label>Teléfono</label><input id="pTel" placeholder="351..."></div>
@@ -496,17 +503,28 @@ function pintarPuntos(){
   }
   h += '<table class="tabla-p"><tr><th></th><th>Punto</th><th>Tipo</th><th>Radio</th><th>Horario</th><th></th></tr>';
   puntosCache.forEach(function(p){
-    h += '<tr>' +
+    var hor = p.es_24h ? '24 horas'
+            : (p.desde ? p.desde + '–' + p.hasta : 'sin horario');
+    if (!p.horario_uniforme) hor += ' *';
+    h += '<tr' + (p.activo ? '' : ' style="opacity:.45"') + '>' +
       '<td><span class="luz-p' + (p.abierto_ahora ? ' on' : '') + '"></span></td>' +
       '<td>' + esc(p.nombre) + '<br><small style="color:var(--muted)">' + esc(p.direccion) + '</small></td>' +
       '<td>' + ({mami:'Mami', kiosco_adherido:'Kiosco', propio:'Propio'}[p.tipo] || p.tipo) + '</td>' +
       '<td>' + p.radio_km + ' km</td>' +
-      '<td>' + (p.abierto_ahora ? 'abierto' : 'cerrado') + '</td>' +
-      '<td><button class="btn btn-g btn-s" onclick="togglePunto(\'' + p.id + '\',' + (!p.activo) + ')">' +
-        (p.activo ? 'Desactivar' : 'Activar') + '</button></td>' +
+      '<td>' + hor + '<br><small style="color:var(--muted)">' +
+        (p.abierto_ahora ? 'abierto ahora' : 'cerrado ahora') + '</small></td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-g btn-s" onclick="editarPunto(\'' + p.id + '\')">Editar</button> ' +
+        '<button class="btn btn-g btn-s" onclick="togglePunto(\'' + p.id + '\',' + (!p.activo) + ')">' +
+          (p.activo ? 'Desactivar' : 'Activar') + '</button>' +
+      '</td>' +
     '</tr>';
   });
   h += '</table>';
+  if (puntosCache.some(function(p){ return !p.horario_uniforme; })) {
+    h += '<div class="sug" style="margin-top:10px">* Este punto tiene horarios distintos según el día. ' +
+         'Si lo editás desde acá, se le aplica el mismo horario a los siete días.</div>';
+  }
   $('puntos').innerHTML = h;
 }
 
@@ -592,29 +610,78 @@ $('btnWspNodo').addEventListener('click', function(){
 function abrirModal(id){ $(id).classList.add('ver'); }
 window.cerrarModal = function(id){ $(id).classList.remove('ver'); };
 
-$('btnNuevoPunto').addEventListener('click', function(){
-  $('errPunto').textContent = '';
-  abrirModal('mPunto');
+var editandoId = null;   // null = alta, uuid = edición
+
+// El check de 24 horas y los campos de hora son lo mismo por debajo:
+// 24hs se guarda como desde = hasta.
+$('p24').addEventListener('change', function(){
+  $('horarioNormal').style.display = this.checked ? 'none' : 'grid';
 });
+
+function abrirFormPunto(punto){
+  editandoId = punto ? punto.id : null;
+  $('errPunto').textContent = '';
+  $('tituloPunto').textContent = punto ? 'Editar punto' : 'Nuevo punto de preparación';
+  $('btnGuardarPunto').textContent = punto ? 'Guardar cambios' : 'Guardar';
+
+  $('pNombre').value = punto ? punto.nombre : '';
+  $('pTipo').value   = punto ? punto.tipo : 'mami';
+  $('pDir').value    = punto ? punto.direccion : '';
+  $('pRadio').value  = punto ? punto.radio_km : 5;
+  $('pTel').value    = punto ? (punto.telefono || '') : '';
+
+  var es24 = punto ? !!punto.es_24h : false;
+  $('p24').checked = es24;
+  $('horarioNormal').style.display = es24 ? 'none' : 'grid';
+  $('pDesde').value = (punto && punto.desde && !es24) ? punto.desde : '08:00';
+  $('pHasta').value = (punto && punto.hasta && !es24) ? punto.hasta : '21:00';
+
+  $('avisoHorario').textContent = (punto && !punto.horario_uniforme)
+    ? 'Ojo: este punto tiene horarios distintos según el día. Si guardás, se le aplica el mismo a los siete.'
+    : '';
+
+  abrirModal('mPunto');
+}
+
+$('btnNuevoPunto').addEventListener('click', function(){ abrirFormPunto(null); });
+
+window.editarPunto = function(id){
+  var p = puntosCache.filter(function(x){ return x.id === id; })[0];
+  if (p) abrirFormPunto(p);
+};
 
 $('btnGuardarPunto').addEventListener('click', async function(){
   var b = $('btnGuardarPunto');
-  b.disabled = true; $('errPunto').textContent = 'Ubicando la dirección…';
+  var nombre = $('pNombre').value.trim();
+  var dir = $('pDir').value.trim();
+  if (!nombre || !dir) { $('errPunto').textContent = 'Falta el nombre o la dirección'; return; }
+
+  b.disabled = true;
+  $('errPunto').textContent = 'Ubicando la dirección…';
+
+  // 24 horas se expresa como desde = hasta
+  var desde = $('p24').checked ? '00:00' : $('pDesde').value;
+  var hasta = $('p24').checked ? '00:00' : $('pHasta').value;
+
+  var cuerpo = {
+    nombre: nombre,
+    tipo: $('pTipo').value,
+    direccion: dir,
+    desde: desde,
+    hasta: hasta,
+    radio_km: Number($('pRadio').value) || 5,
+    telefono: $('pTel').value.trim()
+  };
+  if (editandoId) cuerpo.id = editandoId;
+
   try {
-    var d = await api('puntos', { method:'POST', body:{
-      nombre: $('pNombre').value.trim(),
-      tipo:   $('pTipo').value,
-      direccion: $('pDir').value.trim(),
-      desde:  $('pDesde').value,
-      hasta:  $('pHasta').value,
-      radio_km: Number($('pRadio').value) || 5,
-      telefono: $('pTel').value.trim()
-    }});
-    toast('Punto creado');
+    await api('puntos', { method:'POST', body: cuerpo });
+    toast(editandoId ? 'Punto actualizado' : 'Punto creado');
     cerrarModal('mPunto');
-    ['pNombre','pDir','pTel'].forEach(function(i){ $(i).value = ''; });
-    sugerencias = {};
+    editandoId = null;
+    sugerencias = {};     // las distancias cambian si se movió el punto
     cargarPuntos();
+    refrescar();
   } catch (e) {
     $('errPunto').textContent = e.message;
   } finally { b.disabled = false; }
