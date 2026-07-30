@@ -81,6 +81,22 @@
   .cobro b{font-family:Rajdhani,sans-serif;font-size:26px;display:block;color:var(--warn)}
   .cobro small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
   .cobro.pagado b{color:var(--ok)}
+  .vuelto{border-top:1px dashed var(--line);margin-top:10px;padding-top:9px;
+          display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+  .vuelto b{font-family:Rajdhani,sans-serif;font-size:20px;color:#fff;display:inline}
+  .sello{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 9px;
+         border-radius:11px;margin-bottom:9px}
+  .sello.ok{background:#0d3a1e;color:#4ade80}
+  .sello.nuevo{background:#3d2800;color:#f5c469}
+  .caja-turno{background:var(--panel);border:1px solid var(--line);border-radius:11px;
+              padding:13px 15px;margin-bottom:14px}
+  .caja-turno h4{font-family:Rajdhani,sans-serif;font-size:11px;letter-spacing:2px;
+                 text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:700}
+  .cl{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}
+  .cl span:last-child{font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px}
+  .cl.total{border-top:1px solid var(--line);margin-top:7px;padding-top:9px}
+  .cl.total span:last-child{color:var(--warn);font-size:22px}
+  .cl.gris span{color:var(--muted)}
   .fila{display:flex;gap:9px;margin-bottom:9px}
   .fila .btn{font-size:15px;padding:14px}
   .vacio{text-align:center;color:var(--muted);padding:50px 20px;font-size:15px;line-height:1.6}
@@ -126,6 +142,9 @@
       <div style="text-align:right"><b id="nHoy">0</b><span style="color:var(--muted);font-size:12px">entregados hoy</span></div>
       <div class="gps"><span class="luz" id="luzGps"></span><span id="txtGps">GPS</span></div>
     </div>
+
+    <!-- Rendición del turno: lo que tiene en el bolsillo -->
+    <div class="caja-turno" id="cajaTurno"></div>
 
     <div id="lista"></div>
 
@@ -213,12 +232,27 @@ async function cargar(){
     $('miDato').textContent = enTurno ? 'en turno' : 'fuera de turno';
     $('nPed').textContent = pedidos.length;
     $('nHoy').textContent = d.entregados_hoy || 0;
+    pintarCaja(d.caja);
 
     if (yo.en_turno !== enTurno) { enTurno = yo.en_turno; sincronizarTurno(); }
     pintar();
   }catch(e){
     if (!/Sesión vencida/.test(e.message)) toast('⚠ ' + e.message);
   }
+}
+
+// Cuánto efectivo tiene que rendir al cerrar el turno.
+// Se separa lo que cobró en mano de lo que ya venía pagado y nunca tocó.
+function pintarCaja(c){
+  if (!c || !c.entregados){ $('cajaTurno').innerHTML = ''; return; }
+  var h = '<h4>Tu turno</h4>';
+  h += '<div class="cl"><span>Cobrado en efectivo</span><span>' + pesos(c.cobrado_efectivo) + '</span></div>';
+  if (c.ya_pagados){
+    h += '<div class="cl gris"><span>Ya pagados (' + c.ya_pagados + ') — no los tocaste</span><span>' +
+         pesos(c.monto_ya_pagado) + '</span></div>';
+  }
+  h += '<div class="cl total"><span>A rendir</span><span>' + pesos(c.a_rendir) + '</span></div>';
+  $('cajaTurno').innerHTML = h;
 }
 
 function pintar(){
@@ -240,9 +274,16 @@ function tarjeta(p){
   var h = '<div class="ped' + (camino?' camino':'') + '">';
   h += '<div class="ped-top"><span class="cod">' + esc(p.codigo) + '</span>' +
        '<span class="chip' + (camino?' camino':'') + '">' + (camino?'En camino':'Por retirar') + '</span></div>';
+  // Domicilio conocido o nuevo. Importa de madrugada.
+  h += p.verificado
+    ? '<div class="sello ok">✓ Domicilio verificado · ' + p.entregas_previas +
+      ' entrega' + (p.entregas_previas > 1 ? 's' : '') + ' previa' + (p.entregas_previas > 1 ? 's' : '') + '</div>'
+    : '<div class="sello nuevo">Primera vez en este domicilio</div>';
+
   h += '<div class="dir">📍 ' + esc(p.direccion) + '</div>';
   if (p.direccion_notas) h += '<div class="notas">⚠ ' + esc(p.direccion_notas) + '</div>';
-  h += '<div class="cli">' + esc(p.cliente_nombre || 'Sin nombre') + '</div>';
+  h += '<div class="cli">' + esc(p.cliente_nombre || 'Sin nombre') +
+       (p.cliente_telefono ? ' · ' + esc(p.cliente_telefono) : '') + '</div>';
 
   var items = (p.items||[]).map(function(i){
     return i.qty + '× ' + esc(i.nombre) + (i.size ? ' ' + esc(i.size) : '');
@@ -252,11 +293,20 @@ function tarjeta(p){
   var cobra = !p.pagado && p.metodo_pago !== 'mercadopago';
   h += '<div class="cobro' + (cobra?'':' pagado') + '"><small>' +
        (cobra ? 'cobrar en ' + esc(p.metodo_pago || 'efectivo') : 'ya está pago') +
-       '</small><b>' + pesos(p.total) + '</b></div>';
+       '</small><b>' + pesos(p.total) + '</b>';
+  // Vuelto: para salir con el cambio justo y no volver al kiosco
+  if (cobra && p.paga_con) {
+    h += '<div class="vuelto"><span>Paga con ' + pesos(p.paga_con) + '</span>' +
+         '<span>vuelto <b>' + pesos(p.vuelto) + '</b></span></div>';
+  } else if (cobra) {
+    h += '<div class="vuelto"><span>No avisó con cuánto paga</span><span>llevá cambio</span></div>';
+  }
+  h += '</div>';
 
   h += '<div class="fila">';
   h += '<button class="btn btn-g" onclick="navegar(\'' + destino + '\')">🗺 Ir</button>';
-  if (tel) h += '<button class="btn btn-g" onclick="wsp(\'' + tel + '\')">💬 Cliente</button>';
+  if (tel) h += '<button class="btn btn-g" onclick="llamar(\'' + tel + '\')">📞 Llamar</button>';
+  if (tel) h += '<button class="btn btn-g" onclick="wsp(\'' + tel + '\')">💬 WhatsApp</button>';
   h += '</div>';
 
   if (!camino) {
@@ -270,6 +320,7 @@ function tarjeta(p){
 
 window.navegar = function(d){ window.open('https://www.google.com/maps/dir/?api=1&destination=' + d, '_blank'); };
 window.wsp = function(t){ window.open('https://wa.me/' + t, '_blank'); };
+window.llamar = function(t){ window.location.href = 'tel:+54' + t; };
 
 window.marcar = async function(id, estado){
   try{

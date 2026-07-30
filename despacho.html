@@ -578,10 +578,13 @@ window.verLista = function(pedidoId){
   t += p.punto_nombre ? ('Preparar en: ' + p.punto_nombre + '\n') : '';
   t += '─────────────\n';
   (p.items || []).forEach(function(i){
-    t += '• ' + i.qty + ' × ' + i.nombre + (i.size ? ' ' + i.size : '') + '\n';
+    t += '• ' + i.qty + ' × ' + i.nombre + (i.size ? ' ' + i.size : '') +
+         '   ' + pesos(i.qty * i.precio) + '\n';
   });
   t += '─────────────\n';
-  t += 'Total de items: ' + (p.items || []).reduce(function(a,i){ return a + i.qty; }, 0);
+  // El subtotal es solo mercadería: el envío no es asunto del nodo.
+  t += 'Productos: ' + pesos(p.subtotal) + '\n';
+  t += 'Items: ' + (p.items || []).reduce(function(a,i){ return a + i.qty; }, 0);
   listaActual = { texto: t, telefono: String(p.punto_telefono || '').replace(/\D/g,'') };
   $('listaTexto').textContent = t;
   $('btnWspNodo').style.display = listaActual.telefono ? '' : 'none';

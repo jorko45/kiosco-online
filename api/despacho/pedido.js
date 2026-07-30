@@ -100,6 +100,12 @@ export default async function handler(req, res) {
     metodo_pago: metodo,
     pagado: false,
     mp_payment_id: b.mp_payment_id ? String(b.mp_payment_id).slice(0, 80) : null,
+    // Con cuanto paga: solo si es efectivo y cubre el total.
+    // La base tiene un check por si acaso, pero mejor no llegar a el.
+    paga_con:
+      metodo === 'efectivo' && Number.isFinite(Number(b.paga_con)) && Number(b.paga_con) >= total
+        ? Math.round(Number(b.paga_con))
+        : null,
   };
 
   try {

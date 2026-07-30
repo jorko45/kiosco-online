@@ -7,7 +7,7 @@
 // Todo referido al repartidor del token: nunca recibe un id por parametro,
 // asi no hay forma de mirar ni tocar los pedidos de otro.
 
-import { seleccionar, actualizar, insertar, json, cors, cuerpo } from '../_lib/db.js';
+import { seleccionar, actualizar, insertar, rpc, json, cors, cuerpo } from '../_lib/db.js';
 import { exigirRepartidor } from '../_lib/auth.js';
 
 export default async function handler(req, res) {
@@ -19,11 +19,11 @@ export default async function handler(req, res) {
   try {
     // ── GET: mis pedidos ───────────────────────────────────────────
     if (req.method === 'GET') {
-      const [pedidos, yo] = await Promise.all([
+      const [pedidos, yo, caja] = await Promise.all([
         seleccionar('pedidos', {
           select:
             'id,codigo,estado,cliente_nombre,cliente_telefono,direccion,direccion_notas,' +
-            'lat,lng,items,total,envio,metodo_pago,pagado,creado_at,asignado_at,retirado_at',
+            'lat,lng,items,total,envio,metodo_pago,pagado,paga_con,creado_at,asignado_at,retirado_at',
           repartidor_id: `eq.${sesion.id}`,
           estado: 'in.(asignado,en_camino)',
           order: 'asignado_at.asc',
@@ -32,23 +32,44 @@ export default async function handler(req, res) {
           select: 'id,nombre,en_turno,turno_inicio',
           id: `eq.${sesion.id}`,
         }),
+        // Rendicion del turno: cuanto efectivo tiene que entregar
+        rpc('caja_repartidor', { p_repartidor_id: sesion.id }),
       ]);
 
-      // Cuantas entregó hoy, para que vea su propio avance
-      const desdeHoy = new Date();
-      desdeHoy.setHours(0, 0, 0, 0);
-      const hoy = await seleccionar('pedidos', {
-        select: 'id',
-        repartidor_id: `eq.${sesion.id}`,
-        estado: 'eq.entregado',
-        entregado_at: `gte.${desdeHoy.toISOString()}`,
-      });
+      // Domicilio verificado: ¿ya le entregamos antes a este cliente en
+      // esta direccion? Es dato de seguridad para el que reparte de noche.
+      const conHistorial = await Promise.all(
+        pedidos.map(async (p) => {
+          let previas = 0;
+          try {
+            previas = await rpc('entregas_previas', {
+              p_telefono: p.cliente_telefono,
+              p_direccion: p.direccion,
+            });
+          } catch (e) { /* si falla, se muestra como domicilio nuevo */ }
+          return {
+            ...p,
+            entregas_previas: Number(previas) || 0,
+            verificado: (Number(previas) || 0) > 0,
+            vuelto: p.paga_con ? Math.max(0, p.paga_con - p.total) : null,
+          };
+        })
+      );
+
+      const c = (Array.isArray(caja) ? caja[0] : caja) || {};
 
       return json(res, 200, {
         ok: true,
         repartidor: yo[0] || { id: sesion.id, nombre: sesion.nombre },
-        pedidos,
-        entregados_hoy: hoy.length,
+        pedidos: conHistorial,
+        entregados_hoy: c.entregados || 0,
+        caja: {
+          entregados: c.entregados || 0,
+          cobrado_efectivo: c.cobrado_efectivo || 0,
+          ya_pagados: c.ya_pagados || 0,
+          monto_ya_pagado: c.monto_ya_pagado || 0,
+          a_rendir: c.a_rendir || 0,
+        },
       });
     }
 

@@ -1829,9 +1829,26 @@
         <span>💵 Efectivo al recibir</span>
         <span>🏦 Transferencia</span>
       </div>
+
+      <!-- Vuelto: si el repartidor sabe con cuánto pagás, sale con el cambio justo -->
+      <div id="bloqueVuelto" style="background:#f7f7f7;border:1px solid #e3e3e3;border-radius:10px;padding:12px;margin-bottom:14px">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;color:#333;margin-bottom:3px">
+          ¿PAGÁS EN EFECTIVO? DECINOS CON CUÁNTO
+        </div>
+        <div style="font-size:12.5px;color:#777;line-height:1.5;margin-bottom:10px">
+          Así el repartidor sale con el vuelto justo y no perdés tiempo en la puerta.
+        </div>
+        <div id="chipsVuelto" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+      </div>
+
       <button class="btn-mp" id="btnMP" onclick="pagarMP()">💳 Pagar con MercadoPago</button>
       <button class="btn-wsp" id="btnWSP" onclick="pedirWSP()">💬 Enviar pedido por WhatsApp</button>
       <button class="btn-volver-carrito" onclick="volverAlCarrito()">← Volver al carrito</button>
+
+      <div style="margin-top:14px;font-size:12.5px;color:#777;line-height:1.55;border-top:1px solid #eee;padding-top:12px">
+        📞 El repartidor puede llamarte al teléfono que dejaste, para ubicar mejor la dirección
+        o confirmar que estás. Tené el celular a mano.
+      </div>
     </div>
   </div>
 </div>
@@ -7809,6 +7826,76 @@ document.addEventListener('click', function(ev) {
   var original = window.recordarCompra;
   if (typeof original !== 'function') return;
 
+  // ── Vuelto ────────────────────────────────────────────────────────
+  // El cliente elige con cuanto paga y el repartidor sale con el cambio
+  // justo. Es plata que hoy se pierde en viajes de vuelta al kiosco.
+  window.k24PagaCon = null;
+
+  function totalActual() {
+    try {
+      var i = getDeliveryInfo();
+      return i.subtotal + (i.gratis ? 0 : i.costo);
+    } catch (e) { return 0; }
+  }
+
+  // Billetes con los que realmente puede pagar: el importe justo y los
+  // redondeos hacia arriba mas comunes.
+  function opcionesVuelto(total) {
+    var ops = [{ v: total, txt: 'Justo' }];
+    [5000, 10000, 20000, 50000, 100000].forEach(function (paso) {
+      var m = Math.ceil(total / paso) * paso;
+      if (m > total && ops.length < 5 && !ops.some(function (o) { return o.v === m; })) {
+        ops.push({ v: m, txt: '$' + m.toLocaleString('es-AR') });
+      }
+    });
+    return ops;
+  }
+
+  function pintarChipsVuelto() {
+    var cont = document.getElementById('chipsVuelto');
+    if (!cont) return;
+    var total = totalActual();
+    if (!total) { cont.innerHTML = ''; return; }
+
+    var base = 'font-family:Rajdhani,sans-serif;font-weight:700;font-size:13.5px;padding:8px 13px;' +
+               'border-radius:8px;cursor:pointer;border:1.5px solid #ddd;background:#fff;color:#444';
+    var sel  = 'font-family:Rajdhani,sans-serif;font-weight:700;font-size:13.5px;padding:8px 13px;' +
+               'border-radius:8px;cursor:pointer;border:1.5px solid #CC0000;background:#CC0000;color:#fff';
+
+    cont.innerHTML = opcionesVuelto(total).map(function (o) {
+      var activo = window.k24PagaCon === o.v;
+      return '<button type="button" data-v="' + o.v + '" style="' + (activo ? sel : base) + '">' +
+             o.txt + '</button>';
+    }).join('') +
+    '<button type="button" data-v="otro" style="' + base + '">Otro</button>';
+
+    Array.prototype.forEach.call(cont.querySelectorAll('button'), function (b) {
+      b.onclick = function () {
+        if (b.dataset.v === 'otro') {
+          var r = prompt('¿Con cuánto vas a pagar?');
+          if (r === null) return;
+          var n = Math.round(Number(String(r).replace(/[^\d]/g, '')));
+          if (!n || n < total) { showToast('Tiene que ser igual o mayor a $' + total.toLocaleString('es-AR')); return; }
+          window.k24PagaCon = n;
+        } else {
+          var v = Number(b.dataset.v);
+          window.k24PagaCon = (window.k24PagaCon === v) ? null : v;
+        }
+        pintarChipsVuelto();
+      };
+    });
+  }
+
+  // Se repinta cada vez que se abre la caja: el total pudo cambiar.
+  var renderCajaOriginal = window.renderCaja;
+  if (typeof renderCajaOriginal === 'function') {
+    window.renderCaja = function () {
+      var r = renderCajaOriginal.apply(this, arguments);
+      try { pintarChipsVuelto(); } catch (e) {}
+      return r;
+    };
+  }
+
   // OJO: "cart" y "userProfile" se declaran con let/const en el ambito lexico
   // global, asi que NO son window.cart ni window.userProfile (eso devuelve
   // undefined). Hay que referenciarlos directo. El fallback a window queda
@@ -7847,7 +7934,9 @@ document.addEventListener('click', function(ev) {
       }),
       envio: info.gratis ? 0 : info.costo,
       total: info.subtotal + (info.gratis ? 0 : info.costo),
-      metodo_pago: metodo
+      metodo_pago: metodo,
+      // Solo tiene sentido si paga en efectivo al recibir
+      paga_con: (metodo === 'efectivo' && window.k24PagaCon) ? window.k24PagaCon : null
     };
   }
 

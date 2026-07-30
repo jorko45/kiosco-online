@@ -159,6 +159,19 @@ function pintar(p){
   if (p.metodo_pago) h += '<div class="fila"><span>Pago</span><span>' + esc(p.metodo_pago) + '</span></div>';
   h += '</div>';
 
+  // El repartidor puede necesitar llamar. Avisarlo antes evita que el
+  // cliente no atienda un numero desconocido y el pedido quede dando vueltas.
+  if (!terminado) {
+    h += '<div class="card" style="border-color:#3d2800;background:#1c1608">' +
+         '<div style="display:flex;gap:11px;align-items:flex-start">' +
+         '<span style="font-size:20px;line-height:1.2">📞</span>' +
+         '<div style="font-size:13.5px;line-height:1.6;color:#f5c469">' +
+         '<b style="font-family:Rajdhani,sans-serif;font-size:15px">Puede que te llamemos</b><br>' +
+         'El repartidor tiene tu teléfono y puede llamarte para ubicar mejor la dirección ' +
+         'o confirmar que estás. Atendé aunque el número no lo tengas agendado.' +
+         '</div></div></div>';
+  }
+
   h += '<a class="btn" href="/">Volver al kiosco</a>';
 
   document.getElementById('cont').innerHTML = h;
