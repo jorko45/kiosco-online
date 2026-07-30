@@ -3,7 +3,29 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>k24hs — Tu kiosco en tu celular</title>
+  <title>k24hs — Kiosco 24hs con delivery en Córdoba Capital</title>
+  <link rel="canonical" href="https://k24hs.com/">
+
+  <!-- ── SEO + vista previa al compartir el link (WhatsApp, Instagram, Facebook) ── -->
+  <meta name="description" content="Kiosco online abierto las 24 horas con delivery en Córdoba Capital. Bebidas, snacks, golosinas y almacén. Envío $5.000 y pagás al recibir.">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="k24hs">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:url" content="https://k24hs.com/">
+  <meta property="og:title" content="k24hs — Tu kiosco 24hs, a domicilio en Córdoba">
+  <meta property="og:description" content="Pedí bebidas, snacks y almacén a cualquier hora. Delivery en Córdoba Capital, envío $5.000 y pagás al recibir.">
+  <meta property="og:image" content="https://k24hs.com/img/og-k24.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Interior del kiosco k24hs con heladeras, góndolas y snacks">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="k24hs — Tu kiosco 24hs, a domicilio en Córdoba">
+  <meta name="twitter:description" content="Bebidas, snacks y almacén a cualquier hora. Delivery en Córdoba Capital.">
+  <meta name="twitter:image" content="https://k24hs.com/img/og-k24.jpg">
+
   <link rel="manifest" href="/manifest.json">
   <script>
     /* Capturar el evento de instalación lo antes posible (si esperamos al script del final, a veces ya se disparó y se pierde) */
@@ -7545,5 +7567,314 @@ document.addEventListener('click', function(ev) {
 <!-- Vercel Web Analytics (contador de visitas, sin cookies) -->
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     K24 · TRACKING DE PUBLICIDAD  (Meta Pixel + Google Ads)
+     ──────────────────────────────────────────────────────────────────────
+     Bloque autocontenido. No modifica ninguna funcion existente: las
+     "envuelve" al cargar. Si algo falla, se puede borrar entero sin
+     romper nada del sitio.
+
+     >>> PARA ACTIVARLO: completa los 3 IDs de abajo y subi con SUBIR.bat.
+         Mientras esten vacios el bloque no hace absolutamente nada.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── 1. CONFIGURACION — LO UNICO QUE HAY QUE COMPLETAR ─────────────── */
+  var K24_ADS = {
+    META_PIXEL_ID:  '',   // Meta Events Manager > Origenes de datos. Ej: '1234567890123456'
+    GOOGLE_ADS_ID:  '',   // Google Ads > Admin > Etiqueta.        Ej: 'AW-123456789'
+    // Etiqueta de conversion "Compra" de Google Ads. Ej: 'AW-123456789/AbC-D_efGh'
+    GOOGLE_COMPRA_LABEL: '',
+    MONEDA: 'ARS',
+    DEBUG: false          // true = imprime cada evento en la consola del navegador
+  };
+
+  var tieneMeta   = !!K24_ADS.META_PIXEL_ID;
+  var tieneGoogle = !!K24_ADS.GOOGLE_ADS_ID;
+  if (!tieneMeta && !tieneGoogle) return;   // sin IDs, no se carga nada
+
+  function log() {
+    if (K24_ADS.DEBUG && window.console) console.log.apply(console, ['[k24-ads]'].concat([].slice.call(arguments)));
+  }
+
+  /* ─── 2. META PIXEL ─────────────────────────────────────────────────── */
+  if (tieneMeta) {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+    (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', K24_ADS.META_PIXEL_ID);
+    fbq('track', 'PageView');
+  }
+
+  /* ─── 3. GOOGLE ADS (gtag) ──────────────────────────────────────────── */
+  if (tieneGoogle) {
+    var gs = document.createElement('script');
+    gs.async = true;
+    gs.src = 'https://www.googletagmanager.com/gtag/js?id=' + K24_ADS.GOOGLE_ADS_ID;
+    document.head.appendChild(gs);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', K24_ADS.GOOGLE_ADS_ID);
+  }
+
+  /* ─── 4. HELPERS ────────────────────────────────────────────────────── */
+
+  // Valor del carrito en el momento de la llamada.
+  function valorCarrito() {
+    try {
+      var items = Object.values(window.cart || {});
+      var total = items.reduce(function (a, i) { return a + (i.qty || 0) * (i.price || 0); }, 0);
+      return {
+        valor: Math.round(total),
+        cantidad: items.reduce(function (a, i) { return a + (i.qty || 0); }, 0),
+        ids: items.map(function (i) { return i.key || i.name; }).slice(0, 40),
+        nombres: items.map(function (i) { return i.name; }).slice(0, 10)
+      };
+    } catch (e) { return { valor: 0, cantidad: 0, ids: [], nombres: [] }; }
+  }
+
+  // Dispara el mismo evento a Meta y a Google.
+  function track(evento, datos) {
+    datos = datos || {};
+    log(evento, datos);
+    if (tieneMeta) {
+      try { fbq('track', evento, datos.meta || {}); } catch (e) {}
+    }
+    if (tieneGoogle && datos.google) {
+      try { gtag('event', datos.google.nombre, datos.google.params || {}); } catch (e) {}
+    }
+  }
+
+  // Envuelve una funcion global sin alterar su comportamiento.
+  // El seguimiento corre DESPUES y dentro de try/catch: si el tracking
+  // explota, la funcion original ya hizo su trabajo.
+  function envolver(nombreFn, despues) {
+    var original = window[nombreFn];
+    if (typeof original !== 'function') { log('no existe la funcion', nombreFn); return; }
+    window[nombreFn] = function () {
+      var previo;
+      try { previo = valorCarrito(); } catch (e) {}
+      var resultado = original.apply(this, arguments);
+      try { despues.call(this, arguments, previo, resultado); } catch (e) { log('error en tracking de', nombreFn, e); }
+      return resultado;
+    };
+  }
+
+  /* ─── 5. EVENTOS ────────────────────────────────────────────────────── */
+
+  // ViewContent — entra a una seccion del kiosco
+  envolver('enterSection', function (args) {
+    var seccion = args[0] || 'desconocida';
+    track('ViewContent', {
+      meta:   { content_category: seccion, content_type: 'product_group' },
+      google: { nombre: 'view_item_list', params: { item_list_name: seccion } }
+    });
+  });
+
+  // AddToCart — desde la gondola o desde el modal de producto
+  ['addGonToCart', 'addFromModal'].forEach(function (fn) {
+    envolver(fn, function (args, previo) {
+      var ahora = valorCarrito();
+      var delta = Math.max(0, ahora.valor - (previo ? previo.valor : 0));
+      // Si el carrito no crecio, no hubo agregado real (ej: bloqueo +18)
+      if (ahora.cantidad <= (previo ? previo.cantidad : 0)) return;
+      track('AddToCart', {
+        meta:   { value: delta, currency: K24_ADS.MONEDA, content_name: ahora.nombres[ahora.nombres.length - 1] || '' },
+        google: { nombre: 'add_to_cart', params: { value: delta, currency: K24_ADS.MONEDA } }
+      });
+    });
+  });
+
+  // InitiateCheckout — abre la pagina de caja
+  envolver('irACaja', function (args, previo) {
+    var c = valorCarrito();
+    if (!c.cantidad) return;   // irACaja corta si el carrito esta vacio
+    track('InitiateCheckout', {
+      meta:   { value: c.valor, currency: K24_ADS.MONEDA, num_items: c.cantidad, content_ids: c.ids },
+      google: { nombre: 'begin_checkout', params: { value: c.valor, currency: K24_ADS.MONEDA } }
+    });
+  });
+
+  // Purchase — se llama tanto en MercadoPago como en WhatsApp.
+  // OJO: es el momento de confirmar el pedido, no de cobro efectivo.
+  // Con "pagas al recibir" hay que descontar los pedidos cancelados.
+  envolver('recordarCompra', function (args, previo) {
+    var canal = args[0] || 'desconocido';
+    var v = previo && previo.valor ? previo.valor : 0;
+    var n = previo && previo.cantidad ? previo.cantidad : 0;
+    track('Purchase', {
+      meta:   { value: v, currency: K24_ADS.MONEDA, num_items: n, content_ids: previo ? previo.ids : [] },
+      google: K24_ADS.GOOGLE_COMPRA_LABEL
+        ? { nombre: 'conversion', params: {
+              send_to: K24_ADS.GOOGLE_COMPRA_LABEL,
+              value: v, currency: K24_ADS.MONEDA,
+              transaction_id: 'k24-' + Date.now()
+            } }
+        : { nombre: 'purchase', params: { value: v, currency: K24_ADS.MONEDA } }
+    });
+    log('compra por', canal, '$' + v);
+  });
+
+  // Lead B2B — un comercio pide sumarse a la red
+  envolver('enviarRedComercios', function () {
+    track('Lead', {
+      meta:   { content_name: 'red-de-comercios', content_category: 'b2b' },
+      google: { nombre: 'generate_lead', params: { lead_type: 'comercio' } }
+    });
+  });
+
+  // Lead zona — alguien de fuera de cobertura deja su ciudad
+  envolver('enviarZonaPedida', function () {
+    track('Lead', {
+      meta:   { content_name: 'zona-sin-cobertura', content_category: 'expansion' },
+      google: { nombre: 'generate_lead', params: { lead_type: 'zona' } }
+    });
+  });
+
+  log('tracking activo · meta:', tieneMeta, '· google:', tieneGoogle);
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     K24 · DEEP LINKS PARA CAMPAÑAS
+     Permite que un anuncio caiga directo en una seccion concreta:
+       k24hs.com/?s=promos      k24hs.com/?s=botellas
+       k24hs.com/?s=gondola     k24hs.com/?s=golosinas
+       k24hs.com/?s=fresco      k24hs.com/?s=heladeras
+       k24hs.com/?s=comercios   -> abre el formulario B2B
+     Sin ?s= el sitio se comporta exactamente como siempre.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(window.location.search);
+  var destino = (params.get('s') || '').toLowerCase().trim();
+  if (!destino) return;
+
+  var SECCIONES = ['promos','botellas','gondola','golosinas','fresco','heladeras','cigarreria'];
+
+  function ir() {
+    try {
+      if (destino === 'comercios') {
+        if (typeof window.abrirRedComercios === 'function') window.abrirRedComercios();
+        return;
+      }
+      if (SECCIONES.indexOf(destino) !== -1 && typeof window.enterSection === 'function') {
+        window.enterSection(destino);
+      }
+    } catch (e) {}
+  }
+
+  // Esperar a que el sitio termine de montar sus handlers.
+  if (document.readyState === 'complete') {
+    setTimeout(ir, 350);
+  } else {
+    window.addEventListener('load', function () { setTimeout(ir, 350); });
+  }
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     K24 · ALTA DE PEDIDO EN EL SISTEMA DE DESPACHO
+     ──────────────────────────────────────────────────────────────────────
+     Cuando el cliente confirma la compra (MercadoPago o WhatsApp), ademas
+     de lo que ya hacia el sitio, registra el pedido en la base para que
+     aparezca en el panel de despacho y el cliente pueda seguirlo.
+
+     Reglas de este bloque:
+       · No bloquea NUNCA la compra. Si la API falla o no esta configurada,
+         el flujo de siempre (WhatsApp / MercadoPago) sigue igual.
+       · Envuelve recordarCompra() sin modificarla.
+       · Mientras no existan las variables de entorno en Vercel, la API
+         responde "sin_configurar" y esto no hace nada visible.
+     ══════════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  var original = window.recordarCompra;
+  if (typeof original !== 'function') return;
+
+  function armarPedido(canal) {
+    var items = Object.values(window.cart || {});
+    if (!items.length) return null;
+
+    var info = (typeof getDeliveryInfo === 'function')
+      ? getDeliveryInfo()
+      : { costo: 0, gratis: true, subtotal: 0 };
+
+    var p = window.userProfile || {};
+    var direccion = [p.direccion, p.piso].filter(Boolean).join(', ');
+    if (!direccion) return null;   // sin direccion no hay pedido que despachar
+
+    var metodo = canal === 'mercadopago' ? 'mercadopago' : 'efectivo';
+
+    return {
+      cliente_nombre:   p.nombre || '',
+      cliente_telefono: p.telefono || '',
+      cliente_email:    p.email || '',
+      direccion:        direccion,
+      direccion_notas:  [p.barrio, p.referencia].filter(Boolean).join(' · '),
+      lat: p.coords && p.coords.lat ? p.coords.lat : null,
+      lng: p.coords && p.coords.lng ? p.coords.lng : null,
+      items: items.map(function (i) {
+        return { name: i.name, size: i.size || '', qty: i.qty, price: i.price };
+      }),
+      envio: info.gratis ? 0 : info.costo,
+      total: info.subtotal + (info.gratis ? 0 : info.costo),
+      metodo_pago: metodo
+    };
+  }
+
+  window.recordarCompra = function (canal) {
+    // 1) Lo de siempre, primero y pase lo que pase.
+    var pedido = null;
+    try { pedido = armarPedido(canal); } catch (e) {}
+
+    var resultado = original.apply(this, arguments);
+
+    // 2) Alta en despacho, sin bloquear ni romper nada.
+    if (pedido) {
+      try {
+        fetch('/api/despacho/pedido', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pedido)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d || !d.ok || !d.pedido) return;   // sin_configurar u error: no molestamos
+          try {
+            // Guardar el link para que el cliente pueda volver a entrar
+            var guardados = JSON.parse(localStorage.getItem('k24_seguimientos') || '[]');
+            guardados.unshift({
+              codigo: d.pedido.codigo,
+              link: d.pedido.seguimiento,
+              fecha: new Date().toISOString()
+            });
+            localStorage.setItem('k24_seguimientos', JSON.stringify(guardados.slice(0, 20)));
+          } catch (e) {}
+
+          if (typeof showToast === 'function') {
+            showToast('📦 Pedido ' + d.pedido.codigo + ' registrado');
+          }
+          // En WhatsApp el usuario se va del sitio, asi que el link se le
+          // muestra al volver. En MercadoPago redirige enseguida: por eso
+          // solo guardamos y no abrimos nada.
+        })
+        .catch(function () { /* silencio: la compra ya esta hecha */ });
+      } catch (e) {}
+    }
+
+    return resultado;
+  };
+})();
+</script>
 </body>
 </html>

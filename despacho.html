@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>K24 · Despacho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --red:#CC0000; --red-d:#a30000; --bg:#0d1117; --panel:#161b22;
+    --line:#262d38; --txt:#e6edf3; --muted:#8b949e;
+    --nuevo:#e5a000; --confirmado:#3b82f6; --preparando:#8b5cf6;
+    --asignado:#06b6d4; --camino:#22c55e; --ok:#16a34a; --mal:#ef4444;
+  }
+  body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+  h1,h2,h3,.tit{font-family:Rajdhani,sans-serif;letter-spacing:.5px}
+
+  /* ── LOGIN ── */
+  #login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .caja{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:32px;width:100%;max-width:360px}
+  .logo{font-family:Orbitron,sans-serif;font-weight:900;font-size:34px;text-align:center;margin-bottom:4px}
+  .logo span{color:var(--red)}
+  .sub{text-align:center;color:var(--muted);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin-bottom:26px}
+  input,select,textarea{width:100%;background:#0d1117;border:1px solid var(--line);border-radius:9px;
+    padding:12px;color:var(--txt);font-family:Inter,sans-serif;font-size:15px}
+  input:focus,select:focus{outline:none;border-color:var(--red)}
+  .btn{width:100%;background:var(--red);border:none;color:#fff;font-family:Rajdhani,sans-serif;
+    font-weight:700;font-size:16px;letter-spacing:1px;padding:13px;border-radius:9px;cursor:pointer;transition:background .15s}
+  .btn:hover{background:var(--red-d)} .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-s{padding:7px 12px;font-size:13px;width:auto;border-radius:7px}
+  .btn-g{background:#21262d;border:1px solid var(--line)} .btn-g:hover{background:#2d333b}
+  .err{color:var(--mal);font-size:13px;margin-top:12px;text-align:center;min-height:18px}
+
+  /* ── APP ── */
+  #app{display:none}
+  header{background:var(--panel);border-bottom:2px solid var(--red);position:sticky;top:0;z-index:50}
+  .hd{max-width:1600px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .hd .logo{font-size:24px;margin:0}
+  .stats{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+  .stat{text-align:center}
+  .stat b{display:block;font-family:Rajdhani,sans-serif;font-size:21px;line-height:1}
+  .stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .vivo{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:lat 2s infinite}
+  @keyframes lat{0%,100%{opacity:1}50%{opacity:.25}}
+
+  main{max-width:1600px;margin:0 auto;padding:20px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .col>h2{padding:11px 15px;font-size:13px;text-transform:uppercase;letter-spacing:2px;
+    border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .col>h2 i{font-style:normal;background:#0d1117;padding:1px 8px;border-radius:10px;font-size:12px}
+  .col-body{padding:11px;display:flex;flex-direction:column;gap:11px;min-height:70px;max-height:calc(100vh - 220px);overflow-y:auto}
+  .vacio{color:var(--muted);font-size:13px;text-align:center;padding:22px 0}
+
+  .ped{background:#0d1117;border:1px solid var(--line);border-left-width:3px;border-radius:9px;padding:12px;font-size:13.5px}
+  .ped.e-nuevo{border-left-color:var(--nuevo)} .ped.e-confirmado{border-left-color:var(--confirmado)}
+  .ped.e-preparando{border-left-color:var(--preparando)} .ped.e-asignado{border-left-color:var(--asignado)}
+  .ped.e-en_camino{border-left-color:var(--camino)}
+  .ped.nuevo-flash{animation:flash 1.4s ease-out 3}
+  @keyframes flash{0%,100%{background:#0d1117}50%{background:#2a1f00}}
+  .ped-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .cod{font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px}
+  .tiempo{font-size:11px;color:var(--muted)} .tiempo.alerta{color:var(--nuevo);font-weight:600}
+  .tiempo.grave{color:var(--mal);font-weight:700}
+  .dir{color:var(--txt);margin-bottom:3px;line-height:1.35}
+  .meta{color:var(--muted);font-size:12px;margin-bottom:8px;line-height:1.5}
+  .items{background:#161b22;border-radius:6px;padding:8px;margin-bottom:9px;font-size:12.5px;color:#c9d1d9;max-height:110px;overflow-y:auto}
+  .items div{display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+  .tot{display:flex;justify-content:space-between;font-family:Rajdhani,sans-serif;font-weight:700;font-size:15px;margin-bottom:10px}
+  .pago{font-size:11px;padding:2px 7px;border-radius:9px;background:#21262d;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .pago.ok{background:#0d3a1e;color:#4ade80}
+  .acc{display:flex;gap:6px;flex-wrap:wrap}
+  .acc select{width:auto;flex:1;min-width:110px;padding:7px;font-size:13px}
+  .rep-tag{display:inline-block;background:#0b2b33;color:#22d3ee;padding:2px 8px;border-radius:9px;font-size:11.5px;margin-bottom:7px}
+
+  .side{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px}
+  .side h3{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:11px}
+  .reps{display:flex;gap:10px;flex-wrap:wrap}
+  .rep{background:#0d1117;border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13px;display:flex;align-items:center;gap:9px}
+  .rep .luz{width:8px;height:8px;border-radius:50%;background:#3d444d}
+  .rep.turno .luz{background:var(--ok)}
+  .rep small{color:var(--muted);font-size:11px}
+
+  .aviso{background:#3d2800;border:1px solid #7a5200;color:#f5c469;padding:11px 14px;border-radius:9px;font-size:13px;margin-bottom:16px;line-height:1.5}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#21262d;
+    border:1px solid var(--line);border-left:3px solid var(--red);padding:12px 20px;border-radius:9px;
+    font-size:14px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
+  .toast.ver{opacity:1}
+  @media(max-width:640px){ .hd{gap:12px} .stats{gap:14px} .col-body{max-height:none} }
+</style>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login">
+  <div class="caja">
+    <div class="logo">K<span>24</span></div>
+    <div class="sub">Panel de despacho</div>
+    <form id="fLogin">
+      <input id="clave" type="password" placeholder="Clave del panel" autocomplete="current-password" required>
+      <div class="err" id="errLogin"></div>
+      <button class="btn" type="submit" id="btnLogin">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app">
+  <header>
+    <div class="hd">
+      <div class="logo">K<span>24</span></div>
+      <div class="vivo"><span class="dot"></span><span id="lat">conectando…</span></div>
+      <div class="stats">
+        <div class="stat"><b id="sCola">0</b><span>en cola</span></div>
+        <div class="stat"><b id="sHoy">0</b><span>hoy</span></div>
+        <div class="stat"><b id="sEnt">0</b><span>entregados</span></div>
+        <div class="stat"><b id="sFac">$0</b><span>facturado</span></div>
+        <button class="btn btn-g btn-s" id="btnSonido" title="Alerta sonora">🔔</button>
+        <button class="btn btn-g btn-s" id="btnSalir">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="aviso"></div>
+    <div class="cols" id="cols"></div>
+    <div class="side">
+      <h3>Repartidores</h3>
+      <div class="reps" id="reps"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── estado ────────────────────────────────────────────────────────
+var TOKEN = sessionStorage.getItem('k24_despacho_token') || null;
+var sonido = localStorage.getItem('k24_despacho_sonido') !== '0';
+var conocidos = new Set();          // ids ya vistos, para detectar los nuevos
+var primeraCarga = true;
+var timer = null;
+
+var ESTADOS = [
+  { id:'nuevo',      tit:'Nuevos',      sig:['confirmado'] },
+  { id:'confirmado', tit:'Confirmados', sig:['preparando'] },
+  { id:'preparando', tit:'Preparando',  sig:[] },
+  { id:'asignado',   tit:'Asignados',   sig:['en_camino'] },
+  { id:'en_camino',  tit:'En camino',   sig:['entregado'] }
+];
+var NOMBRE = { nuevo:'Nuevo', confirmado:'Confirmado', preparando:'Preparando',
+               asignado:'Asignado', en_camino:'En camino', entregado:'Entregado', cancelado:'Cancelado' };
+
+// ── utilidades ────────────────────────────────────────────────────
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pesos(n){ return '$' + (Number(n)||0).toLocaleString('es-AR'); }
+function toast(msg){
+  var t=$('toast'); t.textContent=msg; t.classList.add('ver');
+  clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('ver'); }, 3200);
+}
+function minutos(seg){
+  var m = Math.floor(seg/60);
+  if (m < 60) return m + ' min';
+  return Math.floor(m/60) + 'h ' + (m%60) + 'm';
+}
+
+async function api(ruta, opciones){
+  opciones = opciones || {};
+  var r = await fetch('/api/despacho/' + ruta, {
+    method: opciones.method || 'GET',
+    headers: Object.assign(
+      { 'Content-Type':'application/json' },
+      TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}
+    ),
+    body: opciones.body ? JSON.stringify(opciones.body) : undefined
+  });
+  if (r.status === 401) { salir(); throw new Error('Sesion vencida'); }
+  var d = await r.json().catch(function(){ return {}; });
+  if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+
+// ── login ─────────────────────────────────────────────────────────
+$('fLogin').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var b = $('btnLogin'); b.disabled = true; $('errLogin').textContent = '';
+  try {
+    var d = await api('login', { method:'POST', body:{ rol:'panel', clave: $('clave').value } });
+    TOKEN = d.token;
+    sessionStorage.setItem('k24_despacho_token', TOKEN);
+    entrar();
+  } catch (err) {
+    $('errLogin').textContent = err.message;
+  } finally { b.disabled = false; }
+});
+
+function salir(){
+  TOKEN = null;
+  sessionStorage.removeItem('k24_despacho_token');
+  clearInterval(timer);
+  $('app').style.display='none';
+  $('login').style.display='flex';
+}
+$('btnSalir').addEventListener('click', salir);
+
+function entrar(){
+  $('login').style.display='none';
+  $('app').style.display='block';
+  pintarSonido();
+  refrescar();
+  timer = setInterval(refrescar, 5000);
+}
+
+// ── alerta sonora ─────────────────────────────────────────────────
+// Sin archivo de audio: se genera un bip con WebAudio.
+function bip(){
+  if (!sonido) return;
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.18].forEach(function(t){
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = 880; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.3, ac.currentTime + t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.15);
+      o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.16);
+    });
+  } catch(e){}
+}
+function pintarSonido(){ $('btnSonido').textContent = sonido ? '🔔' : '🔕'; }
+$('btnSonido').addEventListener('click', function(){
+  sonido = !sonido;
+  localStorage.setItem('k24_despacho_sonido', sonido ? '1' : '0');
+  pintarSonido();
+  if (sonido) bip();
+});
+
+// ── ciclo principal ───────────────────────────────────────────────
+var repartidoresCache = [];
+
+async function refrescar(){
+  try {
+    var d = await api('cola');
+    repartidoresCache = d.repartidores || [];
+    pintarResumen(d.resumen);
+    pintarCola(d.cola || []);
+    pintarRepartidores(repartidoresCache);
+    $('lat').textContent = 'en vivo · ' + new Date().toLocaleTimeString('es-AR');
+    $('aviso').innerHTML = '';
+  } catch (err) {
+    $('lat').textContent = 'sin conexion';
+    if (!/Sesion vencida/.test(err.message)) {
+      $('aviso').innerHTML = '<div class="aviso">No se pudo actualizar: ' + esc(err.message) + '</div>';
+    }
+  }
+}
+
+function pintarResumen(r){
+  r = r || {};
+  $('sCola').textContent = r.en_cola || 0;
+  $('sHoy').textContent  = r.pedidos_hoy || 0;
+  $('sEnt').textContent  = r.entregados_hoy || 0;
+  $('sFac').textContent  = pesos(r.facturado_hoy);
+}
+
+function pintarCola(cola){
+  // Detectar pedidos nuevos para el bip
+  var hayNuevo = false;
+  cola.forEach(function(p){
+    if (!conocidos.has(p.id)) {
+      conocidos.add(p.id);
+      if (!primeraCarga && p.estado === 'nuevo') hayNuevo = true;
+    }
+  });
+  if (hayNuevo) { bip(); toast('Entró un pedido nuevo'); }
+  primeraCarga = false;
+
+  var html = '';
+  ESTADOS.forEach(function(col){
+    var dentro = cola.filter(function(p){ return p.estado === col.id; });
+    html += '<div class="col"><h2>' + col.tit + ' <i>' + dentro.length + '</i></h2><div class="col-body">';
+    html += dentro.length
+      ? dentro.map(function(p){ return tarjeta(p, col); }).join('')
+      : '<div class="vacio">—</div>';
+    html += '</div></div>';
+  });
+  $('cols').innerHTML = html;
+}
+
+function tarjeta(p, col){
+  var seg = p.segundos_desde_creado || 0;
+  var clase = seg > 3600 ? 'grave' : (seg > 1800 ? 'alerta' : '');
+
+  var items = (p.items || []).map(function(i){
+    return '<div><span>' + i.qty + '× ' + esc(i.nombre) + (i.size ? ' ' + esc(i.size) : '') +
+           '</span><span>' + pesos(i.qty * i.precio) + '</span></div>';
+  }).join('');
+
+  var h = '<div class="ped e-' + p.estado + '" data-id="' + p.id + '">';
+  h += '<div class="ped-top"><span class="cod">' + esc(p.codigo) + '</span>' +
+       '<span class="tiempo ' + clase + '">' + minutos(seg) + '</span></div>';
+
+  if (p.repartidor_nombre) h += '<div class="rep-tag">🛵 ' + esc(p.repartidor_nombre) + '</div>';
+
+  h += '<div class="dir">📍 ' + esc(p.direccion) + '</div>';
+  if (p.direccion_notas) h += '<div class="meta">' + esc(p.direccion_notas) + '</div>';
+  h += '<div class="meta">' + esc(p.cliente_nombre || 'Sin nombre');
+  if (p.cliente_telefono) {
+    h += ' · <a href="https://wa.me/' + esc(String(p.cliente_telefono).replace(/\D/g,'')) +
+         '" target="_blank" rel="noopener" style="color:#22d3ee">' + esc(p.cliente_telefono) + '</a>';
+  }
+  h += '</div>';
+
+  if (items) h += '<div class="items">' + items + '</div>';
+
+  h += '<div class="tot"><span>Total' + (p.envio ? ' (envío ' + pesos(p.envio) + ')' : '') + '</span>' +
+       '<span>' + pesos(p.total) + '</span></div>';
+  h += '<div style="margin-bottom:9px"><span class="pago' + (p.pagado ? ' ok' : '') + '">' +
+       esc(p.metodo_pago || 'sin definir') + (p.pagado ? ' · pagado' : '') + '</span></div>';
+
+  // ── acciones ──
+  h += '<div class="acc">';
+  col.sig.forEach(function(s){
+    h += '<button class="btn btn-s" onclick="cambiar(' + p.id + ',\'' + s + '\')">→ ' + NOMBRE[s] + '</button>';
+  });
+
+  // Asignar repartidor: disponible mientras no salio a la calle
+  if (['nuevo','confirmado','preparando','asignado'].indexOf(p.estado) !== -1) {
+    h += '<select onchange="asignar(' + p.id + ', this.value); this.selectedIndex=0">';
+    h += '<option value="">🛵 Asignar…</option>';
+    repartidoresCache.forEach(function(r){
+      if (r.id === p.repartidor_id) return;
+      h += '<option value="' + r.id + '">' + esc(r.nombre) + (r.en_turno ? ' ✓' : ' (sin turno)') + '</option>';
+    });
+    if (p.repartidor_id) h += '<option value="__quitar">✕ Quitar</option>';
+    h += '</select>';
+  }
+
+  h += '<button class="btn btn-s btn-g" onclick="cancelar(' + p.id + ')">✕</button>';
+  h += '</div></div>';
+  return h;
+}
+
+function pintarRepartidores(reps){
+  if (!reps.length) {
+    $('reps').innerHTML = '<div class="vacio">No hay repartidores cargados. Ver LEEME.md, paso 4.</div>';
+    return;
+  }
+  $('reps').innerHTML = reps.map(function(r){
+    var visto = r.ultima_pos_at
+      ? Math.round((Date.now() - new Date(r.ultima_pos_at).getTime())/60000) + ' min'
+      : 'sin señal';
+    return '<div class="rep' + (r.en_turno ? ' turno' : '') + '"><span class="luz"></span>' +
+           '<span>' + esc(r.nombre) + '<br><small>' + (r.en_turno ? 'en turno · ' + visto : 'fuera de turno') + '</small></span></div>';
+  }).join('');
+}
+
+// ── acciones ──────────────────────────────────────────────────────
+window.cambiar = async function(id, estado){
+  var extra = {};
+  if (estado === 'entregado') {
+    var quien = prompt('¿Quién recibió el pedido? (opcional)');
+    if (quien === null) return;
+    if (quien.trim()) extra.receptor = quien.trim();
+    extra.pagado = confirm('¿Se cobró el pedido?');
+  }
+  try {
+    await api('estado', { method:'POST', body: Object.assign({ pedido_id:id, estado:estado }, extra) });
+    toast('Pedido → ' + NOMBRE[estado]);
+    refrescar();
+  } catch (e) { toast('⚠ ' + e.message); }
+};
+
+window.asignar = async function(id, valor){
+  if (!valor) return;
+  try {
+    await api('estado', { method:'POST',
+      body: { pedido_id:id, repartidor_id: valor === '__quitar' ? null : valor } });
+    toast(valor === '__quitar' ? 'Repartidor quitado' : 'Repartidor asignado');
+    refrescar();
+  } catch (e) { toast('⚠ ' + e.message); }
+};
+
+window.cancelar = async function(id){
+  var motivo = prompt('Motivo de la cancelación:');
+  if (motivo === null) return;
+  if (!motivo.trim()) { toast('Hace falta un motivo'); return; }
+  try {
+    await api('estado', { method:'POST', body:{ pedido_id:id, estado:'cancelado', motivo:motivo.trim() } });
+    toast('Pedido cancelado');
+    refrescar();
+  } catch (e) { toast('⚠ ' + e.message); }
+};
+
+// Pausar el refresco si la pestaña no esta visible: ahorra llamadas
+document.addEventListener('visibilitychange', function(){
+  if (!TOKEN) return;
+  clearInterval(timer);
+  if (!document.hidden) { refrescar(); timer = setInterval(refrescar, 5000); }
+  else { timer = setInterval(refrescar, 30000); }
+});
+
+if (TOKEN) entrar();
+</script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="K24 Reparto">
+<link rel="manifest" href="/manifest-repartidor.json">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<title>K24 · Reparto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{--red:#CC0000;--bg:#0d1117;--panel:#161b22;--line:#262d38;--txt:#e6edf3;
+        --muted:#8b949e;--ok:#22c55e;--warn:#e5a000;--mal:#ef4444}
+  body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt);
+       min-height:100vh;padding-bottom:env(safe-area-inset-bottom);overscroll-behavior-y:contain}
+  .logo{font-family:Orbitron,sans-serif;font-weight:900;font-size:32px;text-align:center}
+  .logo span{color:var(--red)}
+  input{width:100%;background:#0d1117;border:1px solid var(--line);border-radius:10px;
+        padding:15px;color:var(--txt);font-size:17px;font-family:Inter,sans-serif}
+  input:focus{outline:none;border-color:var(--red)}
+  .btn{width:100%;background:var(--red);border:none;color:#fff;font-family:Rajdhani,sans-serif;
+       font-weight:700;font-size:18px;letter-spacing:1px;padding:17px;border-radius:11px;cursor:pointer}
+  .btn:active{transform:scale(.98)} .btn:disabled{opacity:.5}
+  .btn-ok{background:var(--ok)} .btn-g{background:#21262d;border:1px solid var(--line)}
+  .err{color:var(--mal);font-size:14px;text-align:center;margin-top:12px;min-height:20px}
+
+  /* login */
+  #login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:22px}
+  .caja{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:30px;width:100%;max-width:360px}
+  .sub{text-align:center;color:var(--muted);font-size:11px;letter-spacing:3px;
+       text-transform:uppercase;margin:4px 0 24px}
+  .caja input{margin-bottom:13px}
+
+  /* app */
+  #app{display:none}
+  header{background:var(--panel);border-bottom:2px solid var(--red);position:sticky;top:0;z-index:20;
+         padding-top:env(safe-area-inset-top)}
+  .hd{padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .hd .logo{font-size:21px;text-align:left}
+  .yo{flex:1;font-size:13px;line-height:1.3}
+  .yo b{font-family:Rajdhani,sans-serif;font-size:16px}
+  .yo small{color:var(--muted)}
+  .sw{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .toggle{width:52px;height:29px;border-radius:15px;background:#30363d;position:relative;
+          cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+  .toggle::after{content:'';position:absolute;top:3px;left:3px;width:23px;height:23px;
+                 border-radius:50%;background:#fff;transition:transform .2s}
+  .toggle.on{background:var(--ok)} .toggle.on::after{transform:translateX(23px)}
+
+  main{padding:14px}
+  .barra{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 15px;
+         margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+  .barra b{font-family:Rajdhani,sans-serif;font-size:19px;display:block}
+  .gps{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .luz{width:9px;height:9px;border-radius:50%;background:#3d444d;flex-shrink:0}
+  .luz.on{background:var(--ok);animation:lat 2s infinite}
+  .luz.err{background:var(--mal)}
+  @keyframes lat{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .ped{background:var(--panel);border:1px solid var(--line);border-radius:13px;
+       padding:16px;margin-bottom:14px}
+  .ped.camino{border-color:var(--ok);border-width:2px}
+  .ped-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cod{font-family:Rajdhani,sans-serif;font-weight:700;font-size:19px}
+  .chip{font-size:11px;padding:3px 10px;border-radius:11px;background:#0b2b33;color:#22d3ee;
+        text-transform:uppercase;letter-spacing:.5px}
+  .chip.camino{background:#0d3a1e;color:#4ade80}
+  .dir{font-size:17px;line-height:1.4;margin-bottom:5px}
+  .notas{color:var(--warn);font-size:14px;margin-bottom:9px;line-height:1.4}
+  .cli{color:var(--muted);font-size:14px;margin-bottom:12px}
+  .items{background:#0d1117;border-radius:8px;padding:11px;margin-bottom:12px;font-size:14px;line-height:1.7}
+  .cobro{background:#0d1117;border:1px solid var(--line);border-radius:9px;padding:12px;
+         margin-bottom:13px;text-align:center}
+  .cobro b{font-family:Rajdhani,sans-serif;font-size:26px;display:block;color:var(--warn)}
+  .cobro small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+  .cobro.pagado b{color:var(--ok)}
+  .fila{display:flex;gap:9px;margin-bottom:9px}
+  .fila .btn{font-size:15px;padding:14px}
+  .vacio{text-align:center;color:var(--muted);padding:50px 20px;font-size:15px;line-height:1.6}
+  .nota{background:#1c2128;border:1px solid var(--line);border-radius:10px;padding:13px;
+        font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:16px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#21262d;
+         border:1px solid var(--line);border-left:3px solid var(--red);padding:13px 20px;
+         border-radius:10px;font-size:14px;z-index:100;opacity:0;transition:opacity .25s;
+         pointer-events:none;max-width:92vw;text-align:center}
+  .toast.ver{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="caja">
+    <div class="logo">K<span>24</span></div>
+    <div class="sub">Reparto</div>
+    <form id="fLogin">
+      <input id="tel" type="tel" inputmode="tel" placeholder="Tu teléfono" autocomplete="username" required>
+      <input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password" required>
+      <div class="err" id="errLogin"></div>
+      <button class="btn" type="submit" id="btnLogin">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="hd">
+      <div class="logo">K<span>24</span></div>
+      <div class="yo"><b id="miNombre">—</b><small id="miDato">—</small></div>
+      <div class="sw">
+        <span id="txtTurno">turno</span>
+        <button class="toggle" id="tgTurno" aria-label="Turno"></button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="barra">
+      <div><b id="nPed">0</b><span style="color:var(--muted);font-size:12px">pedidos activos</span></div>
+      <div style="text-align:right"><b id="nHoy">0</b><span style="color:var(--muted);font-size:12px">entregados hoy</span></div>
+      <div class="gps"><span class="luz" id="luzGps"></span><span id="txtGps">GPS</span></div>
+    </div>
+
+    <div id="lista"></div>
+
+    <div class="nota">
+      <b>Para que el seguimiento funcione:</b> dejá esta pantalla abierta y el teléfono
+      desbloqueado mientras estás en la calle. Si bloqueás el celular, el navegador corta
+      el GPS y el cliente deja de ver dónde venís.<br><br>
+      Instalá la app desde el menú del navegador → “Agregar a la pantalla de inicio”.
+    </div>
+
+    <button class="btn btn-g" id="btnSalir" style="margin-top:16px">Cerrar sesión</button>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+var TOKEN = localStorage.getItem('k24_rep_token') || null;
+var yo = null, pedidos = [], enTurno = false;
+var watchId = null, ultimoEnvio = 0, wakeLock = null, timer = null;
+var INTERVALO_GPS = 15000;   // no mandar posicion mas seguido que esto
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pesos(n){ return '$' + (Number(n)||0).toLocaleString('es-AR'); }
+function toast(m){
+  var t=$('toast'); t.textContent=m; t.classList.add('ver');
+  clearTimeout(t._t); t._t=setTimeout(function(){ t.classList.remove('ver'); },3000);
+}
+
+async function api(ruta, opciones){
+  opciones = opciones || {};
+  var r = await fetch('/api/despacho/' + ruta, {
+    method: opciones.method || 'GET',
+    headers: Object.assign({'Content-Type':'application/json'},
+             TOKEN ? {Authorization:'Bearer '+TOKEN} : {}),
+    body: opciones.body ? JSON.stringify(opciones.body) : undefined
+  });
+  if (r.status === 401) { salir(); throw new Error('Sesión vencida'); }
+  var d = await r.json().catch(function(){ return {}; });
+  if (!r.ok || d.ok === false) throw new Error(d.error || ('Error '+r.status));
+  return d;
+}
+
+// ── login ────────────────────────────────────────────────────────
+$('fLogin').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var b=$('btnLogin'); b.disabled=true; $('errLogin').textContent='';
+  try{
+    var d = await api('login',{method:'POST',body:{
+      rol:'repartidor', telefono:$('tel').value.trim(), pin:$('pin').value.trim() }});
+    TOKEN = d.token; yo = d.repartidor;
+    localStorage.setItem('k24_rep_token', TOKEN);
+    entrar();
+  }catch(err){ $('errLogin').textContent = err.message; }
+  finally{ b.disabled=false; }
+});
+
+function salir(){
+  pararGps();
+  TOKEN=null; localStorage.removeItem('k24_rep_token');
+  clearInterval(timer);
+  $('app').style.display='none'; $('login').style.display='flex';
+}
+$('btnSalir').addEventListener('click', function(){
+  if (confirm('¿Cerrar sesión?')) salir();
+});
+
+function entrar(){
+  $('login').style.display='none';
+  $('app').style.display='block';
+  cargar();
+  timer = setInterval(cargar, 12000);
+}
+
+// ── datos ────────────────────────────────────────────────────────
+async function cargar(){
+  try{
+    var d = await api('repartidor');
+    yo = d.repartidor; pedidos = d.pedidos || [];
+    $('miNombre').textContent = yo.nombre || '—';
+    $('miDato').textContent = enTurno ? 'en turno' : 'fuera de turno';
+    $('nPed').textContent = pedidos.length;
+    $('nHoy').textContent = d.entregados_hoy || 0;
+
+    if (yo.en_turno !== enTurno) { enTurno = yo.en_turno; sincronizarTurno(); }
+    pintar();
+  }catch(e){
+    if (!/Sesión vencida/.test(e.message)) toast('⚠ ' + e.message);
+  }
+}
+
+function pintar(){
+  if (!pedidos.length){
+    $('lista').innerHTML = '<div class="vacio">No tenés pedidos asignados.<br>' +
+      (enTurno ? 'Esperá que el despacho te asigne uno.' : 'Abrí tu turno para recibir pedidos.') + '</div>';
+    return;
+  }
+  $('lista').innerHTML = pedidos.map(tarjeta).join('');
+}
+
+function tarjeta(p){
+  var camino = p.estado === 'en_camino';
+  var tel = String(p.cliente_telefono || '').replace(/\D/g,'');
+  var destino = (p.lat && p.lng)
+      ? p.lat + ',' + p.lng
+      : encodeURIComponent(p.direccion + ', Córdoba, Argentina');
+
+  var h = '<div class="ped' + (camino?' camino':'') + '">';
+  h += '<div class="ped-top"><span class="cod">' + esc(p.codigo) + '</span>' +
+       '<span class="chip' + (camino?' camino':'') + '">' + (camino?'En camino':'Por retirar') + '</span></div>';
+  h += '<div class="dir">📍 ' + esc(p.direccion) + '</div>';
+  if (p.direccion_notas) h += '<div class="notas">⚠ ' + esc(p.direccion_notas) + '</div>';
+  h += '<div class="cli">' + esc(p.cliente_nombre || 'Sin nombre') + '</div>';
+
+  var items = (p.items||[]).map(function(i){
+    return i.qty + '× ' + esc(i.nombre) + (i.size ? ' ' + esc(i.size) : '');
+  }).join('<br>');
+  if (items) h += '<div class="items">' + items + '</div>';
+
+  var cobra = !p.pagado && p.metodo_pago !== 'mercadopago';
+  h += '<div class="cobro' + (cobra?'':' pagado') + '"><small>' +
+       (cobra ? 'cobrar en ' + esc(p.metodo_pago || 'efectivo') : 'ya está pago') +
+       '</small><b>' + pesos(p.total) + '</b></div>';
+
+  h += '<div class="fila">';
+  h += '<button class="btn btn-g" onclick="navegar(\'' + destino + '\')">🗺 Ir</button>';
+  if (tel) h += '<button class="btn btn-g" onclick="wsp(\'' + tel + '\')">💬 Cliente</button>';
+  h += '</div>';
+
+  if (!camino) {
+    h += '<button class="btn" onclick="marcar(' + p.id + ',\'en_camino\')">Retiré el pedido</button>';
+  } else {
+    h += '<button class="btn btn-ok" onclick="entregar(' + p.id + ',' + (cobra?'true':'false') + ',' + p.total + ')">Entregué</button>';
+  }
+  h += '</div>';
+  return h;
+}
+
+window.navegar = function(d){ window.open('https://www.google.com/maps/dir/?api=1&destination=' + d, '_blank'); };
+window.wsp = function(t){ window.open('https://wa.me/' + t, '_blank'); };
+
+window.marcar = async function(id, estado){
+  try{
+    await api('estado',{method:'POST',body:{pedido_id:id,estado:estado}});
+    toast('Listo, salí tranquilo');
+    if (enTurno) arrancarGps();
+    cargar();
+  }catch(e){ toast('⚠ ' + e.message); }
+};
+
+window.entregar = async function(id, cobra, total){
+  if (cobra && !confirm('¿Cobraste ' + pesos(total) + '?')) return;
+  var quien = prompt('¿Quién recibió? (opcional)') || '';
+  try{
+    await api('estado',{method:'POST',body:{
+      pedido_id:id, estado:'entregado', receptor:quien.trim(), pagado:true }});
+    toast('✓ Entregado');
+    cargar();
+  }catch(e){ toast('⚠ ' + e.message); }
+};
+
+// ── turno ────────────────────────────────────────────────────────
+$('tgTurno').addEventListener('click', async function(){
+  var nuevo = !enTurno;
+  try{
+    var d = await api('repartidor',{method:'POST',body:{turno:nuevo}});
+    enTurno = d.en_turno;
+    sincronizarTurno();
+    toast(enTurno ? 'Turno abierto' : 'Turno cerrado');
+    cargar();
+  }catch(e){ toast('⚠ ' + e.message); }
+});
+
+function sincronizarTurno(){
+  $('tgTurno').classList.toggle('on', enTurno);
+  $('txtTurno').textContent = enTurno ? 'en turno' : 'sin turno';
+  $('miDato').textContent = enTurno ? 'en turno' : 'fuera de turno';
+  if (enTurno) arrancarGps(); else pararGps();
+}
+
+// ── GPS ──────────────────────────────────────────────────────────
+// Limitacion conocida de una PWA: si el celular se bloquea o el navegador
+// pasa a segundo plano, el sistema suspende watchPosition. Por eso pedimos
+// wakeLock para que la pantalla no se apague sola. Es lo maximo que se
+// puede hacer sin una app nativa.
+function arrancarGps(){
+  if (watchId !== null || !navigator.geolocation) return;
+  $('luzGps').className = 'luz on'; $('txtGps').textContent = 'buscando…';
+
+  watchId = navigator.geolocation.watchPosition(function(pos){
+    $('luzGps').className = 'luz on';
+    $('txtGps').textContent = 'GPS activo';
+    var ahora = Date.now();
+    if (ahora - ultimoEnvio < INTERVALO_GPS) return;   // no saturar la base
+    ultimoEnvio = ahora;
+    api('repartidor', { method:'POST', body:{
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      precision_m: pos.coords.accuracy
+    }}).catch(function(){ /* si falla una posicion, no molestamos al repartidor */ });
+  }, function(err){
+    $('luzGps').className = 'luz err';
+    $('txtGps').textContent = err.code === 1 ? 'sin permiso' : 'sin señal';
+  }, { enableHighAccuracy:true, maximumAge:10000, timeout:20000 });
+
+  pedirWakeLock();
+}
+
+function pararGps(){
+  if (watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+  $('luzGps').className = 'luz'; $('txtGps').textContent = 'GPS off';
+  if (wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+
+async function pedirWakeLock(){
+  try{
+    if ('wakeLock' in navigator && !wakeLock){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', function(){ wakeLock = null; });
+    }
+  }catch(e){ /* no todos los navegadores lo soportan */ }
+}
+
+// Al volver a primer plano hay que re-pedir el wakeLock: el sistema lo suelta.
+document.addEventListener('visibilitychange', function(){
+  if (!document.hidden && enTurno){ pedirWakeLock(); cargar(); }
+});
+
+if (TOKEN) entrar();
+</script>
+</body>
+</html>

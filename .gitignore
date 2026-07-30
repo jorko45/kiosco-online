@@ -1,3 +1,16 @@
+# === CREDENCIALES — NUNCA subir a GitHub ===
+# SUBIR.bat hace "git add -A", asi que todo lo que no este aca termina publicado.
+USUARIO Y CLAVE DE FORTI.txt
+*CLAVE*.txt
+*PASSWORD*.txt
+*credenciales*
+.env
+.env.*
+
+# Material de campana publicitaria — NO debe publicarse en el sitio
+# (Vercel sirve la raiz del repo, asi que todo lo que se commitea queda online)
+campana/
+
 # Basura de LibreOffice/Excel (archivos abiertos)
 .~lock.*#
 ~$*

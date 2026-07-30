@@ -1,0 +1,38 @@
+# Archivos que estan en el repo pero NO deben publicarse en k24hs.com.
+# Vercel sirve la raiz del proyecto, asi que sin esto quedarian descargables.
+
+# Material de campana publicitaria
+campana/
+
+# SQL y documentacion del sistema de despacho
+# (el esquema de la base no tiene por que ser publico)
+despacho/
+
+# Scripts de trabajo local
+*.py
+*.bat
+*.ps1
+__pycache__/
+
+# Planillas y volcados
+*.xlsx
+*.csv
+*.log
+log_precios.txt
+cambios_precios.csv
+_precios_master.json
+dino_products.json
+
+# Notas internas
+CONTEXTO_K24.md
+RESUMEN_TRABAJO_K24.md
+apps-script-k24.gs
+apps-script-actual.txt
+carrefour_map.txt
+logos_pendientes*.txt
+
+# Credenciales (deberian estar en .gitignore, esto es un segundo cerrojo)
+*CLAVE*.txt
+*PASSWORD*.txt
+.env
+.env.*
