@@ -4494,11 +4494,17 @@ function itemCard(item, sectionKey) {
 }
 
 // Render promos
-(function() {
+// OJO: tiene que ser una funcion con nombre, no un IIFE de una sola pasada.
+// Los precios de la planilla llegan DESPUES de que carga la pagina y pisan
+// catalog.promos. Si las tarjetas se dibujan una sola vez, muestran el precio
+// viejo del codigo mientras el carrito usa el nuevo de la planilla — y el
+// cliente ve un precio en la vitrina y otro al agregar.
+function renderPromos() {
   const el = document.getElementById('promo-grid');
   if (!el) return;
   el.innerHTML = catalog.promos.map(p => itemCard(p, 'promos')).join('');
-})();
+}
+renderPromos();
 
 
 // ── BOTTLE CARD: logo con tamaño según precio ──────────────────────────────
@@ -4719,13 +4725,25 @@ function _aplicarPreciosSheet(data){
     (typeof catalogEspumantes!=='undefined')&&catalogEspumantes
   ].forEach(function(O){ if(O){ try{ proc(O); }catch(e){} } });
   try { _quitarRepetidos(); } catch(e){}
-  // Si la sección Botellas ya estaba dibujada, la rearmo con los precios nuevos
+
+  // ── REDIBUJAR TODO LO QUE YA ESTÉ EN PANTALLA ──────────────────────
+  // Los precios recién llegaron y pisaron el catálogo en memoria. Toda
+  // grilla ya dibujada quedó mostrando el precio viejo, mientras el
+  // carrito usa el nuevo. Eso es un precio en la vitrina y otro en la
+  // caja: el cliente lo lee como que le querés cobrar de más.
+  //
+  // Antes acá solo se rearmaba Botellas y Promos quedaba desactualizada.
   try {
     if (typeof renderBotellasAll === 'function' && renderBotellasAll._done) {
       renderBotellasAll._done = false;
       renderBotellasAll();
     }
   } catch(e){}
+
+  ['renderPromos','renderGondola','renderGolosinas','renderFresco',
+   'renderVinos','renderLicores'].forEach(function(fn){
+    try { if (typeof window[fn] === 'function') window[fn](); } catch(e){}
+  });
 }
 // ── Productos repetidos: dejamos el más barato ────────────────────────────
 // El mismo artículo puede venir cargado dos veces (aparece en dos categorías
