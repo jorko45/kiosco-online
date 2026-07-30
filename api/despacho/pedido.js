@@ -2,6 +2,7 @@
 // Crea un pedido. Lo llama el checkout del sitio (publico, sin login).
 
 import { insertar, json, cors, cuerpo, dbConfigurada } from '../_lib/db.js';
+import { geocodificar } from '../_lib/geo.js';
 
 const MAX_ITEMS = 100;
 const TOPE_TOTAL = 5_000_000; // freno de cordura: nadie pide 5 millones de pesos
@@ -65,15 +66,33 @@ export default async function handler(req, res) {
     ? b.metodo_pago
     : null;
 
+  // ── Coordenadas ─────────────────────────────────────────────────
+  // Si el cliente compartio ubicacion, usamos esa (es la buena).
+  // Si escribio la direccion a mano, la geocodificamos: sin coordenadas
+  // no hay forma de elegir el punto de preparacion mas cercano.
+  let lat = Number.isFinite(Number(b.lat)) ? Number(b.lat) : null;
+  let lng = Number.isFinite(Number(b.lng)) ? Number(b.lng) : null;
+  let origenCoords = lat !== null ? 'cliente' : null;
+
+  if (lat === null || lng === null) {
+    const g = await geocodificar(direccion);
+    if (g) {
+      lat = g.lat;
+      lng = g.lng;
+      origenCoords = g.origen;
+    }
+  }
+
   const fila = {
     estado: 'nuevo',
+    ultimo_actor: 'cliente',
     cliente_nombre: String(b.cliente_nombre || '').trim().slice(0, 120) || null,
     cliente_telefono: String(b.cliente_telefono || '').trim().slice(0, 40) || null,
     cliente_email: String(b.cliente_email || '').trim().slice(0, 160) || null,
     direccion: direccion.slice(0, 300),
     direccion_notas: String(b.direccion_notas || '').trim().slice(0, 300) || null,
-    lat: Number.isFinite(Number(b.lat)) ? Number(b.lat) : null,
-    lng: Number.isFinite(Number(b.lng)) ? Number(b.lng) : null,
+    lat,
+    lng,
     items: limpios,
     subtotal,
     envio,
@@ -85,6 +104,11 @@ export default async function handler(req, res) {
 
   try {
     const p = await insertar('pedidos', fila);
+    if (!origenCoords) {
+      // No es un error, pero conviene que quede en el log: si esto se
+      // repite mucho, la asignacion automatica no va a poder funcionar.
+      console.warn('[despacho] pedido sin coordenadas:', p.codigo, direccion);
+    }
     return json(res, 201, {
       ok: true,
       pedido: {
@@ -92,6 +116,7 @@ export default async function handler(req, res) {
         codigo: p.codigo,
         estado: p.estado,
         total: p.total,
+        ubicado: Boolean(origenCoords),
         seguimiento: `/seguimiento.html?t=${p.token_seguimiento}`,
       },
     });

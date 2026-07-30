@@ -76,6 +76,28 @@
   .acc{display:flex;gap:6px;flex-wrap:wrap}
   .acc select{width:auto;flex:1;min-width:110px;padding:7px;font-size:13px}
   .rep-tag{display:inline-block;background:#0b2b33;color:#22d3ee;padding:2px 8px;border-radius:9px;font-size:11.5px;margin-bottom:7px}
+  .punto-tag{display:inline-block;background:#2b1a3d;color:#c4a1ff;padding:2px 8px;border-radius:9px;font-size:11.5px;margin-bottom:7px;margin-right:5px}
+  .sin-ubicar{display:inline-block;background:#3d2800;color:#f5c469;padding:2px 8px;border-radius:9px;font-size:11px;margin-bottom:7px}
+  .sug{font-size:11.5px;color:var(--muted);margin:-3px 0 8px}
+  .sug b{color:#c4a1ff}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;
+    justify-content:center;z-index:150;padding:20px}
+  .modal.ver{display:flex}
+  .modal-caja{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px;width:100%;max-width:520px;max-height:86vh;overflow-y:auto}
+  .modal-caja h3{font-size:15px;margin-bottom:14px;letter-spacing:1px}
+  .modal-caja label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  .modal-caja input,.modal-caja select{margin-bottom:2px}
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .lista-copiar{background:#0d1117;border:1px solid var(--line);border-radius:9px;padding:12px;
+    font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.65;white-space:pre-wrap;
+    max-height:300px;overflow-y:auto;margin-bottom:12px}
+  .tabla-p{width:100%;font-size:13px;border-collapse:collapse}
+  .tabla-p th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;
+    text-transform:uppercase;letter-spacing:1px;padding:6px 4px;border-bottom:1px solid var(--line)}
+  .tabla-p td{padding:7px 4px;border-bottom:1px solid var(--line)}
+  .luz-p{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3d444d;margin-right:6px}
+  .luz-p.on{background:var(--ok)}
 
   .side{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px}
   .side h3{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:11px}
@@ -132,7 +154,58 @@
       <h3>Repartidores</h3>
       <div class="reps" id="reps"></div>
     </div>
+
+    <div class="side">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">
+        <span>Puntos de preparación</span>
+        <button class="btn btn-g btn-s" id="btnNuevoPunto">+ Agregar</button>
+      </h3>
+      <div id="puntos"></div>
+    </div>
   </main>
+</div>
+
+<!-- ── Modal: lista para pasarle a la sucursal ── -->
+<div class="modal" id="mLista">
+  <div class="modal-caja">
+    <h3>Lista para pedir</h3>
+    <div class="lista-copiar" id="listaTexto"></div>
+    <div class="fila" style="display:flex;gap:8px">
+      <button class="btn" id="btnCopiar">Copiar</button>
+      <button class="btn btn-g" id="btnWspNodo">Enviar por WhatsApp</button>
+      <button class="btn btn-g" onclick="cerrarModal('mLista')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: alta de punto ── -->
+<div class="modal" id="mPunto">
+  <div class="modal-caja">
+    <h3>Nuevo punto de preparación</h3>
+    <label>Nombre</label>
+    <input id="pNombre" placeholder="Mami Nueva Córdoba">
+    <label>Tipo</label>
+    <select id="pTipo">
+      <option value="mami">Sucursal Mami</option>
+      <option value="kiosco_adherido">Kiosco adherido</option>
+      <option value="propio">Local propio</option>
+    </select>
+    <label>Dirección (la ubicamos sola)</label>
+    <input id="pDir" placeholder="Bv. Chacabuco 500">
+    <div class="dos">
+      <div><label>Abre</label><input id="pDesde" type="time" value="08:00"></div>
+      <div><label>Cierra</label><input id="pHasta" type="time" value="21:00"></div>
+    </div>
+    <div class="dos">
+      <div><label>Radio que cubre (km)</label><input id="pRadio" type="number" step="0.5" value="5"></div>
+      <div><label>Teléfono</label><input id="pTel" placeholder="351..."></div>
+    </div>
+    <div class="err" id="errPunto"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn" id="btnGuardarPunto">Guardar</button>
+      <button class="btn btn-g" onclick="cerrarModal('mPunto')">Cancelar</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -246,14 +319,20 @@ $('btnSonido').addEventListener('click', function(){
 
 // ── ciclo principal ───────────────────────────────────────────────
 var repartidoresCache = [];
+var puntosCache = [];
+var colaCache = [];
+var sugerencias = {};   // pedido_id -> mejor punto sugerido
 
 async function refrescar(){
   try {
     var d = await api('cola');
     repartidoresCache = d.repartidores || [];
+    colaCache = d.cola || [];
     pintarResumen(d.resumen);
-    pintarCola(d.cola || []);
+    pintarCola(colaCache);
     pintarRepartidores(repartidoresCache);
+    cargarPuntos();
+    sugerirPuntos(colaCache);
     $('lat').textContent = 'en vivo · ' + new Date().toLocaleTimeString('es-AR');
     $('aviso').innerHTML = '';
   } catch (err) {
@@ -309,7 +388,9 @@ function tarjeta(p, col){
   h += '<div class="ped-top"><span class="cod">' + esc(p.codigo) + '</span>' +
        '<span class="tiempo ' + clase + '">' + minutos(seg) + '</span></div>';
 
+  if (p.punto_nombre) h += '<div class="punto-tag">🏪 ' + esc(p.punto_nombre) + '</div>';
   if (p.repartidor_nombre) h += '<div class="rep-tag">🛵 ' + esc(p.repartidor_nombre) + '</div>';
+  if (p.sin_ubicar) h += '<div class="sin-ubicar">⚠ sin ubicación</div>';
 
   h += '<div class="dir">📍 ' + esc(p.direccion) + '</div>';
   if (p.direccion_notas) h += '<div class="meta">' + esc(p.direccion_notas) + '</div>';
@@ -327,8 +408,36 @@ function tarjeta(p, col){
   h += '<div style="margin-bottom:9px"><span class="pago' + (p.pagado ? ' ok' : '') + '">' +
        esc(p.metodo_pago || 'sin definir') + (p.pagado ? ' · pagado' : '') + '</span></div>';
 
+  // ── sugerencia de punto ──
+  var sug = sugerencias[p.id];
+  if (!p.punto_id && sug) {
+    h += '<div class="sug">Sugerido: <b>' + esc(sug.nombre) + '</b>' +
+         (sug.km_al_cliente != null ? ' · ' + sug.km_al_cliente + ' km' : '') +
+         (sug.abierto ? '' : ' (cerrado)') + '</div>';
+  }
+
   // ── acciones ──
   h += '<div class="acc">';
+
+  // Elegir donde se prepara: disponible hasta que sale a la calle
+  if (['nuevo','confirmado','preparando','asignado'].indexOf(p.estado) !== -1) {
+    h += '<select onchange="elegirPunto(' + p.id + ', this.value); this.selectedIndex=0">';
+    h += '<option value="">🏪 ' + (p.punto_id ? 'Cambiar punto…' : 'Dónde se prepara…') + '</option>';
+    puntosCache.forEach(function(pt){
+      if (!pt.activo || pt.id === p.punto_id) return;
+      var km = (sug && sug.todos) ? sug.todos[pt.id] : null;
+      h += '<option value="' + pt.id + '">' + esc(pt.nombre) +
+           (km != null ? ' · ' + km + ' km' : '') +
+           (pt.abierto_ahora ? '' : ' (cerrado)') + '</option>';
+    });
+    if (p.punto_id) h += '<option value="__quitar">✕ Quitar punto</option>';
+    h += '</select>';
+  }
+
+  if (p.punto_id) {
+    h += '<button class="btn btn-s btn-g" onclick="verLista(' + p.id + ')">📋 Lista</button>';
+  }
+
   col.sig.forEach(function(s){
     h += '<button class="btn btn-s" onclick="cambiar(' + p.id + ',\'' + s + '\')">→ ' + NOMBRE[s] + '</button>';
   });
@@ -363,6 +472,153 @@ function pintarRepartidores(reps){
            '<span>' + esc(r.nombre) + '<br><small>' + (r.en_turno ? 'en turno · ' + visto : 'fuera de turno') + '</small></span></div>';
   }).join('');
 }
+
+// ── puntos de preparación ─────────────────────────────────────────
+async function cargarPuntos(){
+  try {
+    var d = await api('puntos');
+    puntosCache = d.puntos || [];
+    pintarPuntos();
+  } catch (e) { /* no bloquea la cola */ }
+}
+
+function pintarPuntos(){
+  if (!puntosCache.length) {
+    $('puntos').innerHTML = '<div class="vacio">Todavía no cargaste ningún punto. ' +
+      'Sin puntos, los pedidos no tienen dónde prepararse.</div>';
+    return;
+  }
+  var abiertos = puntosCache.filter(function(p){ return p.activo && p.abierto_ahora; }).length;
+  var h = '';
+  if (!abiertos) {
+    h += '<div class="aviso">⚠ Ahora mismo no hay ningún punto abierto. ' +
+         'Los pedidos que entren no se van a poder preparar hasta que abra alguno.</div>';
+  }
+  h += '<table class="tabla-p"><tr><th></th><th>Punto</th><th>Tipo</th><th>Radio</th><th>Horario</th><th></th></tr>';
+  puntosCache.forEach(function(p){
+    h += '<tr>' +
+      '<td><span class="luz-p' + (p.abierto_ahora ? ' on' : '') + '"></span></td>' +
+      '<td>' + esc(p.nombre) + '<br><small style="color:var(--muted)">' + esc(p.direccion) + '</small></td>' +
+      '<td>' + ({mami:'Mami', kiosco_adherido:'Kiosco', propio:'Propio'}[p.tipo] || p.tipo) + '</td>' +
+      '<td>' + p.radio_km + ' km</td>' +
+      '<td>' + (p.abierto_ahora ? 'abierto' : 'cerrado') + '</td>' +
+      '<td><button class="btn btn-g btn-s" onclick="togglePunto(\'' + p.id + '\',' + (!p.activo) + ')">' +
+        (p.activo ? 'Desactivar' : 'Activar') + '</button></td>' +
+    '</tr>';
+  });
+  h += '</table>';
+  $('puntos').innerHTML = h;
+}
+
+// Pide las sugerencias de punto para los pedidos que todavía no lo tienen.
+async function sugerirPuntos(cola){
+  var pendientes = cola.filter(function(p){ return !p.punto_id && !p.sin_ubicar; });
+  for (var i = 0; i < pendientes.length; i++) {
+    var p = pendientes[i];
+    if (sugerencias[p.id]) continue;         // ya la tenemos
+    try {
+      var d = await api('puntos?pedido_id=' + p.id);
+      var cands = (d.candidatos || []).filter(function(c){ return c.abierto && c.dentro_del_radio; });
+      var mejor = cands[0] || (d.candidatos || [])[0];
+      if (mejor) {
+        var todos = {};
+        (d.candidatos || []).forEach(function(c){ todos[c.punto_id] = c.km_al_cliente; });
+        sugerencias[p.id] = { nombre: mejor.nombre, id: mejor.punto_id,
+                              km_al_cliente: mejor.km_al_cliente, abierto: mejor.abierto, todos: todos };
+      }
+    } catch (e) { /* silencio */ }
+  }
+}
+
+window.elegirPunto = async function(pedidoId, valor){
+  if (!valor) return;
+  try {
+    await api('estado', { method:'POST',
+      body:{ pedido_id: pedidoId, punto_id: valor === '__quitar' ? null : valor } });
+    toast(valor === '__quitar' ? 'Punto quitado' : 'Punto asignado');
+    delete sugerencias[pedidoId];
+    refrescar();
+  } catch (e) { toast('⚠ ' + e.message); }
+};
+
+window.togglePunto = async function(id, activar){
+  try {
+    await api('puntos', { method:'POST', body:{ id: id, activo: activar } });
+    toast(activar ? 'Punto activado' : 'Punto desactivado');
+    cargarPuntos();
+  } catch (e) { toast('⚠ ' + e.message); }
+};
+
+// ── lista para pasarle a la sucursal ──────────────────────────────
+// Sin datos del cliente: solo qué hay que juntar.
+var listaActual = { texto:'', telefono:'' };
+
+window.verLista = function(pedidoId){
+  var p = colaCache.filter(function(x){ return x.id === pedidoId; })[0];
+  if (!p) return;
+  var t = 'Pedido ' + p.codigo + '\n';
+  t += p.punto_nombre ? ('Preparar en: ' + p.punto_nombre + '\n') : '';
+  t += '─────────────\n';
+  (p.items || []).forEach(function(i){
+    t += '• ' + i.qty + ' × ' + i.nombre + (i.size ? ' ' + i.size : '') + '\n';
+  });
+  t += '─────────────\n';
+  t += 'Total de items: ' + (p.items || []).reduce(function(a,i){ return a + i.qty; }, 0);
+  listaActual = { texto: t, telefono: String(p.punto_telefono || '').replace(/\D/g,'') };
+  $('listaTexto').textContent = t;
+  $('btnWspNodo').style.display = listaActual.telefono ? '' : 'none';
+  abrirModal('mLista');
+};
+
+$('btnCopiar').addEventListener('click', async function(){
+  try {
+    await navigator.clipboard.writeText(listaActual.texto);
+    toast('Lista copiada');
+  } catch (e) {
+    // Si el navegador no deja usar el portapapeles, seleccionamos el texto
+    var r = document.createRange(); r.selectNodeContents($('listaTexto'));
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    toast('Copiala con Ctrl+C');
+  }
+});
+
+$('btnWspNodo').addEventListener('click', function(){
+  if (!listaActual.telefono) return;
+  window.open('https://wa.me/' + listaActual.telefono + '?text=' +
+              encodeURIComponent(listaActual.texto), '_blank');
+});
+
+// ── alta de punto ─────────────────────────────────────────────────
+function abrirModal(id){ $(id).classList.add('ver'); }
+window.cerrarModal = function(id){ $(id).classList.remove('ver'); };
+
+$('btnNuevoPunto').addEventListener('click', function(){
+  $('errPunto').textContent = '';
+  abrirModal('mPunto');
+});
+
+$('btnGuardarPunto').addEventListener('click', async function(){
+  var b = $('btnGuardarPunto');
+  b.disabled = true; $('errPunto').textContent = 'Ubicando la dirección…';
+  try {
+    var d = await api('puntos', { method:'POST', body:{
+      nombre: $('pNombre').value.trim(),
+      tipo:   $('pTipo').value,
+      direccion: $('pDir').value.trim(),
+      desde:  $('pDesde').value,
+      hasta:  $('pHasta').value,
+      radio_km: Number($('pRadio').value) || 5,
+      telefono: $('pTel').value.trim()
+    }});
+    toast('Punto creado');
+    cerrarModal('mPunto');
+    ['pNombre','pDir','pTel'].forEach(function(i){ $(i).value = ''; });
+    sugerencias = {};
+    cargarPuntos();
+  } catch (e) {
+    $('errPunto').textContent = e.message;
+  } finally { b.disabled = false; }
+});
 
 // ── acciones ──────────────────────────────────────────────────────
 window.cambiar = async function(id, estado){

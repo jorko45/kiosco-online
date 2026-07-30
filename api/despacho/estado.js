@@ -38,7 +38,33 @@ export default async function handler(req, res) {
     const pedido = filas[0];
     if (!pedido) return json(res, 404, { ok: false, error: 'Pedido inexistente' });
 
-    const cambios = {};
+    // Queda registrado en la auditoria quien hizo el cambio.
+    // Sin esto todos los eventos figuran como "sistema" y no sirve para
+    // responder un reclamo.
+    const cambios = {
+      ultimo_actor: sesion.rol === 'panel' ? 'panel' : `repartidor:${sesion.id}`,
+    };
+
+    // ── Punto de preparacion (solo panel) ──────────────────────────
+    if (b.punto_id !== undefined) {
+      if (sesion.rol !== 'panel') {
+        return json(res, 403, { ok: false, error: 'Solo el panel puede elegir el punto' });
+      }
+      if (b.punto_id === null) {
+        cambios.punto_id = null;
+        cambios.punto_asignado_at = null;
+      } else {
+        const pts = await seleccionar('puntos_preparacion', {
+          select: 'id,activo',
+          id: `eq.${b.punto_id}`,
+        });
+        if (!pts[0] || !pts[0].activo) {
+          return json(res, 400, { ok: false, error: 'Punto de preparacion inexistente o inactivo' });
+        }
+        cambios.punto_id = b.punto_id;
+        cambios.punto_asignado_at = new Date().toISOString();
+      }
+    }
 
     // ── Asignacion (solo panel) ────────────────────────────────────
     if (b.repartidor_id !== undefined) {
@@ -95,7 +121,9 @@ export default async function handler(req, res) {
       }
     }
 
-    if (!Object.keys(cambios).length) {
+    // ultimo_actor siempre esta, asi que no cuenta como cambio real.
+    const cambiosReales = Object.keys(cambios).filter((k) => k !== 'ultimo_actor');
+    if (!cambiosReales.length) {
       return json(res, 400, { ok: false, error: 'No se indico ningun cambio' });
     }
 

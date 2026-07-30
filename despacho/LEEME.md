@@ -52,9 +52,13 @@ Guardate la contraseña de la base cuando te la muestre: no se vuelve a ver.
 ### 2 · Crear las tablas
 
 SQL Editor → New query → pegar **todo** `sql/01_esquema.sql` → Run.
-Repetir con `sql/02_mantenimiento.sql`.
+Repetir, **en este orden**, con:
 
-Los dos son idempotentes: se pueden correr de nuevo sin romper nada.
+1. `sql/02_mantenimiento.sql` — limpieza automática y cierre de turnos
+2. `sql/03_puntos_preparacion.sql` — sucursales y kioscos que preparan
+3. `sql/04_actor_y_geo.sql` — auditoría con actor real y geocodificación
+
+Son idempotentes: se pueden correr de nuevo sin romper nada.
 
 ### 3 · Variables de entorno en Vercel
 
@@ -191,6 +195,10 @@ Para que quede claro qué sigue funcionando igual que siempre:
 |---|---|
 | `sql/01_esquema.sql` | Tablas, triggers, máquina de estados, RLS |
 | `sql/02_mantenimiento.sql` | Limpieza de GPS, cierre de turnos, consultas útiles |
+| `sql/03_puntos_preparacion.sql` | Nodos que preparan pedidos, horarios y cercanía |
+| `sql/04_actor_y_geo.sql` | Actor real en la auditoría y caché de geocodificación |
+| `/api/despacho/puntos.js` | Alta y consulta de puntos, sugerencia por cercanía |
+| `/api/_lib/geo.js` | Dirección → coordenadas con OpenStreetMap |
 | `/despacho.html` | Panel de despacho |
 | `/repartidor.html` | PWA del repartidor |
 | `/seguimiento.html` | Seguimiento público |
