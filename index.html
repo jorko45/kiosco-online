@@ -7669,17 +7669,26 @@ document.addEventListener('click', function(ev) {
   }
 
   // Valor del carrito en el momento de la llamada.
+  // Tambien captura el costo de envio vigente AHORA: recordarCompra() consume
+  // el credito de envio gratis mientras corre, asi que consultarlo despues
+  // devolveria otro estado y el Purchase reportaria un valor equivocado.
   function valorCarrito() {
     try {
       var items = Object.values(leerCarrito());
       var total = items.reduce(function (a, i) { return a + (i.qty || 0) * (i.price || 0); }, 0);
+      var envio = 0;
+      try {
+        var d = getDeliveryInfo();
+        envio = d.gratis ? 0 : d.costo;
+      } catch (e) {}
       return {
         valor: Math.round(total),
+        envio: envio,
         cantidad: items.reduce(function (a, i) { return a + (i.qty || 0); }, 0),
         ids: items.map(function (i) { return i.key || i.name; }).slice(0, 40),
         nombres: items.map(function (i) { return i.name; }).slice(0, 10)
       };
-    } catch (e) { return { valor: 0, cantidad: 0, ids: [], nombres: [] }; }
+    } catch (e) { return { valor: 0, envio: 0, cantidad: 0, ids: [], nombres: [] }; }
   }
 
   // Dispara el mismo evento a Meta y a Google.
@@ -7747,9 +7756,17 @@ document.addEventListener('click', function(ev) {
   // Purchase — se llama tanto en MercadoPago como en WhatsApp.
   // OJO: es el momento de confirmar el pedido, no de cobro efectivo.
   // Con "pagas al recibir" hay que descontar los pedidos cancelados.
+  //
+  // El valor incluye el ENVIO, no solo la mercaderia. Dos motivos:
+  //   1. Es lo que el cliente pago de verdad, que es la convencion estandar.
+  //      Reportar menos hace que el retorno se vea peor de lo que es.
+  //   2. Hace que Meta prefiera los pedidos con envio cobrado por sobre los
+  //      de envio gratis — y esos dejan $7.000 contra $2.000 de contribucion.
   envolver('recordarCompra', function (args, previo) {
     var canal = args[0] || 'desconocido';
-    var v = previo && previo.valor ? previo.valor : 0;
+    // previo se capturo ANTES de que corriera recordarCompra, asi que el
+    // envio es el que efectivamente pago el cliente.
+    var v = (previo && previo.valor ? previo.valor : 0) + (previo && previo.envio ? previo.envio : 0);
     var n = previo && previo.cantidad ? previo.cantidad : 0;
     track('Purchase', {
       meta:   { value: v, currency: K24_ADS.MONEDA, num_items: n, content_ids: previo ? previo.ids : [] },
