@@ -3033,6 +3033,7 @@ function addFromModal() {
   } else {
     cart[key] = {
       key,
+      srcId:     v.srcId || null,   // id real en la planilla, para validar el precio al cobrar
       name:      currentBrand.name,
       size:      v.size,
       price:     v.price,
@@ -3698,14 +3699,19 @@ async function pagarMP() {
 
   const { costo: envio, gratis } = getDeliveryInfo();
 
+  // El "id" es la clave del carrito. El servidor la usa para buscar el precio
+  // real en la planilla y NO confiar en el precio que manda el navegador.
   const items = cartItems.map(i => ({
+    // srcId cuando existe (variante fusionada de una marca), si no la clave.
+    // Con eso el servidor encuentra el producto en la planilla y verifica el precio.
+    id:       i.srcId || i.key,
     nombre:   `${i.name} ${i.size}`,
     cantidad: i.qty,
     precio:   i.price,
   }));
 
   if (!gratis && envio > 0) {
-    items.push({ nombre: 'Envío a domicilio', cantidad: 1, precio: envio });
+    items.push({ id: '__envio', nombre: 'Envío a domicilio', cantidad: 1, precio: envio });
   }
 
   try {
@@ -4584,7 +4590,10 @@ function _makeBrandObjs(defs, flatCatalog, idPrefix, style) {
         id: idPrefix + gi + '-' + slug, name: b.n, color: b.c, textColor: b.t || '#fff', _auto: true,
         logo: b.l || _mkWordmark(b.n, b.c, b.t || '#fff', style),
         _type: (items[0].name.split(' ')[0] || '').toLowerCase(),
-        variants: items.map(function(it, i){ return {vid: i + 1, size: _sizeOf(it.name, b.n), price: it.price, img: it.img}; })
+        // srcId conserva el identificador REAL del producto en la planilla.
+        // Sin esto, la variante queda como "marca_2" y el servidor no puede
+        // verificar su precio al cobrar: el vinculo con la planilla se pierde.
+        variants: items.map(function(it, i){ return {vid: i + 1, srcId: it.id, size: _sizeOf(it.name, b.n), price: it.price, img: it.img}; })
       };
       catalog.botellas.push(obj);
       brands.push(obj);
@@ -4598,7 +4607,11 @@ function _mergeVariants(target, source) {
   target.variants.forEach(function(v){ seen[(String(v.size).match(/\d+/g) || ['x']).join('')] = 1; });
   source.variants.forEach(function(v) {
     var k = (String(v.size).match(/\d+/g) || ['x']).join('');
-    if (!seen[k]) { seen[k] = 1; target.variants.push({vid: target.variants.length + 1, size: v.size, price: v.price, img: v.img}); }
+    // Si la variante de origen no trae srcId es porque viene del catalogo
+    // escrito a mano: ahi el id de planilla se arma con el id de SU marca.
+    // Sin esto, al fusionarla en otra tarjeta se pierde el vinculo y el
+    // servidor no puede verificar su precio.
+    if (!seen[k]) { seen[k] = 1; target.variants.push({vid: target.variants.length + 1, srcId: v.srcId || (source.id + '__' + v.vid), size: v.size, price: v.price, img: v.img}); }
   });
 }
 function renderBotellasAll() {
