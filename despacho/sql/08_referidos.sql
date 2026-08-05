@@ -152,10 +152,20 @@ revoke all on referido_canjes from anon, authenticated;
 -- cual. No modifica nada: validar y canjear son dos pasos separados,
 -- porque entre que el cliente escribe el codigo y confirma la compra
 -- puede pasar cualquier cosa.
+-- OJO CON p_excluir_pedido. La validacion corre dos veces: antes de crear
+-- el pedido (para mostrarle al cliente si el codigo sirve) y despues de
+-- crearlo (para consumirlo, que necesita el id). En la segunda pasada el
+-- pedido que estamos por descontar YA EXISTE, asi que la regla "el
+-- telefono no puede tener pedidos previos" lo bloqueaba a si mismo y el
+-- descuento nunca se aplicaba. Excluyendo ese id, la regla sigue valiendo
+-- para todos los demas pedidos.
+drop function if exists validar_referido(text, text, integer);
+
 create or replace function validar_referido(
   p_codigo   text,
   p_telefono text,
-  p_subtotal integer default 0
+  p_subtotal integer default 0,
+  p_excluir_pedido bigint default null
 )
 returns table (ok boolean, descuento integer, motivo text)
 language plpgsql stable as $$
@@ -191,6 +201,7 @@ begin
     select 1 from pedidos
      where tel_norm(cliente_telefono) = t
        and estado not in ('cancelado')
+       and id is distinct from p_excluir_pedido
   ) then
     return query select false, 0, 'Los códigos son solo para la primera compra'; return;
   end if;
@@ -225,7 +236,9 @@ declare
   v      record;
 begin
   select subtotal into sub from pedidos where id = p_pedido_id;
-  select * into v from validar_referido(cod, t, coalesce(sub, 0));
+  -- Se excluye este pedido: si no, se bloquearia a si mismo (ver la nota
+  -- arriba de validar_referido).
+  select * into v from validar_referido(cod, t, coalesce(sub, 0), p_pedido_id);
   if not v.ok then
     return query select false, 0, v.motivo; return;
   end if;
