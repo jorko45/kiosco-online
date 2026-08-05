@@ -4,25 +4,29 @@
 -- ═══════════════════════════════════════════════════════════════════════
 --
 --  POR QUE EXISTE ESTE ARCHIVO
---  v_rentabilidad calculaba la ganancia de mercaderia como subtotal * 0.20,
---  suponiendo un markup del 25% sobre el costo. Ese numero salia de un
---  Excel viejo. La planilla en produccion usa:
+--  v_rentabilidad calculaba la ganancia de mercaderia como subtotal * 0.20
+--  fijo, sin mirar el medio de pago. La planilla arma el precio asi:
 --
 --      precio = costo * (1 + margen) * (1 + mp)
---             = costo * 1,05 * 1,066
 --
---  O sea 5% de margen, no 25%. La vista sobreestimaba la ganancia de
---  mercaderia casi 5 veces.
+--  y el margen NO es uniforme. Medido el 05/08/2026 sobre 387 productos:
+--
+--      25%  -> 54% del catalogo (gondola, vinos, fiambreria, lacteos)
+--      15%  -> 44%
+--      5%   -> solo las gaseosas ancla de la heladera (Coca, Sprite)
+--
+--  O sea ~20% mezclado. El 5% de las gaseosas es deliberado: son los
+--  precios con los que la gente juzga si el kiosco es caro.
 --
 --  ADEMAS: el 6,6% de MercadoPago se le cobra a TODOS los clientes pero
 --  solo se PAGA cuando el pedido se abona con MercadoPago. En efectivo
 --  ese porcentaje queda en la caja. La ganancia real depende entonces del
 --  medio de pago, cosa que la vista anterior ignoraba por completo.
 --
---      efectivo        ->  precio * 0,1066   (10,7%)
---      mercadopago     ->  precio * 0,0406   ( 4,1%)
+--      efectivo        ->  precio * 0,2183   (21,8%)
+--      mercadopago     ->  precio * 0,1523   (15,2%)
 --
---  Un pedido en efectivo deja 2,6 veces mas que el mismo pedido por MP.
+--  Un pedido en efectivo deja un 43% mas que el mismo pedido por MP.
 
 -- ─────────────────────────────────────────────────────────────────────
 --  1. Parametros del negocio, en una tabla y no en el codigo
@@ -122,5 +126,5 @@ revoke all on function ganancia_mercaderia(integer, text) from anon, authenticat
 -- Si da NEGATIVO, cada envio gratis esta destruyendo valor.
 --
 -- Cuando mejore el margen con el proveedor:
---   update parametros_negocio set valor = 0.15, desde = now()
+--   update parametros_negocio set valor = 0.30, desde = now()
 --    where clave = 'margen';
