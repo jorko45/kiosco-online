@@ -1846,6 +1846,27 @@
       <div id="cajaItems"></div>
       <div class="caja-tot" id="cajaTotales"></div>
       <div class="caja-nota" id="cajaNota"></div>
+
+      <!-- Código de referido. Solo se muestra a quien nunca compró:
+           al que ya es cliente no le sirve y le ensucia la caja. -->
+      <div id="bloqueReferido" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed #ddd">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;color:#333;margin-bottom:3px">
+          ¿TE RECOMENDÓ UN AMIGO?
+        </div>
+        <div style="font-size:12.5px;color:#777;line-height:1.5;margin-bottom:10px">
+          Poné su código y te descontamos $3.000 de esta compra.
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="inputReferido" type="text" placeholder="K24-XXXX" maxlength="8" autocomplete="off"
+                 oninput="this.value=this.value.toUpperCase()"
+                 style="flex:1;min-width:0;padding:11px 12px;border:1.5px solid #ddd;border-radius:9px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;text-transform:uppercase">
+          <button onclick="aplicarReferido()"
+                  style="background:#0a1420;color:#fff;border:none;border-radius:9px;padding:11px 18px;font-family:'Rajdhani',sans-serif;font-weight:800;font-size:14px;letter-spacing:.5px;cursor:pointer">
+            USAR
+          </button>
+        </div>
+        <div id="avisoReferido" style="font-size:12.5px;margin-top:8px;line-height:1.5"></div>
+      </div>
     </div>
     <div class="caja-card">
       <h3>¿CÓMO QUERÉS PAGAR?</h3>
@@ -3281,6 +3302,96 @@ function verPedidos() {
   _overlay('🧾 Mis pedidos (' + pedidos.length + ')', rows);
 }
 
+// ── Recomendá y ganá ──────────────────────────────────────────────────
+// El código lo emite el servidor y solo para quien ya compró: es un premio
+// por ser cliente, no algo que cualquiera pueda pedir. Si el teléfono no
+// tiene compras, la API devuelve null y acá se explica por qué.
+async function verReferidos() {
+  _cerrarOverlays();
+  var tel = telefonoDelPerfil();
+  if (!tel) {
+    _overlay('🎁 Recomendá y ganá',
+      '<div style="color:#9fb4c8;font-size:15px;padding:8px 0;line-height:1.6">'
+      + 'Entrá a tu cuenta para ver tu código.</div>');
+    return;
+  }
+
+  _overlay('🎁 Recomendá y ganá', '<div style="color:#9fb4c8;padding:8px 0">Cargando…</div>');
+
+  var d = null;
+  try {
+    var r = await fetch('/api/despacho/referido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'resumen', telefono: tel })
+    });
+    d = await r.json();
+  } catch (e) {}
+
+  if (!d || !d.ok) {
+    _overlay('🎁 Recomendá y ganá',
+      '<div style="color:#9fb4c8;font-size:15px;padding:8px 0;line-height:1.6">'
+      + 'No pudimos traer tu código ahora. Probá de nuevo en un rato.</div>');
+    return;
+  }
+
+  if (!d.codigo) {
+    _overlay('🎁 Recomendá y ganá',
+      '<div style="color:#9fb4c8;font-size:15px;padding:8px 0;line-height:1.6">'
+      + 'Tu código se activa con tu primera compra. Hacé un pedido y volvé acá: '
+      + 'por cada amigo que compre con tu código, los dos se llevan <strong style="color:#4dff88">$3.000</strong>.'
+      + '</div>');
+    return;
+  }
+
+  var msg = encodeURIComponent(
+    '¡Probá K24! Kiosco 24hs con delivery en Córdoba. Usá mi código ' + d.codigo +
+    ' en tu primera compra y te descuentan $3.000 👉 https://k24hs.com'
+  );
+
+  var html =
+    '<div style="text-align:center;padding:6px 0 14px">'
+    + '<div style="font-size:12.5px;color:#8aa;letter-spacing:1px;margin-bottom:6px">TU CÓDIGO</div>'
+    + '<div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:30px;color:#4dff88;letter-spacing:2px">' + d.codigo + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:9px;margin-bottom:16px">'
+    +   '<a href="https://wa.me/?text=' + msg + '" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#25d366;color:#0a1420;text-decoration:none;font-family:Rajdhani,sans-serif;font-weight:800;font-size:14px;padding:12px;border-radius:10px">💬 COMPARTIR</a>'
+    +   '<button onclick="copiarCodigoReferido(\'' + d.codigo + '\',this)" style="flex:1;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);color:#dce8f5;font-family:Rajdhani,sans-serif;font-weight:800;font-size:14px;padding:12px;border-radius:10px;cursor:pointer">📋 COPIAR</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;text-align:center;margin-bottom:14px">'
+    +   '<div style="flex:1;background:rgba(255,255,255,.06);border-radius:10px;padding:11px 6px">'
+    +     '<div style="font-size:22px;font-weight:900;color:#dce8f5">' + (d.amigos_pagados || 0) + '</div>'
+    +     '<div style="font-size:11px;color:#8aa;line-height:1.3">amigos que<br>ya compraron</div></div>'
+    +   '<div style="flex:1;background:rgba(255,255,255,.06);border-radius:10px;padding:11px 6px">'
+    +     '<div style="font-size:22px;font-weight:900;color:#4dff88">' + (d.premios || 0) + '</div>'
+    +     '<div style="font-size:11px;color:#8aa;line-height:1.3">descuentos<br>para usar</div></div>'
+    +   '<div style="flex:1;background:rgba(255,255,255,.06);border-radius:10px;padding:11px 6px">'
+    +     '<div style="font-size:22px;font-weight:900;color:#dce8f5">$' + (d.ganado || 0).toLocaleString('es-AR') + '</div>'
+    +     '<div style="font-size:11px;color:#8aa;line-height:1.3">ahorrado<br>hasta ahora</div></div>'
+    + '</div>'
+    + '<div style="font-size:13px;color:#9fb4c8;line-height:1.6">'
+    +   'Tu amigo se lleva <strong style="color:#4dff88">$3.000</strong> en su primera compra (desde $15.000). '
+    +   'Vos te llevás otros <strong style="color:#4dff88">$3.000</strong> para tu próximo pedido, que se te acreditan '
+    +   'cuando le entregamos el suyo. Se descuenta solo en la caja.'
+    + '</div>';
+
+  _overlay('🎁 Recomendá y ganá', html);
+}
+
+function copiarCodigoReferido(codigo, btn) {
+  var listo = function () {
+    if (!btn) return;
+    var antes = btn.innerHTML;
+    btn.innerHTML = '✅ COPIADO';
+    setTimeout(function () { btn.innerHTML = antes; }, 1800);
+  };
+  try {
+    navigator.clipboard.writeText(codigo).then(listo, function () { showToast('Tu código es ' + codigo); });
+  } catch (e) {
+    showToast('Tu código es ' + codigo);
+  }
+}
+
 // ══ SYNC ENTRE DISPOSITIVOS (Google Sheets vía Apps Script) ══════════════════
 const K24_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxHw92ciow84P-SFFgABT4i04OH21qbaTuOsXM0PPbG2pxA6BcoA3kBuK2rD7dWqdYZGw/exec';
 let _syncTimer = null;
@@ -3632,15 +3743,101 @@ function renderCaja() {
             + '</span><span class="cl-price">$' + (it.price*it.qty).toLocaleString('es-AR') + '</span></div>';
         }).join('');
   }
+  // Descuentos ya confirmados por el servidor (referido y/o premio).
+  var descuento = (window.k24Referido && window.k24Referido.descuento) || 0;
+  if (descuento > total) descuento = total;
+  total -= descuento;
+
   var ct = document.getElementById('cajaTotales');
   if (ct) {
     ct.innerHTML =
       '<div class="caja-line"><span class="cl-name">Subtotal</span><span>$' + subtotal.toLocaleString('es-AR') + '</span></div>'
       + '<div class="caja-line"><span class="cl-name">Envío</span><span>' + (gratis ? '<b style="color:#00aa00">GRATIS 🎉</b>' : '$'+envio.toLocaleString('es-AR')) + '</span></div>'
+      + (descuento > 0
+          ? '<div class="caja-line"><span class="cl-name" style="color:#00aa00">Descuento' + (window.k24Referido.codigo ? ' ' + window.k24Referido.codigo : '') + '</span><span style="color:#00aa00;font-weight:700">−$' + descuento.toLocaleString('es-AR') + '</span></div>'
+          : '')
       + '<div class="caja-line-tot" style="margin-top:8px"><span>TOTAL</span><span>$' + total.toLocaleString('es-AR') + '</span></div>';
   }
   var cn = document.getElementById('cajaNota');
   if (cn) cn.innerHTML = '🛵 Entrega inmediata · 🌙 Comprá a cualquier hora: fuera de horario tu pedido sale apenas empieza el reparto (8:00)';
+  refrescarBloqueReferido();
+}
+
+// ── REFERIDOS ─────────────────────────────────────────────────────────────
+//
+// El navegador no decide nada acá: solo manda el código que escribió el
+// cliente y muestra lo que contesta el servidor. Los envíos gratis viven en
+// el localStorage y con eso alcanza, porque para hacerse trampa hay que
+// gastar $50.000 igual; con referidos no, porque cualquiera abre una
+// ventana de incógnito y se "recomienda" a sí mismo. Por eso todo se
+// valida contra la tabla de pedidos, que el cliente no puede tocar.
+window.k24Referido = window.k24Referido || { codigo: null, descuento: 0 };
+
+// El perfil se declara con `let` mas abajo en el archivo, asi que en el
+// momento en que esta funcion se DEFINE todavia no existe. Cuando se la
+// LLAMA ya esta, pero si el usuario no inicio sesion vale null; por eso
+// tambien miramos el localStorage, que es donde queda al recargar.
+function telefonoDelPerfil() {
+  var p = null;
+  try { p = userProfile; } catch (e) {}
+  if (!p) {
+    try { p = JSON.parse(localStorage.getItem('k24_perfil') || 'null'); } catch (e) {}
+  }
+  return (p && (p.telefono || p.whatsapp)) || '';
+}
+
+// Mostramos el campo solo a quien nunca compró: al que ya es cliente el
+// código no le sirve y solo le ensucia la caja.
+function refrescarBloqueReferido() {
+  var b = document.getElementById('bloqueReferido');
+  if (!b) return;
+  var yaCompro = localStorage.getItem('k24_verificado') === '1';
+  var yaUso = window.k24Referido.descuento > 0;
+  b.style.display = (yaCompro && !yaUso) ? 'none' : '';
+}
+
+async function aplicarReferido() {
+  var input = document.getElementById('inputReferido');
+  var aviso = document.getElementById('avisoReferido');
+  if (!input || !aviso) return;
+
+  var codigo = (input.value || '').trim().toUpperCase();
+  if (!codigo) { aviso.style.color = '#c00'; aviso.textContent = 'Escribí el código que te pasaron.'; return; }
+
+  var tel = telefonoDelPerfil();
+  if (!tel) {
+    aviso.style.color = '#c00';
+    aviso.textContent = 'Necesitamos tu teléfono para validar el código. Completá tus datos y volvé.';
+    return;
+  }
+
+  aviso.style.color = '#777';
+  aviso.textContent = 'Validando…';
+
+  try {
+    var info = getDeliveryInfo();
+    var r = await fetch('/api/despacho/referido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'validar', codigo: codigo, telefono: tel, subtotal: info.subtotal })
+    });
+    var d = await r.json();
+
+    if (d && d.ok) {
+      window.k24Referido = { codigo: codigo, descuento: Number(d.descuento) || 0 };
+      aviso.style.color = '#00aa00';
+      aviso.innerHTML = '✅ Listo: <strong>$' + (Number(d.descuento) || 0).toLocaleString('es-AR') + '</strong> de descuento.';
+      renderCaja();
+    } else {
+      window.k24Referido = { codigo: null, descuento: 0 };
+      aviso.style.color = '#c00';
+      aviso.textContent = (d && d.motivo) || (d && d.error) || 'No pudimos validar ese código.';
+      renderCaja();
+    }
+  } catch (e) {
+    aviso.style.color = '#c00';
+    aviso.textContent = 'No pudimos validar el código. Probá de nuevo en un momento.';
+  }
 }
 function irACaja() {
   if (!Object.keys(cart).length) { showToast('Tu carrito está vacío'); return; }
@@ -7623,6 +7820,7 @@ document.addEventListener('click', function(ev) {
         <button type="button" class="ml-acc" onclick="verPedidos()"><span class="ml-acc-ico">🧾</span><span>Mis compras</span></button>
         <button type="button" class="ml-acc" onclick="verDirecciones()"><span class="ml-acc-ico">📍</span><span>Mis direcciones</span></button>
         <button type="button" class="ml-acc" onclick="verDeseos()"><span class="ml-acc-ico">❤️</span><span>Favoritos</span></button>
+        <button type="button" class="ml-acc" onclick="verReferidos()"><span class="ml-acc-ico">🎁</span><span>Recomendá y ganá</span></button>
         <button type="button" class="ml-acc" onclick="abrirBuzon()"><span class="buzon-dot" id="accAvisosDot"></span><span class="ml-acc-ico">📬</span><span>Avisos</span></button>
         <button type="button" class="ml-acc" onclick="ayudaWhatsApp()"><span class="ml-acc-ico">💬</span><span>Ayuda</span></button>
         <button type="button" class="ml-acc" onclick="cerrarSesion()"><span class="ml-acc-ico">🚪</span><span>Salir</span></button>
@@ -8098,7 +8296,11 @@ document.addEventListener('click', function(ev) {
       total: info.subtotal + (info.gratis ? 0 : info.costo),
       metodo_pago: metodo,
       // Solo tiene sentido si paga en efectivo al recibir
-      paga_con: (metodo === 'efectivo' && window.k24PagaCon) ? window.k24PagaCon : null
+      paga_con: (metodo === 'efectivo' && window.k24PagaCon) ? window.k24PagaCon : null,
+      // Del codigo de referido solo mandamos el texto que escribio el
+      // cliente. Cuanto vale, si existe y si le corresponde lo decide el
+      // servidor: aca no viaja ningun monto.
+      codigo_referido: (window.k24Referido && window.k24Referido.codigo) || null
     };
   }
 
