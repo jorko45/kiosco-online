@@ -1,11 +1,110 @@
 // api/despacho/pedido.js — POST /api/despacho/pedido
 // Crea un pedido. Lo llama el checkout del sitio (publico, sin login).
+//
+// ⚠ TAMBIEN ATIENDE LAS ACCIONES DE REFERIDOS, y no por prolijidad sino
+// por un limite real: el plan Hobby de Vercel permite 12 funciones
+// serverless por deploy, y este proyecto ya tiene 12. Un archivo aparte
+// para referidos hacia fallar el deploy entero con "No more than 12
+// Serverless Functions". Estan juntas porque las dos son publicas y del
+// mismo flujo de compra: si el pedido manda {accion}, se trata como
+// referidos; si no, se crea el pedido.
 
 import { insertar, actualizar, rpc, json, cors, cuerpo, dbConfigurada } from '../_lib/db.js';
 import { geocodificar } from '../_lib/geo.js';
 
 /** Las funciones de Postgres que devuelven TABLE llegan como array. */
 const primera = (r) => (Array.isArray(r) ? r[0] || null : r || null);
+
+// ── Referidos ──────────────────────────────────────────────────────────
+//
+// ⚠ POR QUE LA VALIDACION VIVE EN EL SERVIDOR
+// Los envios gratis se guardan en el localStorage del cliente y con eso
+// alcanza, porque para hacerse trampa hay que gastar $50.000 igual. Con
+// referidos no: cualquiera abre una ventana de incognito y se "recomienda"
+// a si mismo. La unica forma de que el descuento signifique algo es
+// contrastarlo contra la tabla de pedidos, que el cliente no puede tocar.
+
+// Probar codigos al voleo es barato para el atacante (31^4 combinaciones
+// no son tantas) y caro para la base. Es por instancia de Vercel: no es
+// una defensa perfecta, pero corta el caso obvio del script probando.
+const INTENTOS_MAX = 12;
+const VENTANA_MS = 60_000;
+const intentos = new Map();
+
+function demasiadosIntentos(ip) {
+  const ahora = Date.now();
+  const previo = intentos.get(ip);
+  if (!previo || ahora - previo.desde > VENTANA_MS) {
+    intentos.set(ip, { desde: ahora, n: 1 });
+    return false;
+  }
+  previo.n += 1;
+  if (intentos.size > 5000) intentos.clear();   // que el Map no crezca sin techo
+  return previo.n > INTENTOS_MAX;
+}
+
+function ipDe(req) {
+  const h = req.headers || {};
+  return String(h['x-forwarded-for'] || h['x-real-ip'] || 'sin-ip').split(',')[0].trim();
+}
+
+async function accionesReferidos(req, res, b) {
+  const accion = String(b.accion || '').trim();
+  const telefono = String(b.telefono || '').trim();
+
+  try {
+    switch (accion) {
+      // Devuelve null si el telefono todavia no compro nunca: el codigo es
+      // un premio por ser cliente, no algo que cualquiera pueda pedir.
+      case 'mi_codigo': {
+        const codigo = await rpc('codigo_de', { p_telefono: telefono });
+        return json(res, 200, { ok: true, codigo: codigo || null });
+      }
+
+      case 'resumen': {
+        const r = primera(await rpc('resumen_referidos', { p_telefono: telefono }));
+        return json(res, 200, {
+          ok: true,
+          codigo:         r?.codigo || null,
+          amigos:         r?.amigos_totales || 0,
+          amigos_pagados: r?.amigos_pagados || 0,
+          premios:        r?.premios_libres || 0,
+          ganado:         r?.ganado_total || 0,
+        });
+      }
+
+      // Solo consulta, no reserva nada: el canje real va cuando el pedido
+      // existe, porque entre que el cliente escribe el codigo y confirma
+      // la compra puede pasar cualquier cosa.
+      case 'validar': {
+        if (demasiadosIntentos(ipDe(req))) {
+          return json(res, 429, { ok: false, motivo: 'Probaste muchos códigos. Esperá un minuto.' });
+        }
+        const r = primera(await rpc('validar_referido', {
+          p_codigo: String(b.codigo || '').trim(),
+          p_telefono: telefono,
+          p_subtotal: Math.max(0, Math.round(Number(b.subtotal) || 0)),
+        }));
+        return json(res, 200, {
+          ok: Boolean(r?.ok),
+          descuento: r?.descuento || 0,
+          motivo: r?.motivo || 'No se pudo validar el código',
+        });
+      }
+
+      case 'premios': {
+        const n = await rpc('premios_de', { p_telefono: telefono });
+        return json(res, 200, { ok: true, premios: Number(n) || 0 });
+      }
+
+      default:
+        return json(res, 400, { ok: false, error: 'Accion desconocida' });
+    }
+  } catch (e) {
+    console.error('[referido]', accion, e.message);
+    return json(res, 500, { ok: false, error: 'No se pudo procesar el pedido de referidos' });
+  }
+}
 
 /**
  * Cuanto descuento le corresponde a este pedido.
@@ -67,6 +166,9 @@ export default async function handler(req, res) {
   }
 
   const b = cuerpo(req);
+
+  // Referidos: mismo endpoint, distinta accion (ver nota del encabezado).
+  if (b.accion) return await accionesReferidos(req, res, b);
 
   // ── Validacion ──────────────────────────────────────────────────
   const direccion = String(b.direccion || '').trim();

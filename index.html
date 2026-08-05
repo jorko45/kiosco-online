@@ -3320,7 +3320,7 @@ async function verReferidos() {
 
   var d = null;
   try {
-    var r = await fetch('/api/despacho/referido', {
+    var r = await fetch('/api/despacho/pedido', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'resumen', telefono: tel })
@@ -3816,7 +3816,7 @@ async function aplicarReferido() {
 
   try {
     var info = getDeliveryInfo();
-    var r = await fetch('/api/despacho/referido', {
+    var r = await fetch('/api/despacho/pedido', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'validar', codigo: codigo, telefono: tel, subtotal: info.subtotal })
