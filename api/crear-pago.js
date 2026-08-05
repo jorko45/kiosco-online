@@ -10,7 +10,14 @@
 
 import { mapaDePrecios, idDePlanilla } from './_lib/precios.js';
 
-// Costo de envio. Tiene que coincidir con DELIVERY_COSTO de index.html.
+// Costos de envio validos. Tienen que coincidir con index.html:
+//   $5.000 -> tarifa normal (DELIVERY_COSTO)
+//   $2.000 -> con descuento por credito (DELIVERY_COSTO - DELIVERY_DESCUENTO)
+// El credito vive en el localStorage del cliente, asi que el servidor no
+// puede verificar que le corresponda. Lo que si puede —y hace— es no
+// aceptar ningun otro monto: el peor abuso posible es pagar $2.000 en vez
+// de $5.000, no $1.
+const ENVIOS_VALIDOS = [5000, 2000];
 const ENVIO = 5000;
 
 // Diferencia tolerada entre lo que muestra la web y lo que dice la planilla.
@@ -64,10 +71,15 @@ export default async function handler(req, res) {
       let precioFinal = precioCliente;
 
       if (String(it.id) === '__envio') {
-        // El envio no esta en la planilla: se valida contra la constante.
-        precioFinal = ENVIO;
-        if (precioCliente !== ENVIO) {
+        // El envio no esta en la planilla: se valida contra la lista blanca.
+        if (ENVIOS_VALIDOS.includes(precioCliente)) {
+          precioFinal = precioCliente;
+        } else {
+          precioFinal = ENVIO;
           console.warn('[crear-pago] envío alterado:', precioCliente, '→', ENVIO);
+        }
+        if (cantidad !== 1) {
+          return res.status(400).json({ error: 'Envío inválido' });
         }
       } else if (validando) {
         const id = idDePlanilla(it.id);

@@ -1524,7 +1524,7 @@
 
     <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery inmediato</span></div>
       <div class="feat"><span class="feat-icon">🕗</span><span class="feat-text">Comprá 24hs · Reparto 8 a 21hs</span></div>
-      <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 gratis con pedidos +$50.000</span></div>
+      <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 a $2.000 con pedidos +$50.000</span></div>
       <div class="feat"><span class="feat-icon">📲</span><span class="feat-text">Pedido por WhatsApp</span></div>
     </div>
   </div>
@@ -3051,20 +3051,44 @@ function addFromModal() {
 // ── CARRITO ───────────────────────────────────────────────────────────────
 
 const DELIVERY_COSTO = 5000;
-const DELIVERY_MINIMO_CREDITOS = 50000; // monto para ganar envíos gratis
+const DELIVERY_MINIMO_CREDITOS = 50000; // monto de compra que otorga créditos
+const DELIVERY_DESCUENTO  = 3000;       // cuánto descuenta cada crédito
+const DELIVERY_MINIMO_USO = 25000;      // compra mínima para poder usar un crédito
 
+// ── POR QUE EL ENVIO YA NO ES GRATIS ────────────────────────────────────
+// Antes el crédito hacía el envío gratis, sin mínimo de compra. Con el
+// margen real (5% sobre el costo) esa promo perdía plata en cada uso:
+// un pedido de $25.000 con envío gratis pagado por MercadoPago dejaba
+// -$1.985, porque al ingreso perdido se le suma el pago al repartidor,
+// que se hace igual. Para empatar hacía falta un pedido de $73.900.
+// Y como no había mínimo, un cliente podía gastar los 10 créditos en
+// pedidos chicos: hasta -$25.000 por cliente.
+//
+// Ahora el crédito descuenta $3.000 (el cliente paga $2.000) y exige un
+// pedido de $25.000. Peor caso: ~$0. Caso típico: +$1.665. Sigue siendo
+// un 60% de descuento, que es un beneficio real y comunicable.
 function getDeliveryInfo() {
   const credits  = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
   const items    = Object.values(cart);
   const subtotal = items.reduce((a, b) => a + b.qty * b.price, 0);
-  const gratis   = credits > 0;
-  return { costo: gratis ? 0 : DELIVERY_COSTO, gratis, credits, subtotal };
+  const aplica   = credits > 0 && subtotal >= DELIVERY_MINIMO_USO;
+  return {
+    costo: aplica ? DELIVERY_COSTO - DELIVERY_DESCUENTO : DELIVERY_COSTO,
+    aplica,
+    descuento: aplica ? DELIVERY_DESCUENTO : 0,
+    credits,
+    subtotal,
+    // Se mantiene en false a propósito: hay una docena de lugares que hacen
+    // `gratis ? 0 : costo`. Dejándolo en false todos toman el costo real
+    // sin tener que tocarlos, y no queda ninguno devolviendo 0 por error.
+    gratis: false,
+  };
 }
 
 function recordarCompra(canal) {
-  // Usar crédito de envío gratis si corresponde
-  const { gratis, subtotal, costo } = getDeliveryInfo();
-  if (gratis) {
+  // Consumir un crédito solo si de verdad se aplicó el descuento
+  const { aplica, subtotal, costo } = getDeliveryInfo();
+  if (aplica) {
     const credits = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
     localStorage.setItem('k24_envios_gratis', Math.max(0, credits - 1));
   }
@@ -3072,7 +3096,7 @@ function recordarCompra(canal) {
   if (subtotal >= DELIVERY_MINIMO_CREDITOS) {
     const credits = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
     localStorage.setItem('k24_envios_gratis', credits + 10);
-    setTimeout(() => showToast('🎉 ¡Ganaste 10 envíos gratis por tu compra!'), 800);
+    setTimeout(() => showToast('🎉 ¡Ganaste 10 descuentos de envío!'), 800);
   }
   // Marcar como verificado (completó al menos una compra)
   localStorage.setItem('k24_verificado', '1');
@@ -3086,7 +3110,7 @@ function recordarCompra(canal) {
       return { name: i.name, size: i.size || '', qty: i.qty, price: i.price };
     });
     if (items.length) {
-      const envio  = gratis ? 0 : costo;
+      const envio  = costo;   // ya viene con el descuento aplicado si corresponde
       const pedido = {
         fecha:    new Date().toISOString(),
         canal:    canal || '',
@@ -3494,7 +3518,7 @@ function renderCart() {
   _updateFabCaja();
   const items    = Object.values(cart);
   const totalQty = items.reduce((a, b) => a + b.qty, 0);
-  const { costo: envio, gratis, credits, subtotal } = getDeliveryInfo();
+  const { costo: envio, aplica, credits, subtotal } = getDeliveryInfo();
   const total = subtotal + envio;
 
   document.getElementById('cartCount').textContent = totalQty;
@@ -3510,26 +3534,30 @@ function renderCart() {
   const delivEl = document.getElementById('cartDelivery');
   const noteEl  = document.getElementById('cartDeliveryNote');
   if (delivEl) {
-    if (gratis) {
-      delivEl.innerHTML = '<span style="color:#00aa00;font-weight:700">GRATIS 🎉</span>';
+    if (aplica) {
+      delivEl.innerHTML = `<span style="text-decoration:line-through;color:#999">$${DELIVERY_COSTO.toLocaleString('es-AR')}</span> <span style="color:#00aa00;font-weight:700">$${envio.toLocaleString('es-AR')}</span>`;
     } else {
       delivEl.textContent = `$${DELIVERY_COSTO.toLocaleString('es-AR')}`;
       delivEl.style.color = '#555';
     }
   }
   if (noteEl) {
-    if (gratis) {
-      noteEl.innerHTML = `🎉 ¡Envío gratis! Te quedan <strong>${credits}</strong> crédito${credits !== 1 ? 's' : ''} · Horario 8 a 21hs`;
+    const faltaUso = DELIVERY_MINIMO_USO - subtotal;
+    if (aplica) {
+      noteEl.innerHTML = `🎉 Descuento de envío aplicado · Te quedan <strong>${credits - 1}</strong> · Horario 8 a 21hs`;
       noteEl.style.color = '#00aa00';
+    } else if (credits > 0 && faltaUso > 0) {
+      noteEl.innerHTML = `🎟️ Tenés <strong>${credits}</strong> descuento${credits !== 1 ? 's' : ''} de envío · Agregá $${faltaUso.toLocaleString('es-AR')} más y usás uno`;
+      noteEl.style.color = '#c77800';
     } else if (subtotal > 0 && subtotal < DELIVERY_MINIMO_CREDITOS) {
       const falta = (DELIVERY_MINIMO_CREDITOS - subtotal).toLocaleString('es-AR');
-      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Agregá $${falta} más y ganás <strong>10 envíos gratis</strong>`;
+      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Agregá $${falta} más y ganás <strong>10 envíos a $2.000</strong>`;
       noteEl.style.color = '';
     } else if (subtotal >= DELIVERY_MINIMO_CREDITOS) {
-      noteEl.innerHTML = `🎉 Con este pedido ganás <strong>10 envíos gratis</strong> · Horario 8 a 21hs`;
+      noteEl.innerHTML = `🎉 Con este pedido ganás <strong>10 envíos a $2.000</strong> · Horario 8 a 21hs`;
       noteEl.style.color = '#00aa00';
     } else {
-      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Con pedidos +$${DELIVERY_MINIMO_CREDITOS.toLocaleString('es-AR')} ganás 10 gratis · 🕗 8 a 21hs`;
+      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Con pedidos +$${DELIVERY_MINIMO_CREDITOS.toLocaleString('es-AR')} ganás 10 a $2.000 · 🕗 8 a 21hs`;
       noteEl.style.color = '';
     }
   }
