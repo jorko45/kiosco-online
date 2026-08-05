@@ -4426,7 +4426,7 @@ function showTicker(visible) {
 // Solucion: mientras el usuario BAJA esta mirando productos, asi que el
 // boton se esconde; apenas SUBE (que es cuando busca salir) reaparece.
 // Ademas tiene una × para ocultarlo por el resto de la visita.
-var _fabUltimoY = 0, _fabTick = false;
+var _fabUltimoY = 0, _fabTick = 0;
 
 function fabHomeDescartado() {
   try { return sessionStorage.getItem('k24_fab_oculto') === '1'; } catch (e) { return false; }
@@ -4462,23 +4462,26 @@ function mostrarFabHome(visible) {
 // Los eventos de scroll NO burbujean, asi que un listener en window nunca se
 // entera de que scrolleo #landing. En fase de captura sobre document si
 // llegan, venga el scroll del contenedor que venga.
+// Se hace sincronico y con un tope de tiempo, sin requestAnimationFrame:
+// rAF se congela cuando la pestana no esta visible, y con el patron de
+// "flag booleano + rAF" el flag quedaba en true para siempre, dejando el
+// boton muerto al volver. Total, todo el trabajo es prender o apagar una
+// clase; la suavidad la pone la transicion de CSS.
 document.addEventListener('scroll', function (e) {
-  if (_fabTick) return;
-  _fabTick = true;
+  var ahora = Date.now();
+  if (ahora - _fabTick < 60) return;                        // como mucho ~16 veces por segundo
+  _fabTick = ahora;
+  var f = document.getElementById('fabHome');
+  if (!f || f.style.display === 'none') return;
   var t = e.target;
   var y = (!t || t === document || t === document.documentElement)
         ? (window.scrollY || 0)
         : (t.scrollTop || 0);
-  requestAnimationFrame(function () {
-    _fabTick = false;
-    var f = document.getElementById('fabHome');
-    if (!f || f.style.display === 'none') return;
-    var d = y - _fabUltimoY;
-    if (Math.abs(d) < 8) return;                            // ignorar el temblor del dedo
-    if (d > 0 && y > 120) f.classList.add('fab-oculto');    // bajando: fuera del camino
-    else                  f.classList.remove('fab-oculto'); // subiendo: a mano
-    _fabUltimoY = y;
-  });
+  var d = y - _fabUltimoY;
+  if (Math.abs(d) < 8) return;                              // ignorar el temblor del dedo
+  if (d > 0 && y > 120) f.classList.add('fab-oculto');      // bajando: fuera del camino
+  else                  f.classList.remove('fab-oculto');   // subiendo: a mano
+  _fabUltimoY = y;
 }, { capture: true, passive: true });
 
 function enterSection(section) {
