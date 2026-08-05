@@ -3771,6 +3771,17 @@ function renderCaja() {
 // gastar $50.000 igual; con referidos no, porque cualquiera abre una
 // ventana de incógnito y se "recomienda" a sí mismo. Por eso todo se
 // valida contra la tabla de pedidos, que el cliente no puede tocar.
+// ⚠ PONER EN true DESPUES DE CORRER despacho/PEGAR_EN_SUPABASE.sql
+//
+// Mientras esto sea false no se muestra el campo del codigo. El motivo:
+// la validacion ya funciona y diria "$3.000 de descuento", pero el canje
+// todavia falla (el pedido se bloquea a si mismo, ver el archivo), asi
+// que el pedido saldria al precio lleno. Prometerle un descuento al
+// cliente y despues no aplicarlo es peor que no ofrecerlo.
+//
+// El arreglo es solo SQL: el codigo de esta pagina ya esta bien.
+const REFERIDOS_ACTIVOS = false;
+
 window.k24Referido = window.k24Referido || { codigo: null, descuento: 0 };
 
 // El perfil se declara con `let` mas abajo en el archivo, asi que en el
@@ -3791,6 +3802,7 @@ function telefonoDelPerfil() {
 function refrescarBloqueReferido() {
   var b = document.getElementById('bloqueReferido');
   if (!b) return;
+  if (!REFERIDOS_ACTIVOS) { b.style.display = 'none'; return; }
   var yaCompro = localStorage.getItem('k24_verificado') === '1';
   var yaUso = window.k24Referido.descuento > 0;
   b.style.display = (yaCompro && !yaUso) ? 'none' : '';

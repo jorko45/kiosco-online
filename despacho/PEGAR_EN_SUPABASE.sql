@@ -145,3 +145,17 @@ select
   (select count(*) from referidos)                                                 as codigos,
   (select count(*) from referido_canjes)                                           as canjes;
 -- Los tres deberian dar 0.
+
+
+-- ── 4. Y DESPUES, ENCENDER EL CAMPO EN LA WEB ─────────────────────────
+--
+--  Falta un paso mas, fuera de Supabase.
+--
+--  En index.html hay una linea que dice:
+--      const REFERIDOS_ACTIVOS = false;
+--  Cambiala a true y corre SUBIR.bat.
+--
+--  Esta en false a proposito: la validacion ya andaba y le hubiera dicho
+--  al cliente "$3.000 de descuento", pero el canje fallaba y el pedido
+--  salia al precio lleno. Prometer un descuento y no aplicarlo es peor
+--  que no ofrecerlo. Una vez corrido este SQL, ya se puede encender.
