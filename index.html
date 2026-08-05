@@ -4394,7 +4394,14 @@ function showTicker(visible) {
 }
 
 function enterSection(section) {
-  var _fh = document.getElementById('fabHome'); if (_fh) _fh.style.display = 'flex';
+  // El boton flotante "Volver" solo se muestra en la heladera.
+  // Las demas secciones (gondola, golosinas, botellas, promos, fresco,
+  // cigarreria) ya tienen su propio ".section-view-header" sticky con el
+  // boton "← INICIO", que nunca se va de pantalla. Ahi el flotante era
+  // redundante Y ademas tapaba el precio del primer producto de la fila
+  // que quedara a esa altura, abajo a la izquierda.
+  var _fh = document.getElementById('fabHome');
+  if (_fh) _fh.style.display = (section === 'heladeras') ? 'flex' : 'none';
   if (section === 'heladeras') {
     const el = document.getElementById('landing');
     el.classList.add('exiting');
