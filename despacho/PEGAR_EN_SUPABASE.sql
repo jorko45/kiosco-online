@@ -151,7 +151,7 @@ select
 --
 --  Falta un paso mas, fuera de Supabase.
 --
---  En index.html hay una linea que dice:
+--  YA HECHO el 5/8/2026. Quedaba: en index.html la linea
 --      const REFERIDOS_ACTIVOS = false;
 --  Cambiala a true y corre SUBIR.bat.
 --

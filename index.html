@@ -3771,16 +3771,15 @@ function renderCaja() {
 // gastar $50.000 igual; con referidos no, porque cualquiera abre una
 // ventana de incógnito y se "recomienda" a sí mismo. Por eso todo se
 // valida contra la tabla de pedidos, que el cliente no puede tocar.
-// ⚠ PONER EN true DESPUES DE CORRER despacho/PEGAR_EN_SUPABASE.sql
+// Encendido el 5/8/2026, despues de correr despacho/PEGAR_EN_SUPABASE.sql.
 //
-// Mientras esto sea false no se muestra el campo del codigo. El motivo:
-// la validacion ya funciona y diria "$3.000 de descuento", pero el canje
-// todavia falla (el pedido se bloquea a si mismo, ver el archivo), asi
-// que el pedido saldria al precio lleno. Prometerle un descuento al
-// cliente y despues no aplicarlo es peor que no ofrecerlo.
+// Estuvo en false unas horas a proposito: la validacion ya funcionaba y le
+// hubiera dicho al cliente "$3.000 de descuento", pero el canje fallaba
+// —el pedido se bloqueaba a si mismo— y salia al precio lleno. Prometer un
+// descuento y no aplicarlo es peor que no ofrecerlo.
 //
-// El arreglo es solo SQL: el codigo de esta pagina ya esta bien.
-const REFERIDOS_ACTIVOS = false;
+// Si algun dia hay que apagar la promo, alcanza con volver esto a false.
+const REFERIDOS_ACTIVOS = true;
 
 window.k24Referido = window.k24Referido || { codigo: null, descuento: 0 };
 
