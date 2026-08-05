@@ -37,8 +37,28 @@ NRPP = 500
 UMBRAL_SEGURIDAD = 0.60
 
 
+# La consola de Windows abre en cp1252 y no sabe escribir "⚠", "·" ni las
+# tildes. Un print con uno de esos caracteres tira UnicodeEncodeError y mata
+# la corrida entera — paso de verdad: una noche el script actualizo los 4548
+# costos y despues murio imprimiendo un "⚠", quedando marcado como FALLO.
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
+
 def log(*a):
-    print(*a, flush=True)
+    """Nunca puede hacer fallar la corrida: si la consola no sabe escribir
+    un caracter, se reemplaza y se sigue."""
+    try:
+        print(*a, flush=True)
+    except UnicodeEncodeError:
+        cod = getattr(sys.stdout, 'encoding', None) or 'ascii'
+        limpio = [str(x).encode(cod, errors='replace').decode(cod, errors='replace') for x in a]
+        print(*limpio, flush=True)
+    except Exception:
+        pass
 
 
 def Number_(x):
@@ -63,11 +83,33 @@ def fetch(url, timeout=45, reintentos=3):
     raise ultimo
 
 
-def post(payload, timeout=180):
+def post(payload, timeout=180, reintentos=4):
+    """POST con reintentos.
+
+    Antes no los tenia, y como la corrida son ~20 minutos de lotes contra
+    Apps Script, un solo hipo de red la mataba entera. Paso de verdad:
+    "SSL: UNEXPECTED_EOF_WHILE_READING" en el lote 4400 de 4555, con los
+    4400 anteriores ya escritos en la planilla.
+
+    Reintentar es seguro: las acciones de la planilla ASIGNAN valores
+    (poner tal costo en tal fila), no acumulan. Repetir un lote deja el
+    mismo resultado que aplicarlo una sola vez.
+    """
     data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(EXEC, data=data, headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
-        return json.loads(r.read().decode('utf-8', errors='replace'))
+    ultimo = None
+    for intento in range(reintentos):
+        try:
+            req = urllib.request.Request(EXEC, data=data,
+                                         headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
+                return json.loads(r.read().decode('utf-8', errors='replace'))
+        except Exception as e:
+            ultimo = e
+            if intento < reintentos - 1:
+                espera = 3 * (intento + 1)
+                log('   (reintento %d/%d en %ds: %s)' % (intento + 2, reintentos, espera, e))
+                time.sleep(espera)
+    raise ultimo
 
 
 # ─────────────────────────── Super Mami ───────────────────────────
