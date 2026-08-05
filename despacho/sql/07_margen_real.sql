@@ -42,7 +42,7 @@ alter table parametros_negocio enable row level security;
 revoke all on parametros_negocio from anon, authenticated;
 
 insert into parametros_negocio (clave, valor, nota) values
-  ('margen',       0.050, 'Margen sobre el costo. Planilla: columna Margen %'),
+  ('margen',       0.200, 'Margen mezclado: 25% en 54% del catalogo, 15% en 44%, 5% solo en las gaseosas ancla'),
   ('comision_mp',  0.066, 'Comision de MercadoPago trasladada al precio')
 on conflict (clave) do nothing;
 
