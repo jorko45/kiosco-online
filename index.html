@@ -1544,7 +1544,7 @@
 
     <div class="feat"><span class="feat-icon">⚡</span><span class="feat-text">Delivery inmediato</span></div>
       <div class="feat"><span class="feat-icon">🕗</span><span class="feat-text">Comprá 24hs · Reparto 8 a 21hs</span></div>
-      <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 a $2.000 con pedidos +$50.000</span></div>
+      <div class="feat"><span class="feat-icon">🛵</span><span class="feat-text">Envío $5.000 · 10 gratis con pedidos +$50.000</span></div>
       <div class="feat"><span class="feat-icon">📲</span><span class="feat-text">Pedido por WhatsApp</span></div>
     </div>
   </div>
@@ -3076,36 +3076,31 @@ function addFromModal() {
 
 const DELIVERY_COSTO = 5000;
 const DELIVERY_MINIMO_CREDITOS = 50000; // monto de compra que otorga créditos
-const DELIVERY_DESCUENTO  = 3000;       // cuánto descuenta cada crédito
-const DELIVERY_MINIMO_USO = 25000;      // compra mínima para poder usar un crédito
+const DELIVERY_MINIMO_USO      = 50000; // monto mínimo para poder USAR un crédito
 
-// ── POR QUE EL ENVIO YA NO ES GRATIS ────────────────────────────────────
-// Antes el crédito hacía el envío gratis, sin mínimo de compra. Con el
-// margen real (5% sobre el costo) esa promo perdía plata en cada uso:
-// un pedido de $25.000 con envío gratis pagado por MercadoPago dejaba
-// -$1.985, porque al ingreso perdido se le suma el pago al repartidor,
-// que se hace igual. Para empatar hacía falta un pedido de $73.900.
-// Y como no había mínimo, un cliente podía gastar los 10 créditos en
-// pedidos chicos: hasta -$25.000 por cliente.
+// ── LA REGLA DE LOS ENVIOS GRATIS ───────────────────────────────────────
+// El envío gratis es siempre para pedidos de $50.000: ese es el mínimo
+// tanto para GANAR los créditos como para USARLOS.
 //
-// Ahora el crédito descuenta $3.000 (el cliente paga $2.000) y exige un
-// pedido de $25.000. Peor caso: ~$0. Caso típico: +$1.665. Sigue siendo
-// un 60% de descuento, que es un beneficio real y comunicable.
+// El mínimo para usarlos es lo que faltaba antes. Sin él, un cliente que
+// ganaba los 10 créditos con una compra de $50.000 podía gastarlos en
+// pedidos de $10.000, y ahí cada envío perdía plata: al ingreso resignado
+// se le suma el pago al repartidor, que se hace igual.
+//
+// Con el mínimo puesto, la promo se financia sola. Para usarla el cliente
+// tiene que llevar el carrito de ~$25.000 a $50.000, y esos $25.000 extra
+// de mercadería dejan más de lo que cuesta regalar el envío.
 function getDeliveryInfo() {
   const credits  = parseInt(localStorage.getItem('k24_envios_gratis') || '0');
   const items    = Object.values(cart);
   const subtotal = items.reduce((a, b) => a + b.qty * b.price, 0);
   const aplica   = credits > 0 && subtotal >= DELIVERY_MINIMO_USO;
   return {
-    costo: aplica ? DELIVERY_COSTO - DELIVERY_DESCUENTO : DELIVERY_COSTO,
+    costo: aplica ? 0 : DELIVERY_COSTO,
     aplica,
-    descuento: aplica ? DELIVERY_DESCUENTO : 0,
+    gratis: aplica,
     credits,
     subtotal,
-    // Se mantiene en false a propósito: hay una docena de lugares que hacen
-    // `gratis ? 0 : costo`. Dejándolo en false todos toman el costo real
-    // sin tener que tocarlos, y no queda ninguno devolviendo 0 por error.
-    gratis: false,
   };
 }
 
@@ -3559,7 +3554,7 @@ function renderCart() {
   const noteEl  = document.getElementById('cartDeliveryNote');
   if (delivEl) {
     if (aplica) {
-      delivEl.innerHTML = `<span style="text-decoration:line-through;color:#999">$${DELIVERY_COSTO.toLocaleString('es-AR')}</span> <span style="color:#00aa00;font-weight:700">$${envio.toLocaleString('es-AR')}</span>`;
+      delivEl.innerHTML = '<span style="color:#00aa00;font-weight:700">GRATIS 🎉</span>';
     } else {
       delivEl.textContent = `$${DELIVERY_COSTO.toLocaleString('es-AR')}`;
       delivEl.style.color = '#555';
@@ -3568,20 +3563,20 @@ function renderCart() {
   if (noteEl) {
     const faltaUso = DELIVERY_MINIMO_USO - subtotal;
     if (aplica) {
-      noteEl.innerHTML = `🎉 Descuento de envío aplicado · Te quedan <strong>${credits - 1}</strong> · Horario 8 a 21hs`;
+      noteEl.innerHTML = `🎉 ¡Envío gratis! Te quedan <strong>${credits - 1}</strong> · Horario 8 a 21hs`;
       noteEl.style.color = '#00aa00';
     } else if (credits > 0 && faltaUso > 0) {
-      noteEl.innerHTML = `🎟️ Tenés <strong>${credits}</strong> descuento${credits !== 1 ? 's' : ''} de envío · Agregá $${faltaUso.toLocaleString('es-AR')} más y usás uno`;
+      noteEl.innerHTML = `🎟️ Tenés <strong>${credits}</strong> envío${credits !== 1 ? 's' : ''} gratis · Agregá $${faltaUso.toLocaleString('es-AR')} más y usás uno`;
       noteEl.style.color = '#c77800';
     } else if (subtotal > 0 && subtotal < DELIVERY_MINIMO_CREDITOS) {
       const falta = (DELIVERY_MINIMO_CREDITOS - subtotal).toLocaleString('es-AR');
-      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Agregá $${falta} más y ganás <strong>10 envíos a $2.000</strong>`;
+      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Agregá $${falta} más y ganás <strong>10 envíos gratis</strong>`;
       noteEl.style.color = '';
     } else if (subtotal >= DELIVERY_MINIMO_CREDITOS) {
-      noteEl.innerHTML = `🎉 Con este pedido ganás <strong>10 envíos a $2.000</strong> · Horario 8 a 21hs`;
+      noteEl.innerHTML = `🎉 Con este pedido ganás <strong>10 envíos gratis</strong> · Horario 8 a 21hs`;
       noteEl.style.color = '#00aa00';
     } else {
-      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Con pedidos +$${DELIVERY_MINIMO_CREDITOS.toLocaleString('es-AR')} ganás 10 a $2.000 · 🕗 8 a 21hs`;
+      noteEl.innerHTML = `🛵 Envío $${DELIVERY_COSTO.toLocaleString('es-AR')} · Con pedidos +$${DELIVERY_MINIMO_CREDITOS.toLocaleString('es-AR')} ganás <strong>10 gratis</strong> · 🕗 8 a 21hs`;
       noteEl.style.color = '';
     }
   }
@@ -7893,7 +7888,7 @@ document.addEventListener('click', function(ev) {
   //   1. Es lo que el cliente pago de verdad, que es la convencion estandar.
   //      Reportar menos hace que el retorno se vea peor de lo que es.
   //   2. Hace que Meta prefiera los pedidos con envio cobrado por sobre los
-  //      de envio gratis — y esos dejan $7.000 contra $2.000 de contribucion.
+  //      de envio gratis, que dejan $5.000 menos de contribucion cada uno.
   envolver('recordarCompra', function (args, previo) {
     var canal = args[0] || 'desconocido';
     // previo se capturo ANTES de que corriera recordarCompra, asi que el

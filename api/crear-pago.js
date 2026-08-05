@@ -10,14 +10,11 @@
 
 import { mapaDePrecios, idDePlanilla } from './_lib/precios.js';
 
-// Costos de envio validos. Tienen que coincidir con index.html:
-//   $5.000 -> tarifa normal (DELIVERY_COSTO)
-//   $2.000 -> con descuento por credito (DELIVERY_COSTO - DELIVERY_DESCUENTO)
-// El credito vive en el localStorage del cliente, asi que el servidor no
-// puede verificar que le corresponda. Lo que si puede —y hace— es no
-// aceptar ningun otro monto: el peor abuso posible es pagar $2.000 en vez
-// de $5.000, no $1.
-const ENVIOS_VALIDOS = [5000, 2000];
+// Costos de envio validos. Tienen que coincidir con index.html.
+// Solo hay uno: $5.000. Cuando el cliente usa un credito el envio va
+// GRATIS, y en ese caso la web directamente no manda la linea de envio,
+// asi que aca no hay que contemplar un monto intermedio.
+const ENVIOS_VALIDOS = [5000];
 const ENVIO = 5000;
 
 // Diferencia tolerada entre lo que muestra la web y lo que dice la planilla.
