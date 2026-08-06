@@ -3194,6 +3194,90 @@ let wishlist = [];
 try { wishlist = JSON.parse(localStorage.getItem('k24_wishlist') || '[]') || []; } catch (e) { wishlist = []; }
 function saveWishlist() { try { localStorage.setItem('k24_wishlist', JSON.stringify(wishlist)); } catch (e) {} if (typeof syncEstadoDebounced === 'function') syncEstadoDebounced(); }
 function inWishlist(id) { return wishlist.some(function (w) { return w.id === id; }); }
+
+// ── Precio de HOY de un producto suelto ──────────────────────────────
+// Los favoritos guardan el precio del dia que se marcaron. Si el cliente
+// marca algo en agosto y lo compra en octubre, se le cobraba el precio de
+// agosto: vendiamos abajo del costo sin enterarnos. El indice se arma una
+// sola vez, la primera vez que hace falta.
+var _idxPrecios = null;
+function _armarIndicePrecios() {
+  var fuentes = [];
+  function sumar(o) { if (o && typeof o === 'object') fuentes.push(o); }
+  try { sumar(catalogDino2); }        catch (e) {}
+  try { sumar(catalogDistri); }       catch (e) {}
+  try { sumar(catalogFrescoMami); }   catch (e) {}
+  try { sumar(catalogGondola); }      catch (e) {}
+  try { sumar(catalogGolosinas); }    catch (e) {}
+  try { sumar(catalogGolosinasMami); }catch (e) {}
+  try { sumar(catalogJugos); }        catch (e) {}
+  try { sumar(catalogEspumantes); }   catch (e) {}
+  try { sumar(catalogVinos); }        catch (e) {}
+  try { sumar(catalogLicores); }      catch (e) {}
+  try { sumar(catalogSaborizadas); }  catch (e) {}
+  try { sumar(catalogCervezas); }     catch (e) {}
+  try { sumar(catalogAguasExtra); }   catch (e) {}
+  try { sumar(catalogGaseosasExtra); }catch (e) {}
+  var idx = {};
+  fuentes.forEach(function (obj) {
+    Object.keys(obj).forEach(function (k) {
+      var arr = obj[k];
+      if (!Array.isArray(arr)) return;
+      arr.forEach(function (it) {
+        if (it && it.id != null && typeof it.price === 'number') idx[it.id] = it;
+      });
+    });
+  });
+  return idx;
+}
+function precioActual(id, respaldo) {
+  try {
+    if (!_idxPrecios) _idxPrecios = _armarIndicePrecios();
+    var p = _idxPrecios[id];
+    return (p && typeof p.price === 'number') ? p.price : respaldo;
+  } catch (e) { return respaldo; }
+}
+
+// ── El carrito tambien envejece ──────────────────────────────────────
+// El carrito se guarda en el telefono. Si alguien arma el pedido un lunes
+// y lo termina el viernes, esos renglones conservan el precio del lunes.
+// Al abrir la pagina se revisan contra el catalogo de hoy.
+function _precioDeVariante(id, vid) {
+  try {
+    var shelves = Object.keys(catalog);
+    for (var i = 0; i < shelves.length; i++) {
+      var arr = catalog[shelves[i]];
+      if (!Array.isArray(arr)) continue;
+      for (var j = 0; j < arr.length; j++) {
+        if (String(arr[j].id) !== String(id)) continue;
+        var vs = arr[j].variants || [];
+        for (var k = 0; k < vs.length; k++) {
+          if (String(vs[k].vid) === String(vid)) return vs[k].price;
+        }
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+function revalidarPreciosCarrito() {
+  var cambios = 0;
+  try {
+    Object.keys(cart).forEach(function (key) {
+      var linea = cart[key], nuevo = null;
+      var m = key.match(/^(?:gondola|gon)_(.+)$/);
+      if (m) {
+        nuevo = precioActual(m[1], null);
+      } else {
+        var mv = key.match(/^(.+)_(\d+)$/);
+        if (mv) nuevo = _precioDeVariante(mv[1], mv[2]);
+      }
+      if (typeof nuevo === 'number' && nuevo !== linea.price) { linea.price = nuevo; cambios++; }
+    });
+    if (cambios) { saveCart(); if (typeof renderCart === 'function') renderCart(); }
+  } catch (e) {}
+  return cambios;
+}
+window.addEventListener('load', function () { setTimeout(revalidarPreciosCarrito, 0); });
 function toggleWishlistCurrent() {
   if (typeof currentBrand === 'undefined' || !currentBrand) return;
   const id = currentBrand.id;
@@ -3244,8 +3328,11 @@ function verDeseos() {
     return;
   }
   const rows = wishlist.map(function (w) {
+    // Precio de hoy, no el del dia que lo marco.
+    var pHoy = precioActual(w.id, w.price || 0);
+    var etiqueta = (w.shelfKey === 'gon') ? '$' : 'desde $';
     return '<div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
-      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + w.name + '</div><div style="color:#4dff88;font-weight:700;font-size:13px">desde $' + (w.price || 0).toLocaleString('es-AR') + '</div></div>'
+      + '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + w.name + '</div><div style="color:#4dff88;font-weight:700;font-size:13px">' + etiqueta + (pHoy || 0).toLocaleString('es-AR') + '</div></div>'
       + '<button onclick="abrirDeseo(\'' + w.id + '\',\'' + (w.shelfKey || '') + '\')" style="background:#cc1010;border:none;color:#fff;font-weight:800;font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer">Ver</button>'
       + '<button onclick="quitarDeseo(\'' + w.id + '\',this)" style="background:none;border:1px solid rgba(255,255,255,.2);color:#bcd;font-size:12px;padding:8px 10px;border-radius:8px;cursor:pointer">Quitar</button>'
       + '</div>';
@@ -3256,7 +3343,7 @@ function abrirDeseo(id, shelfKey) {
   _cerrarOverlays();
   if (shelfKey === 'gon') {
     var w = wishlist.find(function (x) { return x.id === id; });
-    if (w) addGonToCart(w.id, w.name, w.price, w.img);
+    if (w) addGonToCart(w.id, w.name, precioActual(w.id, w.price), w.img);
     return;
   }
   if (shelfKey) { try { openModal(id, shelfKey); } catch (e) {} }
@@ -7299,9 +7386,17 @@ function enviarArrepentimiento(){
 
 function addGonToCart(id, name, price, img) {
   if (bloqueadoPorEdad(name, '', id)) return;
-  const key = 'gon_' + id;
+  // Misma clave que usa searchAdd. Antes eran distintas ('gon_' vs 'gondola_')
+  // y el mismo producto podia entrar dos veces al carrito, en dos renglones y
+  // a dos precios distintos, segun por donde lo hubiera tocado el cliente.
+  const key = 'gondola_' + id;
+  const viejo = 'gon_' + id;              // carritos guardados de antes
+  if (cart[viejo]) { cart[key] = cart[viejo]; delete cart[viejo]; }
+  // El precio del catalogo manda siempre sobre el que venga por parametro.
+  price = precioActual(id, price);
   if (cart[key]) {
     cart[key].qty++;
+    cart[key].price = price;
   } else {
     cart[key] = { key, name, size: '', price, qty: 1, img, color:'#333', textColor:'#fff' };
   }
