@@ -1,11 +1,10 @@
 -- ═══════════════════════════════════════════════════════════════════════
 --  PEGAR ESTO EN EL EDITOR SQL DE SUPABASE Y APRETAR RUN
 --
---  Son dos cosas:
---    1. El arreglo del canje de referidos (obligatorio)
---    2. La limpieza de los pedidos de prueba (opcional pero conviene)
+--  ⚠ LAS PARTES 1, 2 y 3 YA SE CORRIERON el 5/8/2026. Quedan por historia.
+--     LO PENDIENTE ES LA PARTE 5, al final del archivo.
 --
---  Es seguro correrlo mas de una vez.
+--  Es seguro correrlo entero mas de una vez.
 -- ═══════════════════════════════════════════════════════════════════════
 
 
@@ -159,3 +158,40 @@ select
 --  al cliente "$3.000 de descuento", pero el canje fallaba y el pedido
 --  salia al precio lleno. Prometer un descuento y no aplicarlo es peor
 --  que no ofrecerlo. Una vez corrido este SQL, ya se puede encender.
+
+
+-- ── 5. PENDIENTE: el boton "Avisar" del panel ─────────────────────────
+--
+--  El panel tiene un boton 💬 Avisar que le manda al cliente un WhatsApp
+--  con el link de seguimiento de SU pedido. Para armar ese link hace
+--  falta el token, que la vista de la cola todavia no devuelve.
+--
+--  Mientras esto no se corra, el boton simplemente no aparece. No rompe
+--  nada, pero tampoco sirve.
+
+drop view if exists v_cola_despacho;
+
+create view v_cola_despacho
+with (security_invoker = true) as
+select
+  p.id, p.codigo, p.estado, p.cliente_nombre, p.cliente_telefono,
+  p.token_seguimiento,
+  p.direccion, p.direccion_notas, p.lat, p.lng,
+  p.items, p.subtotal, p.envio, p.descuento, p.total,
+  p.metodo_pago, p.pagado, p.paga_con,
+  p.repartidor_id, r.nombre as repartidor_nombre,
+  p.creado_at, p.asignado_at, p.retirado_at,
+  extract(epoch from (now() - p.creado_at))::int as segundos_desde_creado
+from pedidos p
+left join repartidores r on r.id = p.repartidor_id
+where p.estado not in ('entregado','cancelado')
+order by p.creado_at asc;
+
+revoke all on v_cola_despacho from anon, authenticated;
+
+-- Comprobacion: tienen que aparecer las tres columnas.
+select column_name
+  from information_schema.columns
+ where table_name = 'v_cola_despacho'
+   and column_name in ('token_seguimiento', 'paga_con', 'descuento')
+ order by column_name;
