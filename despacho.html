@@ -445,6 +445,14 @@ function tarjeta(p, col){
     h += '<button class="btn btn-s btn-g" onclick="verLista(' + p.id + ')">📋 Lista</button>';
   }
 
+  // Avisarle al cliente por WhatsApp con el link de seguimiento ya armado.
+  // Se escribe a mano una sola vez y despues es un clic: el link lleva el
+  // token del pedido, asi que no hay forma de mandarle a alguien el
+  // seguimiento de otro.
+  if (p.cliente_telefono && p.token_seguimiento) {
+    h += '<button class="btn btn-s btn-g" onclick="avisar(' + p.id + ')">💬 Avisar</button>';
+  }
+
   col.sig.forEach(function(s){
     h += '<button class="btn btn-s" onclick="cambiar(' + p.id + ',\'' + s + '\')">→ ' + NOMBRE[s] + '</button>';
   });
@@ -589,6 +597,47 @@ window.verLista = function(pedidoId){
   $('listaTexto').textContent = t;
   $('btnWspNodo').style.display = listaActual.telefono ? '' : 'none';
   abrirModal('mLista');
+};
+
+// ── Avisarle al cliente que su pedido esta en marcha ─────────────────────
+//
+// Abre WhatsApp con el mensaje ya escrito y el link de seguimiento del
+// pedido. El link lleva el token unico, asi que cada cliente ve solo lo
+// suyo.
+//
+// Se le habla de usted-vos como en el resto del sitio, y se le adelanta
+// que el repartidor puede llamarlo: si no, la llamada de un numero
+// desconocido asusta y a veces no la atienden.
+window.avisar = function(pedidoId){
+  var p = colaCache.filter(function(x){ return x.id === pedidoId; })[0];
+  if (!p || !p.token_seguimiento) return;
+
+  var tel = String(p.cliente_telefono || '').replace(/\D/g, '');
+  if (!tel) { toast('Este pedido no tiene teléfono'); return; }
+  // WhatsApp necesita el pais. Si el numero viene sin 54, se lo agregamos.
+  if (tel.length === 10) tel = '549' + tel;
+  else if (tel.indexOf('54') !== 0) tel = '54' + tel;
+
+  var nombre = (p.cliente_nombre || '').trim().split(' ')[0];
+  var link = 'https://k24hs.com/seguimiento.html?t=' + p.token_seguimiento;
+
+  var m = '';
+  m += nombre ? ('¡Hola ' + nombre + '! 👋\n\n') : '¡Hola! 👋\n\n';
+  m += 'Recibimos tu pedido *' + p.codigo + '* y ya lo estamos preparando.\n\n';
+  m += 'Podés seguirlo en vivo acá:\n' + link + '\n\n';
+
+  if (p.metodo_pago === 'efectivo') {
+    m += '💵 Total a pagar al recibir: ' + pesos(p.total) + '\n';
+    if (p.paga_con) {
+      m += 'Abonás con ' + pesos(p.paga_con) + ', el repartidor lleva el vuelto.\n';
+    }
+    m += '\n';
+  }
+
+  m += 'El repartidor puede llamarte para ubicarte más rápido.\n\n';
+  m += 'Cualquier cosa respondé este mensaje. ¡Gracias por elegirnos! 🛵';
+
+  window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(m), '_blank');
 };
 
 $('btnCopiar').addEventListener('click', async function(){
