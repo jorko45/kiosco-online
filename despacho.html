@@ -262,8 +262,15 @@ async function api(ruta, opciones){
     ),
     body: opciones.body ? JSON.stringify(opciones.body) : undefined
   });
-  if (r.status === 401) { salir(); throw new Error('Sesion vencida'); }
   var d = await r.json().catch(function(){ return {}; });
+  // Un 401 en el login NO es una sesion vencida: es la clave mal.
+  // Antes se mezclaban y la pantalla decia "Sesion vencida" cuando en
+  // realidad la clave no coincidia, que manda a buscar el problema
+  // exactamente al lugar equivocado.
+  if (r.status === 401 && ruta !== 'login') {
+    salir();
+    throw new Error('Sesion vencida');
+  }
   if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
   return d;
 }
