@@ -98,8 +98,10 @@ export function exigirSesion(req, res) {
 export function claveValida(intento) {
   const real = process.env.ADMIN_PASSWORD;
   if (!real) throw new Error('Falta ADMIN_PASSWORD en las variables de entorno de Vercel');
-  const a = createHmac('sha256', secreto()).update(String(intento ?? '')).digest();
-  const b = createHmac('sha256', secreto()).update(real).digest();
+  // Se recortan los espacios de los dos lados. Pegar el valor en Vercel arrastra
+  // a veces un salto de linea invisible, y entonces la clave correcta nunca entra.
+  const a = createHmac('sha256', secreto()).update(String(intento ?? '').trim()).digest();
+  const b = createHmac('sha256', secreto()).update(String(real).trim()).digest();
   return timingSafeEqual(a, b);
 }
 
