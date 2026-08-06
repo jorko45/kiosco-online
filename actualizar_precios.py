@@ -219,6 +219,71 @@ def nuestros_distri():
             for m in re.finditer(r'\["(d-[^"]+)","([^"]+)",(\d+)', html[i:j])}
 
 
+def _unidades_de(etiqueta):
+    """Cuántas unidades trae una presentación, leyendo su nombre.
+
+    La Distribuidora no publica un precio por producto: publica formatos.
+    'Precio x carton (10 etiquetas)' = 10, 'Precio x unidad' = 1, etc.
+    Devuelve None si no se entiende la etiqueta, para no inventar nada.
+    """
+    s = str(etiqueta or '').lower()
+    if re.search(r'\bmedio\s*carton\b', s):
+        return 5
+    if re.search(r'\bcarton\b', s):
+        return 10
+    m = re.search(r'(?:x|de)\s*(\d+)\s*(?:uni|unidades|etiquetas)', s)
+    if m:
+        return int(m.group(1))
+    m = re.search(r'pack\s*de\s*(\d+)', s)
+    if m:
+        return int(m.group(1))
+    if re.search(r'x\s*(?:1\s*)?(?:unidad|uni)\b', s):
+        return 1
+    return None                                  # bultos, bidones, cosas raras
+
+
+def _precio_unitario(p):
+    """Costo de UNA unidad.
+
+    Antes se leía solo p['price'] y, si no estaba, se buscaba dentro de
+    'presentations' un campo price. Pero los precios no viven ahí: viven en
+    presentations['items']. Por eso 449 de los 720 productos de la
+    Distribuidora quedaban invisibles, entre ellos los 96 cigarrillos.
+
+    Se prefiere el precio por unidad suelta. Si no existe, se usa el formato
+    más chico disponible: es el costo más alto y por lo tanto el mas prudente
+    para calcular el margen. Nunca el mayorista, que da un costo optimista.
+    """
+    directo = p.get('price')
+    if directo:
+        try:
+            return float(directo)
+        except (TypeError, ValueError):
+            pass
+
+    pres = p.get('presentations') or {}
+    items = pres.get('items') if isinstance(pres, dict) else None
+    if not isinstance(items, list):
+        return None
+
+    por_unidad, mas_chico, cant_chica = None, None, None
+    for it in items:
+        if not isinstance(it, dict) or not it.get('price'):
+            continue
+        n = _unidades_de(it.get('name'))
+        if not n:
+            continue
+        try:
+            unit = float(it['price']) / n
+        except (TypeError, ValueError, ZeroDivisionError):
+            continue
+        if n == 1:
+            por_unidad = unit if por_unidad is None else min(por_unidad, unit)
+        if cant_chica is None or n < cant_chica:
+            cant_chica, mas_chico = n, unit
+    return por_unidad if por_unidad is not None else mas_chico
+
+
 def scrapear_pedix():
     """La Distribuidora rehízo su catálogo: los IDs cambiaron, así que cruzamos
     por nombre contra los productos que tenemos cargados."""
@@ -245,12 +310,7 @@ def scrapear_pedix():
         for p in (c.get('products') or []):
             if not isinstance(p, dict):
                 continue
-            pr = p.get('price')
-            if not pr:                                  # si no tiene precio propio, la presentación más barata
-                pres = p.get('presentations') or {}
-                vals = pres.values() if isinstance(pres, dict) else pres
-                cands = [x.get('price') for x in vals if isinstance(x, dict) and x.get('price')]
-                pr = min(cands) if cands else None
+            pr = _precio_unitario(p)
             if pr:
                 try:
                     por_nombre[_norm_nombre(p.get('name', ''))] = int(round(float(pr)))

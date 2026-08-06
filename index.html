@@ -5155,6 +5155,13 @@ function _aplicarPreciosSheet(data){
   // caja: el cliente lo lee como que le querés cobrar de más.
   //
   // Antes acá solo se rearmaba Botellas y Promos quedaba desactualizada.
+  //
+  // OJO: cada grilla tiene un candado (_golosinasRendered y compañía) que
+  // la dibuja una sola vez. Llamar a renderGolosinas() de nuevo no hacía
+  // absolutamente nada: la funcion miraba el candado y se volvia. Por eso
+  // el redibujado de abajo existia pero no servia, y la tarjeta seguia con
+  // el precio viejo mientras la pantalla del producto ya tenia el nuevo.
+  // Hay que soltar el candado antes de volver a dibujar.
   try {
     if (typeof renderBotellasAll === 'function' && renderBotellasAll._done) {
       renderBotellasAll._done = false;
@@ -5162,8 +5169,43 @@ function _aplicarPreciosSheet(data){
     }
   } catch(e){}
 
-  ['renderPromos','renderGondola','renderGolosinas','renderFresco',
-   'renderVinos','renderLicores'].forEach(function(fn){
+  // Que pestaña estaba mirando el cliente, para devolverlo ahi mismo.
+  function _pestanaActiva(idTabs) {
+    var t = document.querySelector('#' + idTabs + ' .gon-tab.active');
+    return t ? t.dataset.key : null;
+  }
+  function _volverAPestana(idTabs, key) {
+    if (!key) return;
+    var cont = document.getElementById(idTabs);
+    if (cont && typeof cont.tabFn === 'function') { try { cont.tabFn(key); } catch(e){} }
+  }
+
+  _golosinasRendered = false;
+  _gondolaRendered   = false;
+  _frescoRendered    = false;
+  _jugosRendered     = false;
+  _espumantesRendered= false;
+  _saborRendered     = false;
+  _cervezasExtRendered = false;
+  _aguasExtRendered  = false;
+  _gaseosasExtRendered = false;
+
+  [['golosinas-tabs','renderGolosinas'], ['gondola-tabs','renderGondola'],
+   ['fresco-tabs','renderFresco'],       ['jugos-tabs','renderJugos'],
+   ['espumantes-tabs','renderEspumantes'],['saborizadas-tabs','renderSaborizadas'],
+   ['cervezasext-tabs','renderCervezasExt'],['aguasext-tabs','renderAguasExt'],
+   ['gaseosasext-tabs','renderGaseosasExt']
+  ].forEach(function (par) {
+    try {
+      var cont = document.getElementById(par[0]);
+      if (!cont || !cont.children.length) return;   // nunca se dibujo: no hay nada que arreglar
+      var key = _pestanaActiva(par[0]);
+      if (typeof window[par[1]] === 'function') window[par[1]]();
+      _volverAPestana(par[0], key);
+    } catch(e){}
+  });
+
+  ['renderPromos','renderVinos','renderLicores'].forEach(function(fn){
     try { if (typeof window[fn] === 'function') window[fn](); } catch(e){}
   });
 }
