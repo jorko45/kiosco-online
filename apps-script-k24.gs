@@ -486,7 +486,18 @@ function doPost(e) {
       return _guardarCuenta(data);
     }
 
-    // ── Registro de usuario (accion por defecto — LOG historico, sin tocar) ──
+    // Una accion que no existe NO puede terminar escribiendo en el log de
+    // usuarios. Antes caia ahi de cabeza y devolvia "Illegal spreadsheet id",
+    // que manda a buscar el problema a la planilla cuando en realidad lo que
+    // pasa es que esta publicada una version vieja del script.
+    if (data.action) {
+      return _jsonOut({ ok:false, accionDesconocida:true,
+        error:'Este Apps Script no conoce la accion "' + data.action + '". '
+            + 'Suele significar que quedo publicada una version vieja: pega de nuevo '
+            + 'apps-script-k24.gs y actualiza la implementacion existente.' });
+    }
+
+    // ── Registro de usuario (posteo sin accion — LOG historico) ──
     var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     var coords = data.coords ? 'https://maps.google.com/?q=' + data.coords.lat + ',' + data.coords.lng : '';
     sheet.appendRow([new Date().toLocaleString('es-AR'), data.nombre||'', data.telefono||'', data.direccion||'', data.piso||'', data.barrio||'', data.referencia||'', coords]);

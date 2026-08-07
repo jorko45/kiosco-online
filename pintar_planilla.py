@@ -50,8 +50,20 @@ def main():
                  'anclas': anclas,
                  'sinProveedor': sin_proveedor})
     if not r.get('ok'):
-        ap.log('   No se pudo pintar: %s' % r)
-        ap.log('   ¿Pegaste la version nueva del Apps Script y la volviste a publicar?')
+        err = str(r.get('error', r))
+        # El script viejo no conoce 'precios_pintar' y se cae al final de doPost,
+        # que intenta abrir una planilla que ya no existe. El mensaje habla de
+        # una planilla, pero el problema es que falta publicar la version nueva.
+        vieja = r.get('accionDesconocida') or 'Illegal spreadsheet' in err
+        ap.log('   No se pudo pintar: %s' % err)
+        if vieja:
+            ap.log('')
+            ap.log('   >> El Apps Script publicado es el VIEJO: no conoce esta accion.')
+            ap.log('      1) Abri apps-script-k24.gs y copia TODO')
+            ap.log('      2) Pegalo encima en el editor de Apps Script')
+            ap.log('      3) Implementar > Administrar implementaciones > editar la que YA existe')
+            ap.log('         (crear una nueva cambia la URL y rompe el sitio)')
+            ap.log('      4) Volve a correr este .bat')
         sys.exit(1)
     ap.log('   naranja (anclas): %s' % r.get('anclas'))
     ap.log('   gris (sin proveedor): %s' % r.get('sinProveedor'))
