@@ -152,6 +152,65 @@ def brand_of(nombre):
     return ''
 
 
+def unificar_cortes(arr):
+    """Un mismo queso viene cargado como Horma, Trozado y Porcionado.
+
+    Son el mismo queso, cortado distinto, y el Mami les pone precios por kilo
+    distintos. La horma es la rueda entera y siempre es la mas barata: el
+    Cremon sale $17.000 en horma y $20.000 porcionado. Mostrar las tres es
+    ruido para el cliente, y peor: si elige la horma paga precio de rueda
+    entera por un kilo cortado, y ahi se va el margen.
+
+    Nos quedamos con el trozado o porcionado, que es lo que entra en una moto.
+    Solo aplica a los que se venden por kilo; las presentaciones por gramos
+    (manteca 100/200/500 gr) son productos distintos de verdad y no se tocan.
+    """
+    POR_KILO = re.compile(r'x\s*[\d.,]*\s*(kg|kilo)\b', re.I)
+    CORTE    = re.compile(r'\b(horma|porcionad[oa]s?|trozad[oa]s?|troz)\b', re.I)
+    ENTERA   = re.compile(r'\b(horma|entera?)\b', re.I)
+
+    def familia(nombre):
+        s = unicodedata.normalize('NFD', nombre).encode('ascii', 'ignore').decode().lower()
+        s = CORTE.sub(' ', s)
+        s = re.sub(r'x\s*[\d.,]*\s*(kg|kilo)\b', ' ', s)
+        # El Mami escribe el mismo queso de dos formas. "Cremoso" es una
+        # descripcion, no distingue nada, y la vitamina la abrevia distinto
+        # segun el dia: "C/vit A y E" y "con Vitamina A y E" son lo mismo.
+        s = re.sub(r'\bcremoso\b', ' ', s)
+        s = re.sub(r'c\s*/\s*vit(amina)?\s*a\s*y\s*e|con\s+vitamina\s+a\s+y\s+e', ' vitae ', s)
+        return ' '.join(re.sub(r'[^a-z0-9]+', ' ', s).split())
+
+    grupos = {}
+    for it in arr:
+        if not POR_KILO.search(it[1]):
+            continue
+        grupos.setdefault(familia(it[1]), []).append(it)
+
+    CORTADO = re.compile(r'\b(porcionad[oa]s?|trozad[oa]s?|troz)\b', re.I)
+
+    sacar = set()
+    for _, miembros in grupos.items():
+        if len(miembros) < 2:
+            continue
+        # Orden de preferencia:
+        #  1) el que dice trozado o porcionado, que es lo que entra en la moto
+        #  2) si no hay ninguno, el que no diga horma
+        #  3) si son todas hormas, no se toca nada
+        candidatos = [m for m in miembros if CORTADO.search(m[1])]
+        if not candidatos:
+            candidatos = [m for m in miembros if not ENTERA.search(m[1])]
+        if not candidatos:
+            continue
+        mejor = min(candidatos, key=lambda m: m[2])    # entre iguales, el mas barato
+        for m in miembros:
+            if m[0] != mejor[0]:
+                sacar.add(m[0])
+
+    if not sacar:
+        return arr, 0
+    return [it for it in arr if it[0] not in sacar], len(sacar)
+
+
 def main():
     idx_path = Path(__file__).parent / 'index.html'
     src = idx_path.read_text(encoding='utf-8')
@@ -267,6 +326,9 @@ def main():
                 seen.add(pid)
                 bases[pid] = precio
                 arr.append([pid, title_case(nombre), precio_final(precio, brand_of(nombre))])
+        arr, quitados = unificar_cortes(arr)
+        if quitados:
+            print(f'    ({quitados} hormas quitadas: ya esta el mismo queso trozado)')
         fresco_raw[key] = arr
         ftotal += len(arr)
         print(f'  {key}: {len(arr)} productos')
