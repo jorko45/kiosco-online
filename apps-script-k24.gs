@@ -294,6 +294,36 @@ function doPost(e) {
       return _jsonOut({ ok:true, marcados:nM });
     }
 
+    // Pinta la planilla segun lo que REALMENTE le pasa a cada fila cuando
+    // corre el actualizador. Las listas las manda actualizar_precios.py:
+    //   data.anclas       = congeladas a proposito (naranja)
+    //   data.sinProveedor = nadie publica su precio (gris)
+    //   el resto          = se actualiza sola (sin color)
+    if (data.action === 'precios_pintar') {
+      var shq = _hojaPrecios(), lrq = shq.getLastRow();
+      if (lrq < 2) return _jsonOut({ ok:true, pintadas:0 });
+      var idsq = shq.getRange(2,1,lrq-1,1).getValues();
+      var esAncla = {}, esSinProv = {};
+      (data.anclas || []).forEach(function(x){ esAncla[String(x).trim()] = 1; });
+      (data.sinProveedor || []).forEach(function(x){ esSinProv[String(x).trim()] = 1; });
+      var colores = [], nA = 0, nS = 0;
+      for (var iq=0; iq<idsq.length; iq++){
+        var idq = String(idsq[iq][0]||'').trim(), color = null;
+        if (esAncla[idq])        { color = '#FFE0B2'; nA++; }   // naranja
+        else if (esSinProv[idq]) { color = '#ECEFF1'; nS++; }   // gris
+        var filaq = [];
+        for (var cq=0; cq<PRECIOS_HEADERS.length; cq++) filaq.push(color);
+        colores.push(filaq);
+      }
+      shq.getRange(2,1,lrq-1,PRECIOS_HEADERS.length).setBackgrounds(colores);
+      try {
+        shq.getRange(1, PRECIOS_HEADERS.length+2)
+           .setValue('Naranja = ANCLA, congelada a proposito  ·  Gris = sin proveedor  ·  Sin color = se actualiza sola')
+           .setFontWeight('bold');
+      } catch(e2){}
+      return _jsonOut({ ok:true, anclas:nA, sinProveedor:nS, automaticas: idsq.length - nA - nS });
+    }
+
     // Solicitud de arrepentimiento (Res. 424/2020) -> hoja "Arrepentimientos"
     if (data.action === 'arrepentimiento') {
       _hojaArrepentimientos().appendRow([
@@ -475,28 +505,16 @@ function doGet(e) {
   try {
     var p = (e && e.parameter) || {};
 
-    // Pinta en la planilla de precios las filas que NO se actualizan solas
-    // (tarjetas de marca y promos: su ID lleva "__"). Naranja suave = manual.
-    if ((p.action||'') === 'pintar_manuales') {
-      var shp = _hojaPrecios(), lrp = shp.getLastRow();
-      if (lrp < 2) return _jsonOut({ ok:true, pintadas:0 });
-      var ids = shp.getRange(2,1,lrp-1,1).getValues();
-      var rango = shp.getRange(2,1,lrp-1,PRECIOS_HEADERS.length);
-      var colores = [], n = 0;
-      for (var i=0;i<ids.length;i++){
-        var id = String(ids[i][0]||'');
-        var manual = (id.indexOf('__') !== -1);   // marca/promo = manual
-        var fila = [];
-        for (var c=0;c<PRECIOS_HEADERS.length;c++) fila.push(manual ? '#FFE0B2' : null);
-        colores.push(fila);
-        if (manual) n++;
-      }
-      rango.setBackgrounds(colores);
-      // leyenda arriba de todo
-      try { shp.getRange(1, PRECIOS_HEADERS.length+2).setValue('Naranja = precio MANUAL (no se actualiza solo)')
-              .setBackground('#FFE0B2').setFontWeight('bold'); } catch(e2){}
-      return _jsonOut({ ok:true, pintadas:n });
-    }
+    // OJO: 'pintar_manuales' quedo obsoleto y se saco a proposito.
+    //
+    // Pintaba de naranja toda fila con "__" en el id, dando por hecho que
+    // esas eran las manuales. Era cierto mientras mapa_marcas.json estuvo
+    // vacio. Al restaurarlo, 216 de esas filas pasaron a actualizarse solas
+    // y el color siguio diciendo lo contrario: un cartel que miente es peor
+    // que no tener cartel.
+    //
+    // Ahora pinta 'precios_pintar' (abajo, en doPost), que recibe la lista
+    // desde actualizar_precios.py — el unico que sabe de verdad a quien toca.
 
     // Catálogo de precios para la web: [id, precioVenta, precioSugerido, activo]
     if ((p.action||'') === 'precios') {
