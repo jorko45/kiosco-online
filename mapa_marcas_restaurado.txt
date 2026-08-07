@@ -1,0 +1,222 @@
+MAPA DE MARCAS RESTAURADO - 216 variantes
+Conecta cada variante de una tarjeta de marca con su producto en el Super Mami.
+Sin esto, esas filas nunca reciben actualizacion de costo.
+
+CLAVE                        MARCA                    VAR  ID EN EL MAMI
+--------------------------------------------------------------------------------
+absolut__1                   Absolut                  1    3071185
+amstel__1                    Amstel                   1    3100784
+amstel__2                    Amstel                   2    3100911
+andes__1                     Andes                    1    3100633
+andes__2                     Andes                    2    3100935
+andes__3                     Andes                    3    3100628
+aperol__1                    Aperol                   1    3070683
+aquarius-g__1                Aquarius                 1    3040217
+aquarius-g__10               Aquarius                 10   3040218
+aquarius-g__11               Aquarius                 11   3040221
+aquarius-g__12               Aquarius                 12   3040564
+aquarius-g__13               Aquarius                 13   3040219
+aquarius-g__14               Aquarius                 14   3040222
+aquarius-g__15               Aquarius                 15   3040563
+aquarius-g__17               Aquarius                 17   3051581
+aquarius-g__2                Aquarius                 2    3040220
+aquarius-g__3                Aquarius                 3    3040664
+aquarius-g__4                Aquarius                 4    3040253
+aquarius-g__5                Aquarius                 5    3040251
+aquarius-g__6                Aquarius                 6    3040565
+aquarius-g__7                Aquarius                 7    3040254
+aquarius-g__8                Aquarius                 8    3040252
+aquarius-g__9                Aquarius                 9    3040880
+arcor__1                     Arcor                    1    3051816
+arcor__2                     Arcor                    2    3051817
+arcor__3                     Arcor                    3    3051815
+arcor__4                     Arcor                    4    3052073
+arcor__5                     Arcor                    5    3052074
+arcor__6                     Arcor                    6    3052075
+bc__1                        BC                       1    3051552
+bc__2                        BC                       2    3051553
+bc__3                        BC                       3    3051549
+bc__4                        BC                       4    3051534
+bc__5                        BC                       5    3051533
+blenders__1                  Blenders                 1    3071119
+blenders__2                  Blenders                 2    3070999
+blenders__3                  Blenders                 3    3071234
+brahma__1                    Brahma                   1    3100025
+brahma__2                    Brahma                   2    3100711
+brahma__3                    Brahma                   3    3100967
+brio__1                      Brio                     1    3040877
+brio__2                      Brio                     2    3040794
+brio__3                      Brio                     3    3040795
+brio__4                      Brio                     4    3040793
+budweiser__1                 Budweiser                1    3100560
+budweiser__2                 Budweiser                2    3100981
+campari__1                   Campari                  1    3070933
+campari__2                   Campari                  2    3070081
+cellier__1                   Cellier                  1    3040884
+cellier__2                   Cellier                  2    3040850
+cellier__3                   Cellier                  3    3040852
+cellier__4                   Cellier                  4    3040887
+cellier__5                   Cellier                  5    3040851
+chivas__2                    Chivas Regal             2    3071120
+cinzano__1                   Cinzano                  1    3071096
+citric__1                    Citric                   1    3261652
+citric__10                   Citric                   10   3263667
+citric__11                   Citric                   11   3263664
+citric__12                   Citric                   12   3263665
+citric__13                   Citric                   13   3260893
+citric__2                    Citric                   2    3260887
+citric__3                    Citric                   3    3263669
+citric__4                    Citric                   4    3263551
+citric__5                    Citric                   5    3263552
+citric__6                    Citric                   6    3263668
+citric__7                    Citric                   7    3263675
+citric__8                    Citric                   8    3263666
+coca-cola__2                 Coca-Cola                2    3080006
+coca-cola__3                 Coca-Cola                3    3080013
+coca-cola__5                 Coca-Cola                5    3080015
+coca-cola__6                 Coca-Cola                6    3080077
+coca-cola__9                 Coca-Cola                9    3080167
+coca-zero__2                 Coca Zero                2    3080136
+coca-zero__3                 Coca Zero                3    3080212
+coca-zero__4                 Coca Zero                4    3080137
+coca-zero__5                 Coca Zero                5    3080138
+cordoba__1                   Córdoba                  1    3100436
+cordoba__2                   Córdoba                  2    3100656
+corona__2                    Corona                   2    3100950
+crush__1                     Crush                    1    3080208
+crush__2                     Crush                    2    3080427
+crush__3                     Crush                    3    3080209
+cunnington__1                Cunnington               1    3080586
+cunnington__10               Cunnington               10   3080552
+cunnington__2                Cunnington               2    3080587
+cunnington__3                Cunnington               3    3080588
+cunnington__5                Cunnington               5    3080590
+cunnington__6                Cunnington               6    3080591
+cunnington__7                Cunnington               7    3080592
+cunnington__8                Cunnington               8    3080594
+cunnington__9                Cunnington               9    3080593
+dada__1                      Dadá                     1    3090643
+doble-cola__1                Doble Cola               1    3080524
+doble-cola__10               Doble Cola               10   3080479
+doble-cola__11               Doble Cola               11   3080481
+doble-cola__12               Doble Cola               12   3080480
+doble-cola__2                Doble Cola               2    3080526
+doble-cola__3                Doble Cola               3    3080525
+doble-cola__4                Doble Cola               4    3080527
+doble-cola__5                Doble Cola               5    3080416
+doble-cola__6                Doble Cola               6    3080476
+doble-cola__7                Doble Cola               7    3080478
+doble-cola__8                Doble Cola               8    3080477
+doble-cola__9                Doble Cola               9    3080417
+dr-lemon__1                  Dr Lemon                 1    3070962
+fanta-zero__2                Fanta Zero               2    3080193
+fanta-zero__3                Fanta Zero               3    3080194
+fanta__2                     Fanta                    2    3080007
+fanta__3                     Fanta                    3    3080017
+fanta__5                     Fanta                    5    3080026
+favinco__1                   Favinco                  1    3051969
+favinco__2                   Favinco                  2    3051970
+fernet-1882__1               Fernet 1882              1    3070356
+fernet-1882__2               Fernet 1882              2    3071307
+fresh-sab__1                 Fresh                    1    3040400
+fresh-sab__2                 Fresh                    2    3040401
+gancia__1                    Gancia                   1    3070076
+glaciar__1                   Glaciar                  1    3040056
+glaciar__2                   Glaciar                  2    3040055
+granadina-cusenier__1        Cusenier Granadina       1    3050039
+granadina-dellepiane__1      Granadina Dellepiane     1    3050137
+h2oh__1                      H2OH                     1    3040842
+h2oh__2                      H2OH                     2    3040844
+h2oh__4                      H2OH                     4    3040841
+heineken__1                  Heineken                 1    3100890
+heineken__2                  Heineken                 2    3100914
+heineken__3                  Heineken                 3    3100928
+imperial__3                  Imperial                 3    3100424
+jameson__1                   Jameson                  1    3071179
+johnnie-walker__1            Johnnie Walker           1    3070046
+johnnie-walker__2            Johnnie Walker           2    3070047
+levite__1                    Levite                   1    3040015
+levite__2                    Levite                   2    3040064
+levite__3                    Levite                   3    3040427
+livra__1                     Livra                    1    3040735
+livra__10                    Livra                    10   3040744
+livra__2                     Livra                    2    3040736
+livra__3                     Livra                    3    3040737
+livra__4                     Livra                    4    3040738
+livra__5                     Livra                    5    3040879
+livra__6                     Livra                    6    3040882
+livra__7                     Livra                    7    3040741
+livra__8                     Livra                    8    3040742
+livra__9                     Livra                    9    3040743
+martini__1                   Martini                  1    3070478
+martini__2                   Martini                  2    3070480
+martini__3                   Martini                  3    3070479
+miller__1                    Miller                   1    3100595
+miller__2                    Miller                   2    3100845
+minerva__1                   Minerva                  1    3050602
+minerva__2                   Minerva                  2    3050042
+minerva__3                   Minerva                  3    3050041
+mirinda__1                   Mirinda                  1    3080057
+mirinda__2                   Mirinda                  2    3080056
+mirinda__3                   Mirinda                  3    3080055
+mirinda__4                   Mirinda                  4    3080277
+mirinda__5                   Mirinda                  5    3080533
+new-style__1                 New Style                1    3071103
+new-style__2                 New Style                2    3071108
+new-style__3                 New Style                3    3070727
+old-smuggler__1              Old Smuggler             1    3070440
+paso-toros__1                Paso de los Toros        1    3080522
+paso-toros__2                Paso de los Toros        2    3080182
+paso-toros__3                Paso de los Toros        3    3080184
+paso-toros__4                Paso de los Toros        4    3080058
+paso-toros__5                Paso de los Toros        5    3080060
+paso-toros__6                Paso de los Toros        6    3080062
+paso-toros__7                Paso de los Toros        7    3080556
+paso-toros__8                Paso de los Toros        8    3080523
+pepsi-black__1               Pepsi Black              1    3080432
+pepsi-black__2               Pepsi Black              2    3080433
+pepsi-black__3               Pepsi Black              3    3080434
+pepsi-black__4               Pepsi Black              4    3080597
+pepsi__1                     Pepsi                    1    3080521
+pepsi__2                     Pepsi                    2    3080047
+pepsi__3                     Pepsi                    3    3080046
+pepsi__4                     Pepsi                    4    3080561
+piel-cordero__1              Piel de Cordero          1    3063800
+pritty-limon__1              Pritty Limón             1    3080408
+pritty-limon__2              Pritty Limón             2    3080407
+pritty-limon__3              Pritty Limón             3    3080406
+pritty-limon__4              Pritty Limón             4    3080410
+quilmes__1                   Quilmes                  1    3100966
+quilmes__2                   Quilmes                  2    3100549
+quilmes__3                   Quilmes                  3    3100969
+quilmes__4                   Quilmes                  4    3100532
+rumipal__1                   Rumipal                  1    3080572
+rumipal__2                   Rumipal                  2    3080569
+rumipal__3                   Rumipal                  3    3080571
+rumipal__4                   Rumipal                  4    3080573
+saldan__1                    Saldan                   1    3051713
+saldan__2                    Saldan                   2    3051714
+saldan__3                    Saldan                   3    3051712
+saldan__4                    Saldan                   4    3040690
+saldan__5                    Saldan                   5    3040689
+santa-julia__1               Santa Julia              1    3060360
+schneider__1                 Schneider                1    3100930
+schneider__2                 Schneider                2    3100652
+schneider__4                 Schneider                4    3100555
+schweppes__6                 Schweppes                6    3080020
+sernova__1                   Sernova                  1    3071112
+skyy__1                      Skyy                     1    3071291
+smirnoff__1                  Smirnoff                 1    3070794
+sprite-zero__2               Sprite Zero              2    3080084
+sprite-zero__3               Sprite Zero              3    3080085
+sprite-zero__4               Sprite Zero              4    3080199
+sprite__2                    Sprite                   2    3080008
+sprite__3                    Sprite                   3    3080021
+sprite__4                    Sprite                   4    3080079
+sprite__5                    Sprite                   5    3080029
+stella__1                    Stella Artois            1    3100941
+stella__2                    Stella Artois            2    3100934
+villa-del-sur__1             Villa del Sur            1    3040440
+villavicencio__1             Villavicencio            1    3040004
+villavicencio__3             Villavicencio            3    3040006
+white-horse__1               White Horse              1    3070049

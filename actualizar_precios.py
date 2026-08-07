@@ -21,6 +21,26 @@ API_PRECIOS = 'https://k24hs.com/api/precios'
 BASE = 'https://www.dinoonline.com.ar'
 PEDIX = 'https://pedix.app/cigarreria-y-distribuidora-del-centro'
 
+# ─────────────────────── PRECIOS ANCLA ───────────────────────
+#  Son los precios que la gente mira primero para decidir si un kiosco
+#  es caro o barato. Si se mueven solos, se mueve la idea que el cliente
+#  se hace de TODO el catalogo. Por eso el actualizador no los toca.
+#
+#  Igual sale a buscar el costo del proveedor y lo informa al final, asi
+#  el margen real queda a la vista sin que cambie el precio de gondola.
+#  Cuando quieras moverlos, los movés vos, a mano y sabiendo.
+#
+#  Para sumar o sacar uno, agregá o borrá su id de esta lista.
+#  Los cigarrillos NO hacen falta: no tienen proveedor mapeado, asi que
+#  el actualizador nunca los tocó ni los va a tocar.
+ANCLAS = {
+    'd-AW8rAxhHKj7II2Xg-cn3E',                                     # Fernet Branca 750
+    'fernet-1882__1', 'fernet-1882__2',                            # Fernet 1882
+    'coca-cola__2', 'coca-cola__3', 'coca-cola__5',
+    'coca-cola__6', 'coca-cola__9',                                # Coca-Cola
+    'coca-zero__2', 'coca-zero__3', 'coca-zero__4', 'coca-zero__5',  # Coca Zero
+}
+
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                   '(KHTML, like Gecko) Chrome/126.0 Safari/537.36',
@@ -384,7 +404,7 @@ def main():
     pp, np_ = scrapear_pedix()
 
     # ── cruce ──
-    actualizar, faltantes, reporte = [], [], []
+    actualizar, faltantes, reporte, anclas = [], [], [], []
     for f in filas:
         fid = str(f[0])
         num = id_mami(fid)
@@ -396,13 +416,30 @@ def main():
             continue
         if nuevo is None:
             faltantes.append((fid, fuente))
-        else:
-            actualizar.append([fid, nuevo])
-            reporte.append((fid, fuente, nom, nuevo))
+            continue
+        if fid in ANCLAS:
+            # Se mira, se informa, no se toca.
+            anclas.append((fid, nom, nuevo, Number_(f[2]) or Number_(f[1])))
+            continue
+        actualizar.append([fid, nuevo])
+        reporte.append((fid, fuente, nom, nuevo))
 
     log('\n== Resumen ==')
     log('   %d costos para actualizar' % len(actualizar))
     log('   %d no aparecieron en la página' % len(faltantes))
+
+    if anclas:
+        log('\n== Anclas: NO se tocan, solo se informan ==')
+        log('   %-34s %10s %10s %8s' % ('producto', 'costo', 'tu precio', 'margen'))
+        for fid, nom, costo, precio in sorted(anclas, key=lambda a: -(a[3] or 0)):
+            etiqueta = (nom or fid)[:34]
+            if precio > 0:
+                m = 100.0 * (precio - costo) / precio
+                aviso = '  <-- POR DEBAJO DEL COSTO' if costo > precio else ''
+                log('   %-34s %10s %10s %7.0f%%%s'
+                    % (etiqueta, '$%d' % costo, '$%d' % precio, m, aviso))
+            else:
+                log('   %-34s %10s %10s %8s' % (etiqueta, '$%d' % costo, '-', '-'))
 
     # ── salvaguarda ──
     ok_mami = len(pm) >= UMBRAL_SEGURIDAD * len(esperados_mami)
