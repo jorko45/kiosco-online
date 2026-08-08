@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>K24 · Red de kioscos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0b1220;color:#e8f0fa;font-family:Rajdhani,system-ui,sans-serif;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px}
+  a{color:#7fc3ff}
+
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:#0b1220;z-index:50}
+  .card{background:#0f1722;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;width:100%;max-width:350px}
+  .card h1{font-family:Orbitron,sans-serif;font-size:18px;margin:0 0 16px}
+  input,select{width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#fff;
+    font-family:Rajdhani,sans-serif;font-weight:700;font-size:15px;padding:11px 12px;margin-bottom:10px}
+  button{font-family:Rajdhani,sans-serif;font-weight:800;cursor:pointer;border:none;border-radius:10px}
+  .btn{background:#cc1010;color:#fff;font-size:15px;padding:12px;width:100%}
+  .err{color:#ff8a8a;font-size:13px;min-height:18px}
+
+  header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#0f1722;border-bottom:1px solid rgba(255,255,255,.1);
+    position:sticky;top:0;z-index:20}
+  header h1{font-family:Orbitron,sans-serif;font-size:15px;margin:0;flex:1}
+  .lat{font-size:12px;color:#7d8fa3}
+  .salir{background:none;border:1px solid rgba(255,255,255,.2);color:#bcd;font-size:13px;padding:7px 11px}
+
+  h2{font-family:Orbitron,sans-serif;font-size:12px;letter-spacing:1px;color:#93a9c0;margin:24px 0 10px;text-transform:uppercase}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:11px}
+  .p{background:#0f1722;border:1px solid rgba(255,255,255,.11);border-radius:14px;padding:14px}
+  .p.on{border-color:rgba(57,211,83,.45)}
+  .p .top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .p .luz{width:10px;height:10px;border-radius:50%;background:#63707f;flex:none}
+  .p.on .luz{background:#39d353;box-shadow:0 0 8px #39d353}
+  .p .nom{font-weight:800;font-size:16px;flex:1}
+  .tipo{font-size:10px;letter-spacing:.5px;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.09);color:#a9bdd2}
+  .tipo.mami{background:rgba(255,176,32,.16);color:#ffcf7a}
+  .p .dato{font-size:13px;color:#93a9c0;margin-top:4px}
+  .p .acc{display:flex;gap:7px;margin-top:11px}
+  .p .acc button{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);color:#dbe7f3;font-size:12px;padding:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .chip{background:rgba(255,90,90,.14);border:1px solid rgba(255,90,90,.35);color:#ffb3b3;border-radius:7px;padding:3px 8px;font-size:12px}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:#7d8fa3;font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.12)}
+  td{padding:9px;border-bottom:1px solid rgba(255,255,255,.07);vertical-align:top}
+  tr.esperando td{background:rgba(57,211,83,.06)}
+  .badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.4px}
+  .b-esp{background:rgba(57,211,83,.18);color:#7ef0a0}
+  .b-rec{background:rgba(255,90,90,.16);color:#ffb3b3}
+  .b-ven{background:rgba(255,176,32,.16);color:#ffd79a}
+  .b-acc{background:rgba(90,160,255,.18);color:#a9d1ff}
+
+  .vacio{background:#0f1722;border:1px dashed rgba(255,255,255,.15);border-radius:14px;padding:26px;text-align:center;color:#7d8fa3}
+  .aviso{background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.35);border-radius:11px;padding:11px 13px;font-size:14px;color:#ffd79a;margin-bottom:12px}
+  dialog{background:#0f1722;color:#e8f0fa;border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:22px;max-width:340px;width:92%;font-family:Rajdhani,sans-serif}
+  dialog::backdrop{background:rgba(0,0,0,.65)}
+  dialog h3{font-family:Orbitron,sans-serif;font-size:15px;margin:0 0 4px}
+  dialog p{color:#93a9c0;font-size:13px;margin:0 0 14px;line-height:1.45}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="card" id="fLogin">
+    <h1>K24 · Red</h1>
+    <input id="clave" type="password" placeholder="Clave del panel" autocomplete="current-password" required>
+    <button class="btn" id="btnLogin" type="submit">Entrar</button>
+    <div class="err" id="errLogin"></div>
+  </form>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>Red de kioscos</h1>
+    <span class="lat" id="lat">—</span>
+    <button class="salir" id="btnSalir">Salir</button>
+  </header>
+
+  <div class="wrap">
+    <div id="zonaSinAsignar"></div>
+
+    <h2>Puntos</h2>
+    <div class="grid" id="grid"></div>
+
+    <h2>Cascada · quién recibió qué</h2>
+    <div id="zonaCascada"></div>
+  </div>
+</div>
+
+<dialog id="dlgPin">
+  <h3>Acceso del kiosco</h3>
+  <p>Elegí un usuario y un PIN y pasáselos al kiosquero. El PIN se guarda encriptado:
+     no vas a poder volver a verlo, solo cambiarlo.</p>
+  <input id="pinUsuario" placeholder="usuario" autocapitalize="none">
+  <input id="pinClave" type="password" inputmode="numeric" placeholder="PIN (mínimo 4 dígitos)">
+  <div class="err" id="errPin"></div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn" style="background:rgba(255,255,255,.08)" onclick="document.getElementById('dlgPin').close()">Cancelar</button>
+    <button class="btn" id="btnGuardarPin">Guardar</button>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+var TOKEN = sessionStorage.getItem('k24_despacho_token') || null;
+var timer = null, puntoPin = null;
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function pesos(n){ return '$' + (Number(n)||0).toLocaleString('es-AR'); }
+function hace(t){
+  if (!t) return 'nunca';
+  var s = Math.round((Date.now() - new Date(t)) / 1000);
+  if (s < 60) return 'hace ' + s + 's';
+  if (s < 3600) return 'hace ' + Math.round(s/60) + ' min';
+  return 'hace ' + Math.round(s/3600) + ' h';
+}
+
+async function api(opciones){
+  opciones = opciones || {};
+  var r = await fetch('/api/despacho/puntos' + (opciones.query || ''), {
+    method: opciones.method || 'GET',
+    headers: Object.assign({'Content-Type':'application/json'},
+      TOKEN ? {Authorization:'Bearer ' + TOKEN} : {}),
+    body: opciones.body ? JSON.stringify(opciones.body) : undefined
+  });
+  var d = await r.json().catch(function(){ return {}; });
+  if (r.status === 401) { salir(); throw new Error('Sesion vencida'); }
+  if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+
+$('fLogin').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var b = $('btnLogin'); b.disabled = true; $('errLogin').textContent = '';
+  try {
+    var r = await fetch('/api/despacho/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rol:'panel', clave: $('clave').value })
+    });
+    var d = await r.json().catch(function(){ return {}; });
+    if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
+    TOKEN = d.token;
+    sessionStorage.setItem('k24_despacho_token', TOKEN);
+    entrar();
+  } catch (err) { $('errLogin').textContent = err.message; }
+  finally { b.disabled = false; }
+});
+
+function salir(){
+  TOKEN = null;
+  sessionStorage.removeItem('k24_despacho_token');
+  clearInterval(timer);
+  $('app').style.display = 'none';
+  $('login').style.display = 'flex';
+}
+$('btnSalir').addEventListener('click', salir);
+
+function entrar(){
+  $('login').style.display = 'none';
+  $('app').style.display = 'block';
+  refrescar();
+  timer = setInterval(refrescar, 5000);
+}
+
+async function refrescar(){
+  try {
+    // Antes de mirar, empujar la cascada: cierra las ofertas vencidas y
+    // se las pasa al siguiente. No hay cron, asi que esta consola es el
+    // motor. Si nadie la tiene abierta, un pedido rechazado se queda
+    // quieto hasta que alguien entre.
+    await api({ method:'POST', body:{ accion:'rotar' } }).catch(function(){});
+    var d = await api({ query:'?red=1' });
+    pintarSinAsignar(d.sin_asignar || []);
+    pintarPuntos(d.puntos || []);
+    pintarCascada(d.cascada || []);
+    $('lat').textContent = 'en vivo · ' + new Date().toLocaleTimeString('es-AR');
+  } catch (e) {
+    if (!/Sesion vencida/.test(e.message)) $('lat').textContent = 'sin conexión';
+  }
+}
+
+function pintarSinAsignar(lista){
+  var z = $('zonaSinAsignar');
+  if (!lista.length) { z.innerHTML = ''; return; }
+  z.innerHTML = '<h2>Sin punto asignado</h2>' + lista.map(function(p){
+    return '<div class="aviso">' + esc(p.codigo) + ' · ' + pesos(p.subtotal) + ' · ' + hace(p.creado_at)
+      + ' <button class="salir" style="margin-left:8px" onclick="ofrecer(' + p.id + ')">Ofrecer ahora</button></div>';
+  }).join('');
+}
+
+async function ofrecer(id){
+  try {
+    var d = await api({ method:'POST', body:{ accion:'ofrecer', pedido_id:id } });
+    if (!d.ok) alert(d.motivo || 'Ningún punto puede tomarlo');
+    refrescar();
+  } catch (e) { alert(e.message); }
+}
+
+function pintarPuntos(lista){
+  $('grid').innerHTML = lista.map(function(p){
+    var latidoOk = p.ultimo_latido && (Date.now() - new Date(p.ultimo_latido)) < 90000;
+    var conectado = p.online && latidoOk;
+    var esMami = p.tipo === 'mami';
+    var falt = (p.faltantes || []).slice(0, 8).map(function(f){
+      return '<span class="chip">' + esc(f.nombre || f.producto_id) + '</span>'; }).join('');
+    var mas = (p.faltantes || []).length > 8 ? '<span class="chip">+' + ((p.faltantes.length)-8) + '</span>' : '';
+
+    return '<div class="p' + (conectado || esMami ? ' on' : '') + '">'
+      + '<div class="top"><div class="luz"></div><div class="nom">' + esc(p.nombre) + '</div>'
+      + '<span class="tipo ' + (esMami ? 'mami' : '') + '">' + esc(p.tipo) + '</span></div>'
+      + '<div class="dato">' + (esMami
+          ? 'Cierra la fila. No necesita estar conectado: lo operás vos.'
+          : (conectado ? 'Conectado · ' : 'Desconectado · ') + 'último latido ' + hace(p.ultimo_latido)) + '</div>'
+      + '<div class="dato">radio ' + (p.radio_km || '?') + ' km · prioridad ' + (p.prioridad || 0)
+      + (p.usuario ? ' · usuario <b>' + esc(p.usuario) + '</b>' : ' · <b style="color:#ffb3b3">sin acceso</b>') + '</div>'
+      + (falt ? '<div class="chips">' + falt + mas + '</div>' : '')
+      + '<div class="acc"><button onclick="abrirPin(\'' + p.id + '\',\'' + esc(p.usuario || '') + '\')">'
+      + (p.usuario ? 'Cambiar PIN' : 'Dar acceso') + '</button></div>'
+      + '</div>';
+  }).join('') || '<div class="vacio">No hay puntos cargados.</div>';
+}
+
+function abrirPin(id, usuario){
+  puntoPin = id;
+  $('pinUsuario').value = usuario || '';
+  $('pinClave').value = '';
+  $('errPin').textContent = '';
+  $('dlgPin').showModal();
+}
+
+$('btnGuardarPin').addEventListener('click', async function(){
+  $('errPin').textContent = '';
+  try {
+    await api({ method:'POST', body:{ accion:'pin', id:puntoPin,
+      usuario: $('pinUsuario').value, pin: $('pinClave').value } });
+    $('dlgPin').close();
+    refrescar();
+  } catch (e) { $('errPin').textContent = e.message; }
+});
+
+function pintarCascada(filas){
+  if (!filas.length) {
+    $('zonaCascada').innerHTML = '<div class="vacio">Todavía no se ofreció ningún pedido.</div>';
+    return;
+  }
+  var badge = {
+    null: '<span class="badge b-esp">esperando</span>',
+    acepto: '<span class="badge b-acc">lo tomó</span>',
+    rechazo: '<span class="badge b-rec">rechazó</span>',
+    vencio: '<span class="badge b-ven">no contestó</span>',
+    saltado: '<span class="badge b-ven">saltado</span>'
+  };
+  var f = filas.map(function(c){
+    var esperando = c.respuesta == null;
+    return '<tr' + (esperando ? ' class="esperando"' : '') + '>'
+      + '<td><b>' + esc(c.codigo) + '</b></td>'
+      + '<td>' + c.orden + '</td>'
+      + '<td>' + esc(c.punto) + '</td>'
+      + '<td>' + (badge[c.respuesta] || esc(c.respuesta)) + '</td>'
+      + '<td>' + (esperando ? Math.max(0, c.segundos_restantes) + ' s' : hace(c.ofrecido_at)) + '</td>'
+      + '<td style="color:#93a9c0">' + esc(c.motivo || '') + '</td>'
+      + '</tr>';
+  }).join('');
+  $('zonaCascada').innerHTML =
+    '<table><thead><tr><th>Pedido</th><th>#</th><th>Punto</th><th>Respuesta</th><th>Cuándo</th><th>Motivo</th></tr></thead>'
+    + '<tbody>' + f + '</tbody></table>';
+}
+
+if (TOKEN) entrar();
+</script>
+</body>
+</html>

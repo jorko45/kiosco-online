@@ -1,24 +1,88 @@
 // api/despacho/puntos.js
 //
+//   PANEL (vos)
 //   GET  /api/despacho/puntos                 → lista de puntos con su estado
 //   GET  /api/despacho/puntos?pedido_id=123   → candidatos ordenados para ese pedido
+//   GET  /api/despacho/puntos?red=1           → estado de la red + cascadas abiertas
 //   POST /api/despacho/puntos                 → alta de punto
 //   POST /api/despacho/puntos { id, ... }     → edicion (activar, radio, prioridad)
+//   POST { accion:'pin', id, usuario, pin }   → darle acceso a un kiosco
+//   POST { accion:'ofrecer', pedido_id }      → arrancar la ronda a mano
+//   POST { accion:'rotar' }                   → cerrar vencidas y pasar al siguiente
 //
-// Todo esto es del panel. Un repartidor no tiene nada que hacer aca.
+//   KIOSCO (el kiosquero)
+//   GET  /api/despacho/puntos?kiosco=1        → mi estado, mi oferta, mis faltantes
+//   POST { accion:'latido', online }          → sigo acá / me prendo / me apago
+//   POST { accion:'responder', pedido_id, respuesta, motivo }
+//   POST { accion:'faltante', producto_id, nombre, falta }
+//
+// Todo lo del kiosco esta metido aca a proposito: Vercel deja 12 funciones
+// en el plan gratuito y ya estan las 12 usadas. Un archivo nuevo tira el
+// deploy entero abajo, no solo el endpoint nuevo.
 
-import { seleccionar, actualizar, rpc, json, cors, cuerpo } from '../_lib/db.js';
-import { exigirPanel } from '../_lib/auth.js';
+import { seleccionar, actualizar, insertar, rpc, json, cors, cuerpo } from '../_lib/db.js';
+import { exigirPanel, exigirKiosco } from '../_lib/auth.js';
 
 const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
+// Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
+const DE_KIOSCO = new Set(['latido', 'responder', 'faltante']);
+
 export default async function handler(req, res) {
   if (cors(req, res, 'GET, POST, OPTIONS')) return;
+
+  // ── Rama del kiosco ──────────────────────────────────────────────
+  const esKiosco =
+    (req.method === 'GET' && req.query.kiosco) ||
+    (req.method === 'POST' && DE_KIOSCO.has(String((cuerpo(req) || {}).accion || '')));
+
+  if (esKiosco) {
+    const ses = exigirKiosco(req, res);
+    if (!ses) return;
+    try {
+      return await manejarKiosco(req, res, ses);
+    } catch (e) {
+      console.error('[puntos] kiosco:', e.message);
+      return json(res, 500, { ok: false, error: 'Error del servidor' });
+    }
+  }
+
   if (!exigirPanel(req, res)) return;
 
   try {
     // ── GET ────────────────────────────────────────────────────────
     if (req.method === 'GET') {
+      // ── Estado de la red, para tu consola ──────────────────────
+      if (req.query.red) {
+        const [puntos, cascada, sinAsignar] = await Promise.all([
+          seleccionar('puntos_preparacion', {
+            select: 'id,nombre,tipo,activo,online,ultimo_latido,usuario,lat,lng,radio_km,prioridad',
+            order: 'nombre.asc',
+          }),
+          seleccionar('v_cascada', { order: 'pedido_id.desc,orden.asc', limit: '80' }),
+          seleccionar('pedidos', {
+            select: 'id,codigo,subtotal,creado_at,estado',
+            punto_id: 'is.null',
+            estado: 'in.(nuevo,confirmado)',
+            order: 'creado_at.asc',
+          }),
+        ]);
+
+        const faltantes = await seleccionar('punto_faltantes', {
+          select: 'punto_id,producto_id,nombre,desde',
+          order: 'desde.desc',
+        });
+        const porPunto = {};
+        for (const f of faltantes) (porPunto[f.punto_id] ||= []).push(f);
+
+        return json(res, 200, {
+          ok: true,
+          puntos: puntos.map((p) => ({ ...p, faltantes: porPunto[p.id] || [] })),
+          cascada,
+          sin_asignar: sinAsignar,
+        });
+      }
+
       const pedidoId = req.query.pedido_id;
 
       // Sin pedido: la lista completa para administrar
@@ -103,6 +167,45 @@ export default async function handler(req, res) {
     // ── POST ───────────────────────────────────────────────────────
     if (req.method === 'POST') {
       const b = cuerpo(req);
+
+      // ── Darle acceso a un kiosco ───────────────────────────────
+      // El PIN lo elegis vos y viaja una sola vez. En la base queda
+      // hasheado con bcrypt: no hay forma de volver a leerlo, ni para vos.
+      if (b.accion === 'pin') {
+        if (!b.id) return json(res, 400, { ok: false, error: 'Falta el punto' });
+        const r = await rpc('poner_pin_punto', {
+          p_punto_id: b.id,
+          p_usuario: String(b.usuario || ''),
+          p_pin: String(b.pin || ''),
+        });
+        const e = Array.isArray(r) ? r[0] : r;
+        return json(res, e && e.ok ? 200 : 400, {
+          ok: !!(e && e.ok),
+          error: e && e.ok ? undefined : (e ? e.motivo : 'No se pudo'),
+        });
+      }
+
+      // ── Arrancar la ronda a mano ───────────────────────────────
+      if (b.accion === 'ofrecer') {
+        const id = Number(b.pedido_id);
+        if (!Number.isFinite(id)) return json(res, 400, { ok: false, error: 'Falta el pedido' });
+        const r = await rpc('ofrecer_pedido', { p_pedido_id: id });
+        const e = Array.isArray(r) ? r[0] : r;
+        return json(res, 200, {
+          ok: !!(e && e.ok),
+          punto: e ? e.nombre : null,
+          vence_at: e ? e.vence_at : null,
+          motivo: e ? e.motivo : null,
+        });
+      }
+
+      // ── Cerrar vencidas y pasar al siguiente ───────────────────
+      // Lo llama la consola cada pocos segundos. Sin esto un pedido cuya
+      // oferta vencio se queda quieto para siempre: no hay cron.
+      if (b.accion === 'rotar') {
+        const n = await rpc('rotar_ofertas_vencidas', {});
+        return json(res, 200, { ok: true, rotados: Number(n) || 0 });
+      }
 
       // ── Edicion ────────────────────────────────────────────────
       if (b.id) {
@@ -227,4 +330,132 @@ export default async function handler(req, res) {
     console.error('[despacho] puntos:', e.message, e.detalle || '');
     return json(res, 500, { ok: false, error: 'Error del servidor' });
   }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  LA PANTALLA DEL KIOSCO
+//
+//  Un kiosco adherido es proveedor y competencia a la vez: le vende a los
+//  mismos vecinos. Por eso de aca no sale NUNCA el nombre, el telefono ni
+//  la direccion del cliente. Solo que juntar y cuanto va a cobrar.
+// ═══════════════════════════════════════════════════════════════════════
+async function manejarKiosco(req, res, ses) {
+  const puntoId = ses.punto_id;
+
+  if (req.method === 'GET') {
+    const [punto, ofertas, faltantes] = await Promise.all([
+      seleccionar('puntos_preparacion', {
+        select: 'id,nombre,tipo,online,ultimo_latido,activo',
+        id: `eq.${puntoId}`,
+      }),
+      seleccionar('v_oferta_para_kiosco', { punto_id: `eq.${puntoId}` }),
+      seleccionar('punto_faltantes', {
+        select: 'producto_id,nombre,desde',
+        punto_id: `eq.${puntoId}`,
+        order: 'desde.desc',
+      }),
+    ]);
+
+    const p = punto[0] || {};
+    const oferta = ofertas[0] || null;
+
+    // Lo que ya acepto y todavia no salio, para que sepa que esta preparando.
+    const enPreparacion = await seleccionar('pedidos', {
+      select: 'id,codigo,items,estado,pago_al_punto',
+      punto_id: `eq.${puntoId}`,
+      estado: 'in.(confirmado,preparando,asignado)',
+      order: 'creado_at.asc',
+    });
+
+    return json(res, 200, {
+      ok: true,
+      punto: { id: p.id, nombre: p.nombre, tipo: p.tipo, online: !!p.online, activo: !!p.activo },
+      oferta,
+      preparando: enPreparacion,
+      faltantes,
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return json(res, 405, { ok: false, error: 'Método no permitido' });
+  }
+
+  const b = cuerpo(req);
+
+  // ── Sigo acá ───────────────────────────────────────────────────
+  if (b.accion === 'latido') {
+    const r = await rpc('latido_punto', {
+      p_punto_id: puntoId,
+      p_online: b.online === undefined ? null : Boolean(b.online),
+    });
+    const e = Array.isArray(r) ? r[0] : r;
+    return json(res, 200, { ok: true, online: !!(e && e.online), conectado: !!(e && e.conectado) });
+  }
+
+  // ── Tomo el pedido / lo dejo pasar ─────────────────────────────
+  if (b.accion === 'responder') {
+    const pedidoId = Number(b.pedido_id);
+    if (!Number.isFinite(pedidoId)) {
+      return json(res, 400, { ok: false, error: 'Falta el pedido' });
+    }
+    if (!['acepto', 'rechazo'].includes(b.respuesta)) {
+      return json(res, 400, { ok: false, error: 'Respuesta inválida' });
+    }
+
+    const r = await rpc('responder_oferta', {
+      p_pedido_id: pedidoId,
+      p_punto_id: puntoId,
+      p_respuesta: b.respuesta,
+      p_motivo: b.motivo ? String(b.motivo).slice(0, 200) : null,
+    });
+    const e = Array.isArray(r) ? r[0] : r;
+
+    // Rechazado: el pedido no puede quedarse esperando a que alguien mire
+    // la consola. Se le ofrece al siguiente en el acto.
+    if (b.respuesta === 'rechazo' && e && e.ok) {
+      try { await rpc('ofrecer_pedido', { p_pedido_id: pedidoId }); } catch (_) {}
+    }
+    return json(res, e && e.ok ? 200 : 409, {
+      ok: !!(e && e.ok),
+      motivo: e ? e.motivo : 'No se pudo registrar la respuesta',
+    });
+  }
+
+  // ── Se me acabó / ya tengo ─────────────────────────────────────
+  if (b.accion === 'faltante') {
+    const prod = String(b.producto_id || '').trim();
+    if (!prod) return json(res, 400, { ok: false, error: 'Falta el producto' });
+
+    if (b.falta === false) {
+      await fetchDelete('punto_faltantes', { punto_id: `eq.${puntoId}`, producto_id: `eq.${prod}` });
+      return json(res, 200, { ok: true, falta: false });
+    }
+    // upsert a mano: si ya estaba marcado no pasa nada
+    try {
+      await insertar('punto_faltantes', {
+        punto_id: puntoId,
+        producto_id: prod,
+        nombre: b.nombre ? String(b.nombre).slice(0, 200) : null,
+      });
+    } catch (e) {
+      if (!/duplicate|conflict|23505/i.test(e.message || '')) throw e;
+    }
+    return json(res, 200, { ok: true, falta: true });
+  }
+
+  return json(res, 400, { ok: false, error: 'Acción desconocida' });
+}
+
+
+/** Borrado por PostgREST. db.js no expone uno, y para esto alcanza. */
+async function fetchDelete(tabla, filtro) {
+  const base = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  const qs = new URLSearchParams(filtro).toString();
+  const r = await fetch(`${base}/rest/v1/${tabla}?${qs}`, {
+    method: 'DELETE',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: 'return=minimal' },
+  });
+  if (!r.ok) throw new Error(`DELETE ${tabla}: ${r.status}`);
 }

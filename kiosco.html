@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b1220">
+<title>K24 · Kiosco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b1220;color:#e8f0fa;font-family:Rajdhani,system-ui,sans-serif;font-size:16px}
+  .wrap{max-width:820px;margin:0 auto;padding:14px}
+
+  /* ── login ── */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:22px;background:#0b1220;z-index:50}
+  .card{background:#0f1722;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:24px;width:100%;max-width:360px}
+  .card h1{font-family:Orbitron,sans-serif;font-size:19px;margin:0 0 4px}
+  .card p{color:#93a9c0;font-size:14px;margin:0 0 18px}
+  input,select,textarea{width:100%;background:#0b1220;border:1px solid rgba(255,255,255,.18);border-radius:11px;color:#fff;
+    font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;padding:12px 13px;margin-bottom:11px}
+  input:focus{outline:none;border-color:#cc1010}
+  button{font-family:Rajdhani,sans-serif;font-weight:800;cursor:pointer;border:none;border-radius:11px}
+  .btn{background:#cc1010;color:#fff;font-size:16px;padding:13px;width:100%;letter-spacing:.5px}
+  .btn:disabled{opacity:.55;cursor:default}
+  .err{color:#ff8a8a;font-size:14px;min-height:19px;margin-top:6px}
+
+  /* ── barra ── */
+  header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0f1722;border-bottom:1px solid rgba(255,255,255,.1);
+    position:sticky;top:0;z-index:20}
+  header .nom{font-family:Orbitron,sans-serif;font-weight:900;font-size:15px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sw{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
+    border-radius:30px;padding:5px 11px 5px 7px;cursor:pointer;font-weight:800;font-size:13px}
+  .luz{width:11px;height:11px;border-radius:50%;background:#63707f;transition:.2s}
+  .sw.on .luz{background:#39d353;box-shadow:0 0 9px #39d353}
+  .sw.on{border-color:rgba(57,211,83,.5)}
+  .salir{background:none;border:1px solid rgba(255,255,255,.2);color:#bcd;font-size:13px;padding:7px 11px}
+
+  h2{font-family:Orbitron,sans-serif;font-size:13px;letter-spacing:1px;color:#93a9c0;margin:22px 0 9px;text-transform:uppercase}
+
+  /* ── oferta ── */
+  .oferta{background:linear-gradient(160deg,#12253a,#0f1722);border:2px solid #39d353;border-radius:18px;padding:18px;
+    box-shadow:0 0 34px rgba(57,211,83,.16)}
+  .oferta.urgente{border-color:#ff5a5a;box-shadow:0 0 34px rgba(255,90,90,.22);animation:late 1s infinite}
+  @keyframes late{50%{box-shadow:0 0 44px rgba(255,90,90,.4)}}
+  .reloj{font-family:Orbitron,sans-serif;font-size:42px;font-weight:900;text-align:center;letter-spacing:2px;margin:2px 0 4px}
+  .sub{text-align:center;color:#93a9c0;font-size:13px;margin-bottom:14px}
+  .plata{text-align:center;background:rgba(57,211,83,.12);border:1px solid rgba(57,211,83,.35);border-radius:13px;padding:11px;margin-bottom:14px}
+  .plata b{display:block;font-family:Orbitron,sans-serif;font-size:27px;color:#4dff88}
+  .plata span{font-size:12px;color:#93a9c0;letter-spacing:.5px}
+  ul.items{list-style:none;margin:0 0 15px;padding:0}
+  ul.items li{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  ul.items li b{background:#cc1010;border-radius:8px;min-width:32px;text-align:center;padding:3px 6px;font-size:15px}
+  ul.items li span{flex:1;font-size:15px;line-height:1.25}
+  ul.items li .nohay{background:none;border:1px solid rgba(255,255,255,.22);color:#ffb3b3;font-size:11px;padding:6px 9px;border-radius:8px;font-weight:800}
+  .fila2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ok{background:#1f9d3f;color:#fff;font-size:17px;padding:16px}
+  .no{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.22);color:#e8f0fa;font-size:15px;padding:16px}
+
+  .vacio{background:#0f1722;border:1px dashed rgba(255,255,255,.16);border-radius:16px;padding:30px 18px;text-align:center;color:#7d8fa3}
+  .vacio .ico{font-size:34px;display:block;margin-bottom:8px;opacity:.6}
+
+  .prep{background:#0f1722;border:1px solid rgba(255,255,255,.12);border-left:3px solid #ffb020;border-radius:12px;padding:13px;margin-bottom:9px}
+  .prep .cod{font-family:Orbitron,sans-serif;font-size:13px;color:#ffb020}
+  .prep .det{font-size:14px;color:#c7d6e6;margin-top:5px;line-height:1.35}
+
+  .falt{display:flex;gap:8px;align-items:center;background:#0f1722;border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;padding:9px 12px;margin-bottom:7px;font-size:14px}
+  .falt span{flex:1}
+  .falt button{background:none;border:1px solid rgba(255,255,255,.2);color:#9fe6b0;font-size:12px;padding:6px 10px}
+  .aviso{background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.4);border-radius:11px;padding:11px 13px;
+    font-size:14px;color:#ffd79a;margin-bottom:12px;line-height:1.4}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="card" id="fLogin">
+    <h1>K24 · Kiosco</h1>
+    <p>Entrá para recibir pedidos.</p>
+    <input id="usuario" placeholder="Usuario" autocomplete="username" autocapitalize="none" required>
+    <input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password" required>
+    <button class="btn" id="btnLogin" type="submit">Entrar</button>
+    <div class="err" id="errLogin"></div>
+  </form>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="nom" id="hNombre">—</div>
+    <div class="sw" id="swOnline"><div class="luz"></div><span id="txOnline">Cerrado</span></div>
+    <button class="salir" id="btnSalir">Salir</button>
+  </header>
+
+  <div class="wrap">
+    <div id="avisoOffline" class="aviso" style="display:none">
+      Estás <b>cerrado</b>: no te van a llegar pedidos. Tocá el interruptor de arriba para abrir.
+    </div>
+
+    <div id="zonaOferta"></div>
+
+    <div id="zonaPrep"></div>
+
+    <h2>Lo que no tengo</h2>
+    <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
+      Marcá acá lo que se te acabó y no te van a llegar pedidos que lo incluyan.
+      Se borra solo a los 7 días, así que si sigue faltando volvé a marcarlo.
+    </div>
+    <div id="listaFaltantes"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+var TOKEN  = sessionStorage.getItem('k24_kiosco_token') || null;
+var PUNTO  = null;
+var timer  = null, latido = null, tickReloj = null;
+var ofertaActual = null;
+var sonoAviso = false;
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function pesos(n){ return '$' + (Number(n)||0).toLocaleString('es-AR'); }
+
+async function api(opciones){
+  opciones = opciones || {};
+  var url = '/api/despacho/puntos' + (opciones.query || '');
+  var r = await fetch(url, {
+    method: opciones.method || 'GET',
+    headers: Object.assign({'Content-Type':'application/json'},
+      TOKEN ? {Authorization:'Bearer ' + TOKEN} : {}),
+    body: opciones.body ? JSON.stringify(opciones.body) : undefined
+  });
+  var d = await r.json().catch(function(){ return {}; });
+  // Un 401 en el login es "PIN mal", no "sesion vencida". Solo cerramos
+  // sesion cuando el 401 llega en una llamada normal.
+  if (r.status === 401 && !opciones.esLogin) { salir(); throw new Error('Sesion vencida'); }
+  if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+
+// ── entrar ────────────────────────────────────────────────────────
+$('fLogin').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var b = $('btnLogin'); b.disabled = true; $('errLogin').textContent = '';
+  try {
+    var r = await fetch('/api/despacho/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rol:'kiosco', usuario: $('usuario').value, pin: $('pin').value })
+    });
+    var d = await r.json().catch(function(){ return {}; });
+    if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
+    TOKEN = d.token; PUNTO = d.punto;
+    sessionStorage.setItem('k24_kiosco_token', TOKEN);
+    entrar();
+  } catch (err) {
+    $('errLogin').textContent = err.message;
+  } finally { b.disabled = false; }
+});
+
+function salir(){
+  TOKEN = null; PUNTO = null;
+  sessionStorage.removeItem('k24_kiosco_token');
+  clearInterval(timer); clearInterval(latido); clearInterval(tickReloj);
+  $('app').style.display = 'none';
+  $('login').style.display = 'flex';
+}
+$('btnSalir').addEventListener('click', function(){
+  // Al salir se apaga: si no, el sistema sigue creyendo que estas abierto
+  // y te manda pedidos que nadie va a ver.
+  api({ method:'POST', body:{ accion:'latido', online:false } }).catch(function(){});
+  salir();
+});
+
+function entrar(){
+  $('login').style.display = 'none';
+  $('app').style.display = 'block';
+  refrescar();
+  timer  = setInterval(refrescar, 4000);
+  latido = setInterval(function(){
+    api({ method:'POST', body:{ accion:'latido' } }).catch(function(){});
+  }, 30000);
+  tickReloj = setInterval(pintarReloj, 250);
+}
+
+// ── prender / apagar ──────────────────────────────────────────────
+$('swOnline').addEventListener('click', async function(){
+  var queda = !($('swOnline').classList.contains('on'));
+  try {
+    var d = await api({ method:'POST', body:{ accion:'latido', online: queda } });
+    pintarOnline(d.online);
+    refrescar();
+  } catch(e){}
+});
+
+function pintarOnline(on){
+  $('swOnline').classList.toggle('on', !!on);
+  $('txOnline').textContent = on ? 'Abierto' : 'Cerrado';
+  $('avisoOffline').style.display = on ? 'none' : 'block';
+}
+
+// ── el bip ────────────────────────────────────────────────────────
+function bip(){
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    [0, .2, .4].forEach(function(t){
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = 990; o.type = 'square';
+      g.gain.setValueAtTime(.0001, ac.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(.35, ac.currentTime + t + .01);
+      g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + t + .17);
+      o.start(ac.currentTime + t); o.stop(ac.currentTime + t + .18);
+    });
+  } catch(e){}
+  try { if (navigator.vibrate) navigator.vibrate([220,90,220,90,220]); } catch(e){}
+}
+
+// ── ciclo ─────────────────────────────────────────────────────────
+async function refrescar(){
+  try {
+    var d = await api({ query:'?kiosco=1' });
+    PUNTO = d.punto;
+    $('hNombre').textContent = d.punto.nombre || 'Kiosco';
+    pintarOnline(d.punto.online);
+
+    var nueva = d.oferta && (!ofertaActual || ofertaActual.pedido_id !== d.oferta.pedido_id);
+    ofertaActual = d.oferta || null;
+    if (nueva) { sonoAviso = false; }
+    if (ofertaActual && !sonoAviso) { bip(); sonoAviso = true; }
+
+    pintarOferta();
+    pintarPreparando(d.preparando || []);
+    pintarFaltantes(d.faltantes || []);
+  } catch (err) {
+    if (!/Sesion vencida/.test(err.message)) {
+      // Sin conexion no se avisa fuerte: vuelve solo en 4 segundos.
+    }
+  }
+}
+
+function pintarOferta(){
+  var z = $('zonaOferta');
+  if (!ofertaActual) {
+    z.innerHTML = '<h2>Pedido entrante</h2><div class="vacio"><span class="ico">🛎️</span>'
+      + (PUNTO && PUNTO.online
+          ? 'Todo tranquilo. Cuando entre un pedido cerca tuyo, suena acá.'
+          : 'Estás cerrado. Abrí para empezar a recibir pedidos.')
+      + '</div>';
+    return;
+  }
+  var o = ofertaActual;
+  var items = Array.isArray(o.items) ? o.items : [];
+  var li = items.map(function(it){
+    var nom = esc(it.name || it.nombre || it.producto || 'Producto');
+    var id  = esc(it.id || it.key || '');
+    return '<li><b>' + (Number(it.qty || it.cantidad) || 1) + '</b><span>' + nom + '</span>'
+      + '<button class="nohay" onclick="noTengo(\'' + id + '\',\'' + nom.replace(/'/g,"\\'") + '\')">No tengo</button></li>';
+  }).join('');
+
+  z.innerHTML =
+    '<h2>Pedido entrante</h2>'
+    + '<div class="oferta" id="cajaOferta">'
+    +   '<div class="reloj" id="reloj">--</div>'
+    +   '<div class="sub">para aceptar antes de que pase al siguiente</div>'
+    +   '<div class="plata"><b>' + pesos(o.vas_a_cobrar) + '</b><span>ES LO QUE COBRÁS VOS</span></div>'
+    +   '<ul class="items">' + li + '</ul>'
+    +   '<div class="fila2">'
+    +     '<button class="btn no" onclick="responder(\'rechazo\')">No puedo</button>'
+    +     '<button class="btn ok" onclick="responder(\'acepto\')">LO TOMO</button>'
+    +   '</div>'
+    + '</div>';
+  pintarReloj();
+}
+
+function pintarReloj(){
+  if (!ofertaActual) return;
+  var r = $('reloj'); if (!r) return;
+  var seg = Math.max(0, Math.round((new Date(ofertaActual.vence_at) - Date.now()) / 1000));
+  var m = Math.floor(seg / 60), s = seg % 60;
+  r.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  var caja = $('cajaOferta');
+  if (caja) caja.classList.toggle('urgente', seg <= 30);
+  if (seg <= 0) { ofertaActual = null; refrescar(); }
+}
+
+async function responder(resp){
+  if (!ofertaActual) return;
+  var id = ofertaActual.pedido_id;
+  var motivo = null;
+  if (resp === 'rechazo') {
+    motivo = prompt('¿Por qué no podés? (opcional)\nEj: no tengo stock, estoy solo, ya cerré') || null;
+  }
+  try {
+    var d = await api({ method:'POST', body:{ accion:'responder', pedido_id:id, respuesta:resp, motivo:motivo } });
+    ofertaActual = null;
+    if (!d.ok) alert(d.motivo || 'No se pudo');
+    refrescar();
+  } catch (e) { alert(e.message); refrescar(); }
+}
+
+async function noTengo(prodId, nombre){
+  if (!prodId) { alert('Este producto no tiene código, marcalo desde la lista de abajo.'); return; }
+  try {
+    await api({ method:'POST', body:{ accion:'faltante', producto_id:prodId, nombre:nombre, falta:true } });
+    // Marcar un faltante durante una oferta es, en los hechos, rechazarla:
+    // el pedido es indivisible y ya no lo podes cumplir entero.
+    if (ofertaActual) {
+      await api({ method:'POST', body:{ accion:'responder', pedido_id:ofertaActual.pedido_id,
+        respuesta:'rechazo', motivo:'Sin stock de ' + nombre } });
+      ofertaActual = null;
+    }
+    refrescar();
+  } catch (e) { alert(e.message); }
+}
+
+function pintarPreparando(lista){
+  var z = $('zonaPrep');
+  if (!lista.length) { z.innerHTML = ''; return; }
+  z.innerHTML = '<h2>Preparando</h2>' + lista.map(function(p){
+    var items = Array.isArray(p.items) ? p.items : [];
+    var det = items.map(function(it){
+      return (Number(it.qty || it.cantidad) || 1) + '× ' + esc(it.name || it.nombre || 'Producto');
+    }).join(' · ');
+    return '<div class="prep"><div class="cod">' + esc(p.codigo) + ' · cobrás ' + pesos(p.pago_al_punto) + '</div>'
+      + '<div class="det">' + det + '</div></div>';
+  }).join('');
+}
+
+function pintarFaltantes(lista){
+  var z = $('listaFaltantes');
+  if (!lista.length) {
+    z.innerHTML = '<div class="vacio" style="padding:18px">No marcaste nada. El sistema asume que tenés todo.</div>';
+    return;
+  }
+  z.innerHTML = lista.map(function(f){
+    return '<div class="falt"><span>' + esc(f.nombre || f.producto_id) + '</span>'
+      + '<button onclick="yaTengo(\'' + esc(f.producto_id) + '\')">Ya tengo</button></div>';
+  }).join('');
+}
+
+async function yaTengo(prodId){
+  try {
+    await api({ method:'POST', body:{ accion:'faltante', producto_id:prodId, falta:false } });
+    refrescar();
+  } catch (e) { alert(e.message); }
+}
+
+if (TOKEN) entrar();
+
+// Si cierra la pestaña no avisamos nada, y es a proposito: sendBeacon no
+// deja mandar el header de autorizacion, asi que el pedido llegaria sin
+// sesion y el servidor lo rechazaria. De eso se ocupa el latido: sin señal
+// por 90 segundos el kiosco se considera desconectado y deja de recibir.
+// Que un pedido se ofrezca a un kiosco que acaba de cerrar la pestaña no
+// rompe nada: vence en 2 minutos y pasa al siguiente.
+</script>
+</body>
+</html>

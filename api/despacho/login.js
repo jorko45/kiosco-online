@@ -13,7 +13,7 @@ function faltantes(rol) {
     f.push('DESPACHO_SECRET (minimo 16 caracteres)');
   }
   if (rol === 'panel' && !process.env.ADMIN_PASSWORD) f.push('ADMIN_PASSWORD');
-  if (rol === 'repartidor') {
+  if (rol === 'repartidor' || rol === 'kiosco') {
     if (!process.env.SUPABASE_URL) f.push('SUPABASE_URL');
     if (!process.env.SUPABASE_SERVICE_KEY) f.push('SUPABASE_SERVICE_KEY');
   }
@@ -87,6 +87,38 @@ export default async function handler(req, res) {
         token: crearToken({ rol: 'repartidor', id: rep.id, nombre: rep.nombre }, 16),
         rol: 'repartidor',
         repartidor: { id: rep.id, nombre: rep.nombre, en_turno: rep.en_turno },
+      });
+    }
+
+    // ── Kiosco adherido ────────────────────────────────────────────
+    // El PIN identifica al MOSTRADOR, no a una persona. En un kiosco hay
+    // turnos y quien atiende a la madrugada no es quien firmo el convenio.
+    if (b.rol === 'kiosco') {
+      if (!dbConfigurada()) {
+        return json(res, 503, { ok: false, error: 'Despacho no configurado' });
+      }
+      const usuario = String(b.usuario || '').trim();
+      const pin = String(b.pin || '').trim();
+      if (!usuario || !pin) {
+        return json(res, 400, { ok: false, error: 'Faltan usuario y PIN' });
+      }
+      if (!frenarIntentos(`kio:${usuario}`)) {
+        return json(res, 429, { ok: false, error: 'Demasiados intentos. Esperá 10 minutos.' });
+      }
+
+      const filas = await rpc('verificar_pin_punto', { p_usuario: usuario, p_pin: pin });
+      const k = Array.isArray(filas) ? filas[0] : filas;
+      if (!k || !k.id) {
+        // Mismo mensaje para usuario inexistente y PIN malo.
+        return json(res, 401, { ok: false, error: 'Usuario o PIN incorrecto' });
+      }
+
+      limpiarIntentos(`kio:${usuario}`);
+      return json(res, 200, {
+        ok: true,
+        token: crearToken({ rol: 'kiosco', punto_id: k.id, nombre: k.nombre }, 16),
+        rol: 'kiosco',
+        punto: { id: k.id, nombre: k.nombre, tipo: k.tipo, online: k.online },
       });
     }
 

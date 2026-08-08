@@ -84,6 +84,22 @@ export function exigirRepartidor(req, res) {
   return p;
 }
 
+/**
+ * Exige sesion de kiosco. Devuelve el payload o responde 401.
+ *
+ * El token lleva el id del PUNTO, no de una persona: en un kiosco hay
+ * turnos, y quien esta en el mostrador a las 3 de la manana no es el mismo
+ * que firmo el convenio. Lo que importa es que mostrador es.
+ */
+export function exigirKiosco(req, res) {
+  const p = leerToken(tokenDe(req));
+  if (!p || p.rol !== 'kiosco' || !p.punto_id) {
+    res.status(401).json({ ok: false, error: 'No autorizado' });
+    return null;
+  }
+  return p;
+}
+
 /** Acepta panel o repartidor. */
 export function exigirSesion(req, res) {
   const p = leerToken(tokenDe(req));
