@@ -34,7 +34,8 @@ PEDIX = 'https://pedix.app/cigarreria-y-distribuidora-del-centro'
 #  Los cigarrillos NO hacen falta: no tienen proveedor mapeado, asi que
 #  el actualizador nunca los tocó ni los va a tocar.
 ANCLAS = {
-    'd-AW8rAxhHKj7II2Xg-cn3E',                                     # Fernet Branca 750
+    'd-AW8rAxhHKj7II2Xg-cn3E',                                     # Fernet Branca 750 (Distribuidora)
+    'fernet-branca__1', 'fernet-branca__2',                        # Fernet Branca (tarjeta de marca)
     'fernet-1882__1', 'fernet-1882__2',                            # Fernet 1882
     'coca-cola__2', 'coca-cola__3', 'coca-cola__5',
     'coca-cola__6', 'coca-cola__9',                                # Coca-Cola
