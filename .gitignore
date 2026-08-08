@@ -38,3 +38,6 @@ cambios_precios.csv
 /Kiosco Interactivo.png
 /image_*.png
 log_precios.txt
+
+# Secreto que autoriza a tocar la planilla de precios
+secreto_planilla.txt

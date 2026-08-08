@@ -194,9 +194,40 @@ function _hojaPrecios(){
   return sh;
 }
 
+/**
+ * Acciones que pueden romper la planilla y por lo tanto piden secreto.
+ *
+ * La URL de este script esta a la vista en el codigo de k24hs.com: tiene
+ * que estarlo, porque el navegador del cliente la usa para guardar pedidos.
+ * Eso significa que cualquiera que mire el fuente la tiene. Mientras las
+ * acciones destructivas no pidieran nada, un POST de tres lineas vaciaba
+ * la lista de precios entera.
+ *
+ * Las acciones del cliente (guardar_pedido, comercio, zona_pedida...) NO
+ * llevan secreto: las manda el navegador y ahi no hay donde esconderlo.
+ * Esas solo agregan filas, no borran nada.
+ */
+var ACCIONES_PROTEGIDAS = [
+  'precios_reset', 'precios_append', 'precios_costos',
+  'precios_activo', 'precios_pintar'
+];
+
+function _secretoOk(data) {
+  var esperado = PropertiesService.getScriptProperties().getProperty('K24_SECRETO');
+  // Sin secreto configurado no se bloquea nada: asi esto se puede publicar
+  // sin romper el actualizador que ya esta corriendo. En cuanto cargues la
+  // propiedad K24_SECRETO en Configuracion del proyecto, empieza a exigirlo.
+  if (!esperado) return true;
+  return String((data && data.secreto) || '') === esperado;
+}
+
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
+
+    if (ACCIONES_PROTEGIDAS.indexOf(data.action) !== -1 && !_secretoOk(data)) {
+      return _jsonOut({ ok:false, error:'Esta accion necesita el secreto del proyecto' });
+    }
 
     // Vaciar la planilla de precios (deja el encabezado)
     if (data.action === 'precios_reset') {

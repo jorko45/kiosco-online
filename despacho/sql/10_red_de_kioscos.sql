@@ -466,7 +466,47 @@ revoke all on function calcular_pago_al_punto(bigint)      from anon, authentica
 
 
 -- ─────────────────────────────────────────────────────────────────────
---  9. COMPROBACION
+--  9. LA RUEDA GIRA SOLA
+-- ─────────────────────────────────────────────────────────────────────
+--  Sin esto, la unica que empuja la cascada es la consola: si un kiosco
+--  rechaza a las 4 de la manana y nadie tiene red.html abierto, el pedido
+--  se queda quieto hasta que alguien entre. El cliente esperando y nadie
+--  enterado. Con pg_cron la base se encarga sola, una vez por minuto.
+--
+--  Si la extension no esta disponible, no pasa nada: el bloque avisa y
+--  sigue. La consola sigue funcionando como respaldo.
+do $$
+begin
+  create extension if not exists pg_cron;
+
+  -- Si ya estaba programada, se reemplaza.
+  perform cron.unschedule('k24_rotar_ofertas')
+    where exists (select 1 from cron.job where jobname = 'k24_rotar_ofertas');
+
+  perform cron.schedule(
+    'k24_rotar_ofertas',
+    '* * * * *',                       -- cada minuto, el minimo que permite cron
+    $cron$ select rotar_ofertas_vencidas(); $cron$
+  );
+
+  -- Los faltantes viejos mienten: nadie desmarca lo que repuso.
+  perform cron.unschedule('k24_limpiar_faltantes')
+    where exists (select 1 from cron.job where jobname = 'k24_limpiar_faltantes');
+
+  perform cron.schedule(
+    'k24_limpiar_faltantes',
+    '17 4 * * *',                      -- 4:17 AM, cuando no hay nadie
+    $cron$ select limpiar_faltantes_viejos(); $cron$
+  );
+
+  raise notice 'pg_cron listo: la cascada gira sola cada minuto';
+exception when others then
+  raise notice 'pg_cron no disponible (%). La consola red.html sigue siendo el motor.', sqlerrm;
+end $$;
+
+
+-- ─────────────────────────────────────────────────────────────────────
+--  10. COMPROBACION
 -- ─────────────────────────────────────────────────────────────────────
 select
   (select count(*) from parametros_negocio where clave like 'kiosco_%')        as parametros,

@@ -104,6 +104,24 @@ def fetch(url, timeout=45, reintentos=3):
     raise ultimo
 
 
+def secreto_planilla():
+    """El secreto que autoriza a tocar la planilla.
+
+    Vive en secreto_planilla.txt, al lado de este script, y ese archivo esta
+    en .gitignore: no se sube a GitHub. El mismo valor va cargado en el Apps
+    Script, en Configuracion del proyecto > Propiedades del script, con el
+    nombre K24_SECRETO.
+
+    Si el archivo no existe no pasa nada: el Apps Script tampoco exige nada
+    mientras no tenga la propiedad cargada.
+    """
+    p = Path(__file__).parent / 'secreto_planilla.txt'
+    try:
+        return p.read_text(encoding='utf-8').strip()
+    except Exception:
+        return ''
+
+
 def post(payload, timeout=180, reintentos=4):
     """POST con reintentos.
 
@@ -116,6 +134,9 @@ def post(payload, timeout=180, reintentos=4):
     (poner tal costo en tal fila), no acumulan. Repetir un lote deja el
     mismo resultado que aplicarlo una sola vez.
     """
+    s = secreto_planilla()
+    if s:
+        payload = dict(payload, secreto=s)
     data = json.dumps(payload).encode('utf-8')
     ultimo = None
     for intento in range(reintentos):
