@@ -290,8 +290,16 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────
 --  6. OFRECER
 -- ─────────────────────────────────────────────────────────────────────
+drop function if exists ofrecer_pedido(bigint);
+
+-- OJO CON LOS NOMBRES DE SALIDA.
+-- Esta funcion devolvia columnas llamadas punto_id, nombre y vence_at, que
+-- son tambien nombres de columnas de las tablas que consulta. Adentro de
+-- plpgsql eso es ambiguo y Postgres se planta con "column reference is
+-- ambiguous". Por eso las de salida ahora llevan prefijo r_ y adentro se
+-- califica todo con el alias de la tabla.
 create or replace function ofrecer_pedido(p_pedido_id bigint)
-returns table (ok boolean, punto_id uuid, nombre text, vence_at timestamptz, motivo text)
+returns table (ok boolean, r_punto_id uuid, r_nombre text, r_vence_at timestamptz, r_motivo text)
 language plpgsql as $$
 declare
   c      record;
@@ -309,9 +317,9 @@ begin
   end if;
 
   -- Cerrar la que vencio, si quedo alguna.
-  update pedido_ofertas
+  update pedido_ofertas o
      set respuesta = 'vencio', respondido_at = now()
-   where pedido_id = p_pedido_id and respuesta is null and vence_at <= now();
+   where o.pedido_id = p_pedido_id and o.respuesta is null and o.vence_at <= now();
 
   select * into c from candidatos_para_pedido(p_pedido_id) order by orden limit 1;
 
@@ -325,7 +333,8 @@ begin
 
   insert into pedido_ofertas (pedido_id, punto_id, orden, vence_at)
   values (p_pedido_id, c.punto_id,
-          coalesce((select max(orden) from pedido_ofertas where pedido_id = p_pedido_id), 0) + 1,
+          coalesce((select max(o2.orden) from pedido_ofertas o2
+                     where o2.pedido_id = p_pedido_id), 0) + 1,
           v);
 
   return query select true, c.punto_id, c.nombre, v, null::text;
