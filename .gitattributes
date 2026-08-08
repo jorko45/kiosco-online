@@ -1,0 +1,30 @@
+# Le dice a Git como tratar cada tipo de archivo.
+#
+# Sin esto, Git adivina. Y cada vez que corres SUBIR.bat te escupe cuarenta
+# lineas de "LF will be replaced by CRLF" que no significan nada malo pero
+# tapan los mensajes que si importan, como un CONFLICT.
+#
+# Lo importante de verdad es la lista de binarios: si Git cree que una imagen
+# es texto, le cambia los finales de linea al guardarla y la rompe. Hoy no
+# paso, pero es cuestion de tiempo.
+
+# Texto: normalizar y dejarlo en formato Windows en tu maquina
+* text=auto eol=crlf
+
+# Binarios: no tocar ni un byte
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.svg  binary
+*.pdf  binary
+*.xlsx binary
+*.xls  binary
+*.zip  binary
+*.mp3  binary
+*.mp4  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
