@@ -26,7 +26,7 @@ import { exigirPanel, exigirKiosco } from '../_lib/auth.js';
 const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
-const DE_KIOSCO = new Set(['latido', 'responder', 'faltante']);
+const DE_KIOSCO = new Set(['latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio', 'sugerir']);
 
 export default async function handler(req, res) {
   if (cors(req, res, 'GET, POST, OPTIONS')) return;
@@ -53,6 +53,20 @@ export default async function handler(req, res) {
     // ── GET ────────────────────────────────────────────────────────
     if (req.method === 'GET') {
       // ── Estado de la red, para tu consola ──────────────────────
+      // ── Precios de la red y sugerencias ───────────────────────
+      if (req.query.precios) {
+        const [precios, ranking, sugerencias] = await Promise.all([
+          seleccionar('v_precios_red', { order: 'producto.asc,precio.asc' }),
+          seleccionar('v_kiosco_competitividad', { order: 'desvio_pct.asc' }),
+          seleccionar('punto_sugerencias', {
+            select: 'id,punto_id,tipo,nombre,precio,nota,estado,creado_at',
+            estado: 'in.(nueva,vista)',
+            order: 'creado_at.desc',
+          }),
+        ]);
+        return json(res, 200, { ok: true, precios, ranking, sugerencias });
+      }
+
       if (req.query.red) {
         const [puntos, cascada, sinAsignar] = await Promise.all([
           seleccionar('puntos_preparacion', {
@@ -344,6 +358,16 @@ async function manejarKiosco(req, res, ses) {
   const puntoId = ses.punto_id;
 
   if (req.method === 'GET') {
+    // Mi lista de precios, en pantalla aparte para no cargarla siempre.
+    if (req.query.precios) {
+      const mios = await seleccionar('punto_precios', {
+        select: 'id,nombre,precio,producto_id,actualizado_at',
+        punto_id: `eq.${puntoId}`,
+        order: 'nombre.asc',
+      });
+      return json(res, 200, { ok: true, precios: mios });
+    }
+
     const [punto, ofertas, faltantes] = await Promise.all([
       seleccionar('puntos_preparacion', {
         select: 'id,nombre,tipo,online,ultimo_latido,activo',
@@ -442,6 +466,47 @@ async function manejarKiosco(req, res, ses) {
       if (!/duplicate|conflict|23505/i.test(e.message || '')) throw e;
     }
     return json(res, 200, { ok: true, falta: true });
+  }
+
+  // ── A cuánto lo vendo yo ───────────────────────────────────────
+  // Su precio de mostrador. No cambia lo que paga el cliente en el sitio:
+  // sirve para ver quien compra bien y quien compra mal dentro de la red.
+  if (b.accion === 'mi_precio') {
+    const r = await rpc('guardar_precio_punto', {
+      p_punto_id: puntoId,
+      p_nombre: String(b.nombre || '').slice(0, 200),
+      p_precio: Math.round(Number(b.precio) || 0),
+      p_producto_id: b.producto_id ? String(b.producto_id).slice(0, 80) : null,
+    });
+    const e = Array.isArray(r) ? r[0] : r;
+    return json(res, e && e.ok ? 200 : 400, {
+      ok: !!(e && e.ok),
+      error: e && e.ok ? undefined : (e ? e.motivo : 'No se pudo'),
+    });
+  }
+
+  if (b.accion === 'borrar_precio') {
+    const id = Number(b.id);
+    if (!Number.isFinite(id)) return json(res, 400, { ok: false, error: 'Falta el id' });
+    // El filtro por punto_id no es decorativo: sin el, un kiosco podria
+    // borrar la lista de otro pasando un id cualquiera.
+    await fetchDelete('punto_precios', { id: `eq.${id}`, punto_id: `eq.${puntoId}` });
+    return json(res, 200, { ok: true });
+  }
+
+  // ── Te propongo algo ───────────────────────────────────────────
+  if (b.accion === 'sugerir') {
+    const tipo = ['falta_en_catalogo', 'para_oferta', 'otro'].includes(b.tipo) ? b.tipo : 'otro';
+    const nombre = String(b.nombre || '').trim();
+    if (nombre.length < 2) return json(res, 400, { ok: false, error: 'Escribí qué producto' });
+    await insertar('punto_sugerencias', {
+      punto_id: puntoId,
+      tipo,
+      nombre: nombre.slice(0, 200),
+      precio: Number(b.precio) > 0 ? Math.round(Number(b.precio)) : null,
+      nota: b.nota ? String(b.nota).slice(0, 500) : null,
+    });
+    return json(res, 200, { ok: true });
   }
 
   return json(res, 400, { ok: false, error: 'Acción desconocida' });

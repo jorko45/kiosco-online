@@ -89,6 +89,15 @@
 
     <h2>Cascada · quién recibió qué</h2>
     <div id="zonaCascada"></div>
+
+    <h2>Quién compra bien y quién compra mal</h2>
+    <div id="zonaRanking"></div>
+
+    <h2>Precios de la red</h2>
+    <div id="zonaPrecios"></div>
+
+    <h2>Lo que proponen los kioscos</h2>
+    <div id="zonaSugerencias"></div>
   </div>
 </div>
 
@@ -166,7 +175,9 @@ function entrar(){
   $('login').style.display = 'none';
   $('app').style.display = 'block';
   refrescar();
+  cargarPrecios();
   timer = setInterval(refrescar, 5000);
+  setInterval(cargarPrecios, 30000);
 }
 
 async function refrescar(){
@@ -271,6 +282,67 @@ function pintarCascada(filas){
   $('zonaCascada').innerHTML =
     '<table><thead><tr><th>Pedido</th><th>#</th><th>Punto</th><th>Respuesta</th><th>Cuándo</th><th>Motivo</th></tr></thead>'
     + '<tbody>' + f + '</tbody></table>';
+}
+
+// ── precios de la red ─────────────────────────────────────────────
+// Se pide cada 30 segundos y no cada 5: es informacion para pensar, no
+// para reaccionar, y son consultas mas pesadas.
+async function cargarPrecios(){
+  try {
+    var d = await api({ query:'?red=1&precios=1' });
+    pintarRanking(d.ranking || []);
+    pintarPrecios(d.precios || []);
+    pintarSugerencias(d.sugerencias || []);
+  } catch (e) {}
+}
+
+function pintarRanking(l){
+  if (!l.length) {
+    $('zonaRanking').innerHTML = '<div class="vacio">Ningún kiosco cargó su lista todavía.</div>';
+    return;
+  }
+  $('zonaRanking').innerHTML = '<table><thead><tr>'
+    + '<th>Kiosco</th><th>Productos</th><th>Más barato</th><th>Más caro</th><th>Desvío</th><th>Qué hacer</th>'
+    + '</tr></thead><tbody>' + l.map(function(r){
+    var d = r.desvio_pct;
+    var lectura = d == null ? '—'
+      : d <= -5 ? '<span style="color:#7ef0a0">Compra bien · preguntarle a quién le compra</span>'
+      : d >=  5 ? '<span style="color:#ffb3b3">Compra caro · ofrecerle mercadería nuestra</span>'
+      : '<span style="color:#93a9c0">En la media</span>';
+    return '<tr><td><b>' + esc(r.punto) + '</b></td><td>' + r.productos_cargados + '</td>'
+      + '<td>' + r.veces_mas_barato + '</td><td>' + r.veces_mas_caro + '</td>'
+      + '<td>' + (d == null ? '—' : (d > 0 ? '+' : '') + d + '%') + '</td>'
+      + '<td>' + lectura + '</td></tr>';
+  }).join('') + '</tbody></table>';
+}
+
+function pintarPrecios(l){
+  if (!l.length) { $('zonaPrecios').innerHTML = '<div class="vacio">Sin datos.</div>'; return; }
+  // Solo lo que cargo mas de un kiosco: un precio suelto no se compara con nada.
+  var comparables = l.filter(function(p){ return p.cuantos_lo_venden > 1; });
+  if (!comparables.length) {
+    $('zonaPrecios').innerHTML = '<div class="vacio">Todavía ningún producto está cargado por dos kioscos, '
+      + 'que es lo que hace falta para poder comparar.</div>';
+    return;
+  }
+  $('zonaPrecios').innerHTML = '<table><thead><tr>'
+    + '<th>Producto</th><th>Kiosco</th><th>Su precio</th><th>Más barato</th><th>Promedio</th>'
+    + '</tr></thead><tbody>' + comparables.slice(0, 120).map(function(p){
+    var esMin = p.precio === p.mas_barato_de_la_red;
+    return '<tr><td>' + esc(p.producto) + '</td><td>' + esc(p.punto) + '</td>'
+      + '<td' + (esMin ? ' style="color:#7ef0a0;font-weight:800"' : '') + '>' + pesos(p.precio) + '</td>'
+      + '<td>' + pesos(p.mas_barato_de_la_red) + '</td><td>' + pesos(p.promedio_de_la_red) + '</td></tr>';
+  }).join('') + '</tbody></table>';
+}
+
+function pintarSugerencias(l){
+  if (!l.length) { $('zonaSugerencias').innerHTML = '<div class="vacio">Nada pendiente.</div>'; return; }
+  var etiqueta = { falta_en_catalogo:'No lo tenemos', para_oferta:'Para oferta', otro:'Otro' };
+  $('zonaSugerencias').innerHTML = l.map(function(s){
+    return '<div class="aviso" style="background:rgba(90,160,255,.09);border-color:rgba(90,160,255,.3);color:#cfe2f7">'
+      + '<b>' + esc(etiqueta[s.tipo] || s.tipo) + ':</b> ' + esc(s.nombre)
+      + (s.nota ? ' — ' + esc(s.nota) : '') + '</div>';
+  }).join('');
 }
 
 if (TOKEN) entrar();

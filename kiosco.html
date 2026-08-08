@@ -101,6 +101,33 @@
 
     <div id="zonaPrep"></div>
 
+    <h2>Mis precios de mostrador</h2>
+    <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
+      A cuánto vendés vos en el kiosco. <b>Esto no cambia el precio de k24hs.com</b> —
+      nos sirve para ver quién está comprando bien y conseguir mejores precios para todos.
+    </div>
+    <form id="fPrecio" style="display:grid;grid-template-columns:1fr 110px 92px;gap:8px;margin-bottom:12px">
+      <input id="pNombre" placeholder="Producto" required>
+      <input id="pPrecio" type="number" inputmode="numeric" min="1" placeholder="$" required>
+      <button class="btn" type="submit" style="padding:12px">Guardar</button>
+    </form>
+    <div id="misPrecios"></div>
+
+    <h2>Proponer</h2>
+    <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
+      ¿Te piden algo que no está en la página? ¿Se te ocurre una oferta? Contanos.
+    </div>
+    <form id="fSug" style="display:grid;gap:8px;margin-bottom:20px">
+      <select id="sTipo">
+        <option value="falta_en_catalogo">Me lo piden y no está en la página</option>
+        <option value="para_oferta">Lo pondría en oferta</option>
+        <option value="otro">Otra cosa</option>
+      </select>
+      <input id="sNombre" placeholder="Producto" required>
+      <input id="sNota" placeholder="Comentario (opcional)">
+      <button class="btn" type="submit">Enviar</button>
+    </form>
+
     <h2>Lo que no tengo</h2>
     <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
       Marcá acá lo que se te acabó y no te van a llegar pedidos que lo incluyan.
@@ -177,6 +204,7 @@ function entrar(){
   $('login').style.display = 'none';
   $('app').style.display = 'block';
   refrescar();
+  cargarMisPrecios();
   timer  = setInterval(refrescar, 4000);
   latido = setInterval(function(){
     api({ method:'POST', body:{ accion:'latido' } }).catch(function(){});
@@ -346,6 +374,48 @@ async function yaTengo(prodId){
     refrescar();
   } catch (e) { alert(e.message); }
 }
+
+// ── mis precios ───────────────────────────────────────────────────
+// Se cargan aparte del ciclo de 4 segundos: es una lista que casi no
+// cambia y no tiene sentido volver a pedirla todo el tiempo.
+async function cargarMisPrecios(){
+  try {
+    var d = await api({ query:'?kiosco=1&precios=1' });
+    var l = d.precios || [];
+    $('misPrecios').innerHTML = l.length
+      ? l.map(function(p){
+          return '<div class="falt"><span>' + esc(p.nombre) + '</span>'
+            + '<b style="color:#4dff88;margin-right:8px">' + pesos(p.precio) + '</b>'
+            + '<button onclick="borrarPrecio(' + p.id + ')">Quitar</button></div>';
+        }).join('')
+      : '<div class="vacio" style="padding:18px">Todavía no cargaste ninguno.</div>';
+  } catch (e) {}
+}
+
+$('fPrecio').addEventListener('submit', async function(e){
+  e.preventDefault();
+  try {
+    await api({ method:'POST', body:{ accion:'mi_precio',
+      nombre: $('pNombre').value, precio: Number($('pPrecio').value) } });
+    $('pNombre').value = ''; $('pPrecio').value = '';
+    cargarMisPrecios();
+  } catch (err) { alert(err.message); }
+});
+
+async function borrarPrecio(id){
+  try { await api({ method:'POST', body:{ accion:'borrar_precio', id:id } }); cargarMisPrecios(); }
+  catch (e) { alert(e.message); }
+}
+
+$('fSug').addEventListener('submit', async function(e){
+  e.preventDefault();
+  try {
+    await api({ method:'POST', body:{ accion:'sugerir', tipo: $('sTipo').value,
+      nombre: $('sNombre').value, nota: $('sNota').value } });
+    $('sNombre').value = ''; $('sNota').value = '';
+    alert('¡Gracias! Lo vamos a mirar.');
+  } catch (err) { alert(err.message); }
+});
 
 if (TOKEN) entrar();
 
