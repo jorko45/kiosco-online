@@ -325,6 +325,23 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Arrancar la ronda de la red ────────────────────────────────
+    // El pedido tiene que salir a buscar kiosco YA. Si esperamos al cron
+    // se pierde hasta un minuto, y un minuto de un pedido de kiosco es
+    // mucho. El cron queda igual como red de seguridad por si esto falla.
+    //
+    // Sin coordenadas no hay a quien ofrecerselo: la asignacion es por
+    // cercania. Ese caso cae en el panel para asignarlo a mano.
+    if (origenCoords) {
+      try {
+        await rpc('ofrecer_pedido', { p_pedido_id: p.id });
+      } catch (e) {
+        // Que no salga ofrecido no puede voltear la compra: el pedido ya
+        // esta guardado y el cron lo va a levantar en menos de un minuto.
+        console.warn('[despacho] no se pudo ofrecer el pedido:', e.message);
+      }
+    }
+
     return json(res, 201, {
       ok: true,
       pedido: {
