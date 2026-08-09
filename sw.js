@@ -1,6 +1,6 @@
 // K24 Service Worker — navegación network-first (precios siempre frescos),
 // imágenes stale-while-revalidate, offline sirve el último catálogo visto.
-const SHELL = 'k24-shell-v2';
+const SHELL = 'k24-shell-v3';   // v3: cada pagina guarda su propia copia offline
 const IMGS = 'k24-imgs-v2';
 
 self.addEventListener('install', (e) => {
@@ -20,14 +20,20 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Navegación: red primero, cache de respaldo (offline)
+  // Navegación: red primero, cache de respaldo (offline).
+  //
+  // OJO: antes esto guardaba TODA navegación bajo la clave '/'. Con una sola
+  // página no se notaba, pero al sumar /kiosco.html y /red.html significaba
+  // que entrar al panel del kiosco pisaba la copia offline de la tienda: el
+  // cliente abría k24hs.com sin señal y le aparecía la pantalla del kiosquero.
+  // Ahora cada página guarda la suya.
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then((res) => {
         const copy = res.clone();
-        caches.open(SHELL).then((c) => c.put('/', copy));
+        caches.open(SHELL).then((c) => c.put(url.pathname, copy));
         return res;
-      }).catch(() => caches.match('/'))
+      }).catch(() => caches.match(url.pathname).then((hit) => hit || caches.match('/')))
     );
     return;
   }

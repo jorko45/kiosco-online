@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0b1220">
 <title>K24 · Kiosco</title>
+<link rel="manifest" href="/manifest-kiosco.json">
+<link rel="apple-touch-icon" href="/img/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <style>
@@ -70,6 +72,18 @@
   .falt button{background:none;border:1px solid rgba(255,255,255,.2);color:#9fe6b0;font-size:12px;padding:6px 10px}
   .aviso{background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.4);border-radius:11px;padding:11px 13px;
     font-size:14px;color:#ffd79a;margin-bottom:12px;line-height:1.4}
+
+  /* ── instalar ── */
+  .instalar{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#16304d,#0f1722);
+    border:1px solid rgba(90,160,255,.4);border-radius:15px;padding:14px;margin-bottom:16px}
+  .instalar .ico{font-size:30px;flex:none}
+  .instalar .txt{flex:1;font-size:14px;line-height:1.35;color:#cfe2f7}
+  .instalar .txt b{display:block;font-family:Orbitron,sans-serif;font-size:14px;color:#fff;margin-bottom:3px}
+  .instalar button{background:#1a73e8;color:#fff;font-size:14px;padding:11px 15px;flex:none}
+  #ayudaInstalar{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.7);display:none;
+    align-items:center;justify-content:center;padding:22px}
+  #ayudaInstalar .card{max-width:330px}
+  #ayudaInstalar ol{margin:0 0 4px;padding-left:20px;color:#cfe2f7;font-size:15px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -93,6 +107,12 @@
   </header>
 
   <div class="wrap">
+    <div class="instalar" id="cajaInstalar" style="display:none">
+      <div class="ico">📲</div>
+      <div class="txt"><b>Instalá la app</b>Te queda un ícono en el celular y el pedido suena aunque tengas el navegador cerrado.</div>
+      <button id="btnInstalar">Instalar</button>
+    </div>
+
     <div id="avisoOffline" class="aviso" style="display:none">
       Estás <b>cerrado</b>: no te van a llegar pedidos. Tocá el interruptor de arriba para abrir.
     </div>
@@ -134,6 +154,14 @@
       Se borra solo a los 7 días, así que si sigue faltando volvé a marcarlo.
     </div>
     <div id="listaFaltantes"></div>
+  </div>
+</div>
+
+<div id="ayudaInstalar">
+  <div class="card">
+    <h1>📲 Instalar K24 Kiosco</h1>
+    <div id="pasosInstalar"></div>
+    <button class="btn" id="btnCerrarAyuda" style="margin-top:16px">Entendido</button>
   </div>
 </div>
 
@@ -416,6 +444,66 @@ $('fSug').addEventListener('submit', async function(e){
     alert('¡Gracias! Lo vamos a mirar.');
   } catch (err) { alert(err.message); }
 });
+
+// ── instalar la app ───────────────────────────────────────────────
+// Un kiosquero que la deja como pestaña la pierde entre otras veinte y no
+// escucha el bip. Instalada le queda un icono y una ventana propia.
+var _instalable = null;
+
+function _yaInstalada(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+      || window.navigator.standalone === true;
+}
+function _esIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function pintarInstalar(){
+  // Si ya la instaló, el cartel sobra y encima ocupa la pantalla justo
+  // donde después aparece el pedido.
+  $('cajaInstalar').style.display = _yaInstalada() ? 'none' : 'flex';
+}
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _instalable = e;
+  pintarInstalar();
+});
+window.addEventListener('appinstalled', function(){
+  _instalable = null;
+  $('cajaInstalar').style.display = 'none';
+});
+
+$('btnInstalar').addEventListener('click', async function(){
+  if (_instalable) {
+    _instalable.prompt();
+    try { await _instalable.userChoice; } catch(e){}
+    _instalable = null;
+    return;
+  }
+  // iPhone no deja instalar por código: hay que decirle dónde tocar.
+  $('pasosInstalar').innerHTML = _esIOS()
+    ? '<ol><li>Tocá el botón <b>Compartir</b>, el cuadradito con la flecha ↑</li>'
+      + '<li>Bajá y elegí <b>“Agregar a inicio”</b></li>'
+      + '<li>Confirmá <b>Agregar</b></li></ol>'
+    : '<ol><li>Abrí el menú <b>⋮</b> del navegador, arriba a la derecha</li>'
+      + '<li>Tocá <b>“Instalar app”</b> o <b>“Agregar a pantalla de inicio”</b></li></ol>';
+  $('ayudaInstalar').style.display = 'flex';
+});
+$('btnCerrarAyuda').addEventListener('click', function(){ $('ayudaInstalar').style.display = 'none'; });
+$('ayudaInstalar').addEventListener('click', function(e){
+  if (e.target === $('ayudaInstalar')) $('ayudaInstalar').style.display = 'none';
+});
+
+// El service worker es el que permite instalarla. Ya existe uno en la raiz
+// para el sitio; alcanza con registrarlo tambien desde acá.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+
+pintarInstalar();
 
 if (TOKEN) entrar();
 
