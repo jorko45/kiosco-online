@@ -5266,7 +5266,14 @@ function _quitarRepetidos(){
 // además como ficha suelta traída del proveedor: ej "Fernet Branca 750ml" y
 // "FERNET BRANCA 750 XUN". Dejamos la tarjeta —con el precio más bajo de los
 // dos— y sacamos la ficha suelta.
-var _STOP18 = /^(gaseosa|bebida|aperitivo|botella|lata|pack|xun|un|unidad|unidades|ml|cc|cm3|gr|g|kg|lt|l|x|de|el|la|con|y|original|clasico|clasica)$/;
+// Palabras que no distinguen un producto de otro, y por lo tanto no entran
+// en la clave con la que se detectan los repetidos.
+//
+// Las del rubro (cerveza, whisky, vodka...) se suman porque el Mami escribe
+// "Cerveza Quilmes 473" y la tarjeta de marca dice "Quilmes 473 lata": el
+// mismo producto con una palabra de más. Sin sacarla, el repetido no se
+// detecta y el cliente termina viendo la misma botella dos veces.
+var _STOP18 = /^(gaseosa|bebida|aperitivo|botella|lata|pack|xun|un|unidad|unidades|ml|cc|cm3|gr|g|kg|lt|l|x|de|el|la|con|y|original|clasico|clasica|cerveza|agua|vino|whisky|vodka|gin|ron|licor|sidra|espumante|champagne|champan)$/;
 function _tokProd(s){
   return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()
     .replace(/(\d)([a-z])/g,'$1 $2').replace(/[^a-z0-9]+/g,' ')
