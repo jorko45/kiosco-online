@@ -380,7 +380,12 @@ $$;
 
 revoke all on function param(text, numeric)                     from anon, authenticated;
 revoke all on function codigo_de(text)                          from anon, authenticated;
-revoke all on function validar_referido(text, text, integer)    from anon, authenticated;
+-- OJO: la firma tiene que coincidir con la de arriba, que lleva cuatro
+-- parametros desde que se agrego p_excluir_pedido. Con la firma vieja de
+-- tres esto funcionaba igual en la base de produccion —porque la version
+-- de tres todavia existia de una corrida anterior— pero hacia imposible
+-- reconstruir la base desde cero: fallaba justo aca.
+revoke all on function validar_referido(text, text, integer, bigint) from anon, authenticated;
 revoke all on function canjear_referido(text, text, bigint)     from anon, authenticated;
 revoke all on function premios_de(text)                         from anon, authenticated;
 revoke all on function usar_premio(text, bigint)                from anon, authenticated;
