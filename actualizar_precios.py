@@ -216,22 +216,50 @@ def scrapear_mami():
     cats = descubrir_categorias()
     log('   %d categorías encontradas' % len(cats))
     precios, nombres = {}, {}
+    truncadas = []
     for i, (slug, ncode) in enumerate(sorted(cats.items()), 1):
-        off, total_cat = 0, 0
+        off, total_cat, paso, vistos = 0, 0, None, set()
         while True:
             url = '%s/super/categoria/%s/_/%s?No=%d&Nrpp=%d' % (BASE, slug, ncode, off, NRPP)
             try:
                 prods = parse_products(fetch(url))
             except Exception:
                 break
+            if not prods:
+                break
+
+            nuevos = 0
             for pid, nom, pr in prods:
+                if pid in vistos:
+                    continue
+                vistos.add(pid)
+                nuevos += 1
                 if pr > 0:
                     precios[pid] = pr
                     nombres[pid] = nom
-            total_cat += len(prods)
-            if len(prods) < NRPP:
+            total_cat += nuevos
+
+            # Si la pagina no trajo nada nuevo, la categoria se termino.
+            # (El Mami a veces repite la ultima pagina en vez de dar vacio.)
+            if nuevos == 0:
                 break
-            off += NRPP
+
+            # ── EL ERROR QUE ESTUVO ACA ──────────────────────────────
+            # Antes se cortaba con "if len(prods) < NRPP: break", dando por
+            # hecho que el servidor respeta el tamano de pagina que se le
+            # pide. El Mami no lo respeta: se le piden 500 y devuelve 499.
+            # Con esa regla, TODA categoria de mas de 499 productos se leia
+            # una sola pagina y el resto quedaba invisible. Esos productos
+            # despues se marcaban "ya no esta" y se desactivaban solos.
+            #
+            # Ahora el paso se aprende de lo que el servidor devuelve de
+            # verdad la primera vez, y se sigue mientras aparezca algo nuevo.
+            if paso is None:
+                paso = len(prods)
+            off += paso
+            if off > 20000:            # freno por las dudas, nunca deberia llegar
+                truncadas.append(slug)
+                break
             time.sleep(0.2)
         if i % 10 == 0 or total_cat:
             log('   [%3d/%3d] %-58s %4d' % (i, len(cats), slug[:58], total_cat))
@@ -514,6 +542,22 @@ def main():
     log('   %d costos cambiaron · %d ya estaban igual' % (tot_act, tot_igual))
     if tot_frenados:
         log('   ⚠ %d NO se aplicaron: el precio saltaba mas de 30%% (revisar a mano).' % tot_frenados)
+
+    # ── volver a prender lo que reaparecio ──
+    #
+    # Esto faltaba y hacia mucho dano en silencio. El actualizador sabia
+    # apagar un producto que no encontraba, pero no sabia volver a
+    # prenderlo cuando reaparecia. Cualquier tropiezo del scraper —una
+    # categoria que no cargo, una pagina que se corto— apagaba productos
+    # para siempre, y la unica forma de recuperarlos era a mano, uno por
+    # uno, sabiendo cuales fueron.
+    a_prender = [r[0] for r in reporte]
+    if a_prender:
+        log('\nMarcando Activo = SI a %d productos encontrados...' % len(a_prender))
+        for i in range(0, len(a_prender), LOTE):
+            post({'action': 'precios_activo', 'ids': a_prender[i:i + LOTE], 'activo': 'SI'})
+            time.sleep(0.4)
+        log('   listo')
 
     # ── desactivar faltantes ──
     a_desactivar = [fid for fid, fu in faltantes
