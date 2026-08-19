@@ -22,6 +22,7 @@
 
 import { seleccionar, actualizar, insertar, rpc, json, cors, cuerpo } from '../_lib/db.js';
 import { exigirPanel, exigirKiosco } from '../_lib/auth.js';
+import { linkTemporal } from '../_lib/almacen.js';
 
 const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
@@ -55,6 +56,29 @@ export default async function handler(req, res) {
   try {
     // ── GET ────────────────────────────────────────────────────────
     if (req.method === 'GET') {
+      // ── Repartidores: quien se anoto y que le falta ────────────
+      if (req.query.repartidores) {
+        const [altas, porVencer] = await Promise.all([
+          seleccionar('v_altas_repartidores', {}),
+          seleccionar('v_docs_por_vencer', {}),
+        ]);
+        const docs = await seleccionar('repartidor_docs', {
+          select: 'repartidor_id,tipo,estado,vence_el,archivo_url,nota,subido_at',
+          order: 'repartidor_id.asc',
+        });
+        // Los links se firman al pedirlos y duran 5 minutos. Nunca se
+        // guarda ni se manda una URL permanente de un documento: un link
+        // que no vence termina en un historial o en un reenvio.
+        const conLink = await Promise.all(
+          docs.map(async (d) => ({
+            ...d,
+            archivo_url: undefined,
+            ver: d.archivo_url ? await linkTemporal(d.archivo_url) : null,
+          }))
+        );
+        return json(res, 200, { ok: true, repartidores: altas, docs: conLink, por_vencer: porVencer });
+      }
+
       // ── Estado de la red, para tu consola ──────────────────────
       // ── Precios de la red y sugerencias ───────────────────────
       if (req.query.precios) {
@@ -182,8 +206,48 @@ export default async function handler(req, res) {
     }
 
     // ── POST ───────────────────────────────────────────────────────
+
     if (req.method === 'POST') {
       const b = cuerpo(req);
+
+      // ── Repartidores: verificar un papel ───────────────────────
+      if (b.accion === 'verificar_doc') {
+        const r = await rpc('verificar_doc', {
+          p_repartidor_id: b.repartidor_id,
+          p_tipo: String(b.tipo || ''),
+          p_aprobado: b.aprobado === true,
+          p_quien: 'panel',
+          p_vence_el: b.vence_el || null,
+          p_nota: b.nota ? String(b.nota) : null,
+        });
+        const e = (Array.isArray(r) ? r[0] : r) || {};
+        return json(res, e.ok ? 200 : 400, { ok: !!e.ok, mensaje: e.motivo });
+      }
+
+      // ── Repartidores: aprobar, rechazar o dar de baja ──────────
+      if (b.accion === 'alta_repartidor') {
+        const estados = { aprobar: 'aprobado', rechazar: 'rechazado', baja: 'baja' };
+        const nuevo = estados[String(b.que || '')];
+        if (!nuevo) return json(res, 400, { ok: false, error: 'Acción desconocida' });
+
+        const cambios = { estado_alta: nuevo, activo: nuevo === 'aprobado' };
+        // La baja marca la fecha, y esa fecha es la que dispara el
+        // borrado de los papeles a los 90 dias. Sin ella no se borra nada.
+        if (nuevo === 'baja') cambios.baja_at = new Date().toISOString();
+        if (nuevo === 'rechazado') cambios.motivo_rechazo = b.motivo ? String(b.motivo) : null;
+        if (nuevo === 'aprobado') { cambios.baja_at = null; cambios.motivo_rechazo = null; }
+
+        await actualizar('repartidores', { id: `eq.${b.repartidor_id}` }, cambios);
+        return json(res, 200, { ok: true, estado: nuevo });
+      }
+
+      // ── Correr el borrado de papeles a mano ────────────────────
+      // Existe porque pg_cron puede no estar disponible, y este borrado
+      // no puede depender de una extension que capaz no esta.
+      if (b.accion === 'borrar_docs') {
+        const n = await rpc('borrar_docs_vencidos', {});
+        return json(res, 200, { ok: true, borrados: Number(n) || 0 });
+      }
 
       // ── Darle acceso a un kiosco ───────────────────────────────
       // El PIN lo elegis vos y viaja una sola vez. En la base queda

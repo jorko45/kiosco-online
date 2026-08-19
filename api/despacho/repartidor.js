@@ -10,6 +10,7 @@
 // Todo referido al repartidor del token: nunca recibe un id por parametro,
 // asi no hay forma de mirar ni tocar los pedidos de otro.
 
+import { guardarArchivo } from '../_lib/almacen.js';
 import { seleccionar, actualizar, insertar, rpc, json, cors, cuerpo } from '../_lib/db.js';
 import { exigirRepartidor } from '../_lib/auth.js';
 
@@ -96,6 +97,17 @@ export default async function handler(req, res) {
         })
       );
 
+      // Papeles: que tiene, que le falta y si ya puede salir.
+      let papeles = { listo: false, faltan: [] }, docs = [];
+      try {
+        const f = await rpc('que_le_falta_repartidor', { p_repartidor_id: sesion.id });
+        papeles = (Array.isArray(f) ? f[0] : f) || papeles;
+        docs = await seleccionar('repartidor_docs', {
+          select: 'tipo,estado,vence_el,nota',
+          repartidor_id: `eq.${sesion.id}`,
+        });
+      } catch (e) { /* si falla, la pantalla no muestra la solapa de papeles */ }
+
       const c = (Array.isArray(caja) ? caja[0] : caja) || {};
 
       return json(res, 200, {
@@ -104,6 +116,7 @@ export default async function handler(req, res) {
         pedidos: conHistorial,
         entregados_hoy: c.entregados || 0,
         ganancias,
+        papeles: { ...papeles, docs: Array.isArray(docs) ? docs : [] },
         caja: {
           entregados: c.entregados || 0,
           cobrado_efectivo: c.cobrado_efectivo || 0,
@@ -190,7 +203,38 @@ export default async function handler(req, res) {
       }
 
       // ── Auxilio ──────────────────────────────────────────────
-      if (b.accion === 'reportar_direccion') {
+      if (b.accion === 'subir_doc') {
+      const tipo = String(b.tipo || '');
+
+      // Se corta aca antes de tocar el almacen. Si el archivo llegara a
+      // subirse y recien despues lo rechazara la base, el certificado de
+      // antecedentes quedaria guardado igual: exactamente lo que no puede
+      // pasar. El orden importa.
+      if (tipo === 'antecedentes') {
+        return json(res, 400, {
+          ok: false,
+          error: 'El certificado de antecedentes no se sube. Se muestra y queda la constancia de que fue verificado.',
+        });
+      }
+
+      let ruta = null;
+      try {
+        ruta = await guardarArchivo(`rep/${sesion.id}/${tipo}-${Date.now()}`, b.archivo);
+      } catch (e) {
+        return json(res, 400, { ok: false, error: e.message });
+      }
+
+      const r = await rpc('cargar_doc', {
+        p_repartidor_id: sesion.id,
+        p_tipo: tipo,
+        p_archivo_url: ruta,
+        p_vence_el: b.vence_el || null,
+      });
+      const e = (Array.isArray(r) ? r[0] : r) || {};
+      return json(res, e.ok ? 200 : 400, { ok: !!e.ok, mensaje: e.motivo });
+    }
+
+    if (b.accion === 'reportar_direccion') {
       const r = await rpc('reportar_direccion', {
         p_repartidor_id: sesion.id,
         p_direccion: String(b.direccion || ''),

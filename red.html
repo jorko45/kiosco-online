@@ -61,6 +61,26 @@
   dialog::backdrop{background:rgba(0,0,0,.65)}
   dialog h3{font-family:Orbitron,sans-serif;font-size:15px;margin:0 0 4px}
   dialog p{color:#93a9c0;font-size:13px;margin:0 0 14px;line-height:1.45}
+
+  .rep{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:10px}
+  .rep.pend{border-color:rgba(255,176,32,.45)}
+  .rep h3{margin:0 0 3px;font-size:15px}
+  .rep .meta{color:#8b949e;font-size:12px;margin-bottom:10px;line-height:1.5}
+  .doc{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #21262d;font-size:13px}
+  .doc .n{flex:1}
+  .doc small{color:#8b949e;display:block;font-size:11px}
+  .doc a{color:#58a6ff;font-size:12px;text-decoration:none}
+  .pill{font-size:11px;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .pill.ok{background:rgba(63,185,80,.15);color:#3fb950}
+  .pill.pend{background:rgba(255,176,32,.15);color:#ffb020}
+  .pill.mal{background:rgba(248,81,73,.15);color:#f85149}
+  .mini{padding:5px 9px;font-size:12px;border-radius:8px;background:#21262d;
+    border:1px solid #30363d;color:#e6edf3;cursor:pointer}
+  .mini.si{background:#1a7f37;border-color:#1a7f37}
+  .mini.no{background:#3d1416;border-color:#8b2c2e;color:#ffb3b3}
+  .nota-legal{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.3);
+    border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;
+    color:#a5c9ff;line-height:1.55}
 </style>
 </head>
 <body>
@@ -86,6 +106,9 @@
 
     <h2>Puntos</h2>
     <div class="grid" id="grid"></div>
+
+    <h2>Repartidores · altas y papeles</h2>
+    <div id="zonaRepartidores"></div>
 
     <h2>Cascada · quién recibió qué</h2>
     <div id="zonaCascada"></div>
@@ -120,6 +143,12 @@ var TOKEN = sessionStorage.getItem('k24_despacho_token') || null;
 var timer = null, puntoPin = null;
 
 function $(id){ return document.getElementById(id); }
+function fecha(iso){
+  if (!iso) return '';
+  var d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleDateString('es-AR');
+}
+
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function pesos(n){ return '$' + (Number(n)||0).toLocaleString('es-AR'); }
@@ -293,8 +322,116 @@ async function cargarPrecios(){
     pintarRanking(d.ranking || []);
     pintarPrecios(d.precios || []);
     pintarSugerencias(d.sugerencias || []);
+    cargarRepartidores();
   } catch (e) {}
 }
+
+// ── repartidores ─────────────────────────────────────────────────
+var ETIQ_DOC = { licencia:'Licencia de conducir', tarjeta_verde:'Tarjeta verde',
+                 seguro:'Seguro', antecedentes:'Antecedentes penales' };
+
+async function cargarRepartidores(){
+  try {
+    var d = await api({ query:'?red=1&repartidores=1' });
+    pintarRepartidores(d.repartidores || [], d.docs || [], d.por_vencer || []);
+  } catch (e) {}
+}
+
+function pintarRepartidores(reps, docs, porVencer){
+  var z = $('zonaRepartidores');
+  if (!reps.length) {
+    z.innerHTML = '<div class="vacio">Todavía no se anotó nadie.</div>';
+    return;
+  }
+
+  var h = '<div class="nota-legal">Los links para ver un documento duran 5 minutos y '
+        + 'después dejan de funcionar. El certificado de antecedentes no se sube: te lo '
+        + 'muestran y vos dejás la constancia (Ley 25.326, art. 7 inc. 4).</div>';
+
+  if (porVencer.length) {
+    h += '<div class="nota-legal" style="background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.4);color:#ffd79a">'
+       + '<b>Vencen pronto:</b> ' + porVencer.map(function(v){
+           return esc(v.nombre) + ' · ' + esc(v.documento) + ' en ' + v.dias + ' días';
+         }).join(' — ') + '</div>';
+  }
+
+  h += reps.map(function(r){
+    var mios = docs.filter(function(d){ return d.repartidor_id === r.id; });
+    var o = '<div class="rep' + (r.estado_alta === 'pendiente' ? ' pend' : '') + '">'
+      + '<h3>' + esc(r.nombre) + ' '
+      + '<span class="pill ' + (r.puede_repartir ? 'ok' : r.estado_alta === 'rechazado' ? 'mal' : 'pend') + '">'
+      + (r.puede_repartir ? 'Puede repartir' : r.estado_alta === 'rechazado' ? 'Rechazado'
+         : r.estado_alta === 'baja' ? 'De baja' : 'Pendiente') + '</span></h3>'
+      + '<div class="meta">' + esc(r.telefono) + ' · ' + esc(r.vehiculo || '')
+      + (r.patente ? ' ' + esc(r.patente) : '')
+      + (r.dni ? ' · DNI ' + esc(r.dni) : '')
+      + (r.consintio_at ? '<br>Aceptó el uso de sus datos el ' + fecha(r.consintio_at) : '')
+      + '</div>';
+
+    ['licencia','tarjeta_verde','seguro','antecedentes'].forEach(function(t){
+      var d = mios.filter(function(x){ return x.tipo === t; })[0] || { tipo:t, estado:'pendiente' };
+      var vencido = d.vence_el && d.vence_el < new Date().toISOString().slice(0,10);
+      var cls = vencido ? 'mal' : d.estado === 'aprobado' ? 'ok' : d.estado === 'rechazado' ? 'mal' : 'pend';
+      var txt = vencido ? 'Vencido' : d.estado === 'aprobado' ? 'OK'
+              : d.estado === 'rechazado' ? 'Rechazado' : 'Falta';
+      o += '<div class="doc"><div class="n">' + esc(ETIQ_DOC[t])
+         + (d.vence_el ? '<small>Vence ' + d.vence_el.split('-').reverse().join('/') + '</small>' : '')
+         + (t === 'antecedentes' && d.verificado_at ? '<small>Verificado</small>' : '')
+         + '</div>'
+         + '<span class="pill ' + cls + '">' + txt + '</span>'
+         + (d.ver ? ' <a href="' + d.ver + '" target="_blank" rel="noopener">ver</a>' : '')
+         + ' <button class="mini si" onclick="verDoc(\'' + r.id + '\',\'' + t + '\',true)">✓</button>'
+         + ' <button class="mini no" onclick="verDoc(\'' + r.id + '\',\'' + t + '\',false)">✕</button>'
+         + '</div>';
+    });
+
+    o += '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">';
+    if (r.estado_alta !== 'aprobado')
+      o += '<button class="mini si" onclick="altaRep(\'' + r.id + '\',\'aprobar\')">Aprobar</button>';
+    if (r.estado_alta === 'pendiente')
+      o += '<button class="mini no" onclick="altaRep(\'' + r.id + '\',\'rechazar\')">Rechazar</button>';
+    if (r.estado_alta === 'aprobado')
+      o += '<button class="mini no" onclick="altaRep(\'' + r.id + '\',\'baja\')">Dar de baja</button>';
+    o += '</div></div>';
+    return o;
+  }).join('');
+
+  z.innerHTML = h;
+}
+
+window.verDoc = async function(id, tipo, aprobado){
+  var vence = null, nota = null;
+  if (aprobado) {
+    // Para antecedentes esta fecha es todo el registro que va a existir.
+    var v = prompt((tipo === 'antecedentes'
+      ? 'Lo viste y está en orden. ¿Hasta cuándo vale?'
+      : '¿Hasta cuándo vale?') + '\n\n(DD/MM/AAAA, o vacío si no vence)') || '';
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v.trim());
+    if (v.trim() && !m) { alert('La fecha va como 31/12/2027'); return; }
+    if (m) vence = m[3] + '-' + ('0'+m[2]).slice(-2) + '-' + ('0'+m[1]).slice(-2);
+  } else {
+    nota = prompt('¿Por qué lo rechazás? Se lo mostramos a él.') || '';
+    if (!nota.trim()) return;
+  }
+  try {
+    await api({ method:'POST', body:{ accion:'verificar_doc',
+      repartidor_id:id, tipo:tipo, aprobado:aprobado, vence_el:vence, nota:nota }});
+    cargarRepartidores();
+  } catch (e) { alert(e.message); }
+};
+
+window.altaRep = async function(id, que){
+  var textos = { aprobar:'¿Aprobar a este repartidor?',
+                 rechazar:'¿Rechazar esta solicitud?',
+                 baja:'¿Dar de baja? Sus papeles se borran solos a los 90 días.' };
+  if (!confirm(textos[que])) return;
+  var motivo = que === 'rechazar' ? (prompt('¿Por qué?') || '') : null;
+  try {
+    await api({ method:'POST', body:{ accion:'alta_repartidor',
+      repartidor_id:id, que:que, motivo:motivo }});
+    cargarRepartidores();
+  } catch (e) { alert(e.message); }
+};
 
 function pintarRanking(l){
   if (!l.length) {

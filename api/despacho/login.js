@@ -13,7 +13,7 @@ function faltantes(rol) {
     f.push('DESPACHO_SECRET (minimo 16 caracteres)');
   }
   if (rol === 'panel' && !process.env.ADMIN_PASSWORD) f.push('ADMIN_PASSWORD');
-  if (rol === 'repartidor' || rol === 'kiosco' || rol === 'kiosco_alta') {
+  if (['repartidor','kiosco','kiosco_alta','repartidor_alta'].includes(rol)) {
     if (!process.env.SUPABASE_URL) f.push('SUPABASE_URL');
     if (!process.env.SUPABASE_SERVICE_KEY) f.push('SUPABASE_SERVICE_KEY');
   }
@@ -172,6 +172,46 @@ export default async function handler(req, res) {
         token: crearToken({ rol: 'kiosco', punto_id: e.punto_id, nombre: b.nombre }, 16),
         rol: 'kiosco',
         punto: { id: e.punto_id, nombre: String(b.nombre || ''), tipo: 'kiosco_adherido', online: false },
+      });
+    }
+
+    // ── Alta de un repartidor ──────────────────────────────────────
+    // Publica como la del kiosco, pero con una diferencia importante:
+    // el kiosco entra y arranca solo, el repartidor NO. Queda pendiente
+    // hasta que Joe le mire los papeles. Un kiosco que miente pierde una
+    // venta; un repartidor sin seguro que choca es otra cosa.
+    if (b.rol === 'repartidor_alta') {
+      if (!dbConfigurada()) {
+        return json(res, 503, { ok: false, error: 'Despacho no configurado' });
+      }
+      if (!frenarIntentos(`repalta:${ip}`, 5)) {
+        return json(res, 429, { ok: false, error: 'Demasiados intentos. Probá más tarde.' });
+      }
+
+      const r = await rpc('registrar_repartidor', {
+        p_nombre: String(b.nombre || ''),
+        p_telefono: String(b.telefono || ''),
+        p_pin: String(b.pin || ''),
+        p_dni: b.dni ? String(b.dni) : null,
+        p_email: b.email ? String(b.email) : null,
+        p_vehiculo: String(b.vehiculo || 'moto'),
+        p_patente: b.patente ? String(b.patente) : null,
+        p_consiente: b.consiente === true,
+      });
+      const e = Array.isArray(r) ? r[0] : r;
+      if (!e || !e.ok) {
+        return json(res, 400, { ok: false, error: e ? e.motivo : 'No se pudo registrar' });
+      }
+
+      limpiarIntentos(`repalta:${ip}`);
+      // Entra igual, para poder cargar los papeles. Lo que no puede
+      // todavia es recibir pedidos: eso lo decide repartidor_habilitado.
+      return json(res, 201, {
+        ok: true,
+        token: crearToken({ rol: 'repartidor', id: e.repartidor_id, nombre: String(b.nombre || '') }, 16),
+        rol: 'repartidor',
+        repartidor: { id: e.repartidor_id, nombre: String(b.nombre || ''), en_turno: false },
+        pendiente: true,
       });
     }
 

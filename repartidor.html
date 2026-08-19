@@ -146,6 +146,26 @@
     width:100%;max-width:340px}
   #dlgRep h3{margin:0 0 4px;font-size:17px}
   #dlgRep p{margin:0 0 14px;color:#8b949e;font-size:12px;line-height:1.5}
+
+  .ayuda{color:#8b949e;font-size:12px;line-height:1.5;margin:0 0 12px}
+  #fAlta select{width:100%;padding:13px;margin-bottom:9px;border-radius:10px;
+    background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:15px}
+  .consent{display:flex;gap:9px;align-items:flex-start;margin:4px 0 12px;
+    font-size:11px;color:#8b949e;line-height:1.5;text-align:left}
+  .consent input{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+  .consent b{color:#e6edf3}
+
+  .papel{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:8px;
+    background:#161b22;border:1px solid #30363d;border-radius:11px;font-size:13px}
+  .papel .nom{flex:1;line-height:1.4}
+  .papel .est{font-size:11px;padding:3px 8px;border-radius:99px;white-space:nowrap}
+  .est.ok{background:rgba(63,185,80,.15);color:#3fb950}
+  .est.pend{background:rgba(139,148,158,.15);color:#8b949e}
+  .est.mal{background:rgba(248,81,73,.15);color:#f85149}
+  .papel small{display:block;color:#8b949e;font-size:11px;margin-top:2px}
+  .aviso-papeles{background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.35);
+    border-radius:12px;padding:14px;margin-bottom:12px;font-size:13px;color:#ffd79a;line-height:1.6}
+  .aviso-papeles b{display:block;color:#ffb020;margin-bottom:5px;font-size:14px}
 </style>
 </head>
 <body>
@@ -159,6 +179,35 @@
       <input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password" required>
       <div class="err" id="errLogin"></div>
       <button class="btn" type="submit" id="btnLogin">Entrar</button>
+    </form>
+    <button class="btn btn-g" id="verAlta" style="margin-top:10px">Quiero trabajar con K24</button>
+
+    <form id="fAlta" style="display:none">
+      <p class="ayuda">Te registrás vos. Después cargás los papeles y te habilitamos.</p>
+      <input id="aNombre"  placeholder="Nombre y apellido" required>
+      <input id="aTel"     type="tel" inputmode="tel" placeholder="Teléfono" required>
+      <input id="aDni"     inputmode="numeric" placeholder="DNI">
+      <input id="aEmail"   type="email" placeholder="Email (opcional)">
+      <select id="aVeh">
+        <option value="moto">Moto</option>
+        <option value="bici">Bicicleta</option>
+        <option value="auto">Auto</option>
+      </select>
+      <input id="aPatente" placeholder="Patente" style="text-transform:uppercase">
+      <input id="aPin"     type="password" inputmode="numeric" placeholder="Elegí un PIN (4 dígitos o más)" required>
+
+      <label class="consent">
+        <input type="checkbox" id="aOk">
+        <span>Acepto que K24 guarde mi nombre, teléfono, DNI y los papeles del
+        vehículo para poder trabajar. Puedo pedir verlos, corregirlos o que los
+        borren cuando quiera. Se borran solos a los 90 días de que deje de
+        trabajar. <b>El certificado de antecedentes no se sube ni se guarda</b>:
+        lo mostrás y solo queda anotado que fue verificado.</span>
+      </label>
+
+      <div class="err" id="errAlta"></div>
+      <button class="btn" type="submit" id="btnAlta">Registrarme</button>
+      <button class="btn btn-g" type="button" id="volverLogin">Ya tengo cuenta</button>
     </form>
   </div>
 </div>
@@ -212,7 +261,9 @@
     <div class="ganancias" id="ganancias"></div>
     <div class="caja-turno" id="cajaTurno"></div>
 
+    <div id="papeles"></div>
     <div id="lista"></div>
+    <input type="file" id="fArch" accept="image/*,application/pdf" capture="environment" style="display:none">
 
     <div class="nota">
       <b>Para que el seguimiento funcione:</b> dejá esta pantalla abierta y el teléfono
@@ -283,6 +334,40 @@ $('btnSalir').addEventListener('click', function(){
   if (confirm('¿Cerrar sesión?')) salir();
 });
 
+// ── alta de repartidor ──────────────────────────────────────────
+$('verAlta').addEventListener('click', function(){
+  $('fLogin').style.display='none'; $('verAlta').style.display='none';
+  $('fAlta').style.display='block';
+});
+$('volverLogin').addEventListener('click', function(){
+  $('fAlta').style.display='none';
+  $('fLogin').style.display='block'; $('verAlta').style.display='block';
+});
+
+$('fAlta').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  $('errAlta').textContent = '';
+  if (!$('aOk').checked) {
+    // No se puede tratar el dato sin consentimiento, asi que tampoco
+    // tiene sentido dejar mandar el formulario sin el tilde.
+    $('errAlta').textContent = 'Necesitamos que aceptes cómo vamos a usar tus datos';
+    return;
+  }
+  $('btnAlta').disabled = true;
+  try{
+    var d = await api('login',{method:'POST',body:{
+      rol:'repartidor_alta',
+      nombre:$('aNombre').value.trim(), telefono:$('aTel').value.trim(),
+      pin:$('aPin').value.trim(), dni:$('aDni').value.trim(),
+      email:$('aEmail').value.trim(), vehiculo:$('aVeh').value,
+      patente:$('aPatente').value.trim(), consiente:true }});
+    TOKEN = d.token; yo = d.repartidor;
+    localStorage.setItem('k24_rep_token', TOKEN);
+    entrar();
+  }catch(e){ $('errAlta').textContent = e.message; }
+  finally{ $('btnAlta').disabled = false; }
+});
+
 function entrar(){
   $('login').style.display='none';
   $('app').style.display='block';
@@ -301,6 +386,7 @@ async function cargar(){
     $('nHoy').textContent = d.entregados_hoy || 0;
     pintarCaja(d.caja);
     pintarGanancias(d.ganancias);
+    pintarPapeles(d.papeles);
     _sosVisible();
 
     if (yo.en_turno !== enTurno) { enTurno = yo.en_turno; sincronizarTurno(); }
@@ -388,6 +474,86 @@ function pintarCaja(c){
   h += '<div class="cl total"><span>A rendir</span><span>' + pesos(c.a_rendir) + '</span></div>';
   $('cajaTurno').innerHTML = h;
 }
+
+// ── papeles ──────────────────────────────────────────────────────
+var ETIQ = { licencia:'Licencia de conducir', tarjeta_verde:'Tarjeta verde',
+             seguro:'Seguro del vehículo', antecedentes:'Certificado de antecedentes' };
+
+function pintarPapeles(pa){
+  var c = $('papeles');
+  if (!pa || pa.listo) { c.innerHTML = ''; return; }   // al dia: no molesta
+
+  var h = '<div class="aviso-papeles"><b>Todavía no podés recibir pedidos</b>'
+        + 'Cargá los papeles y los revisamos. Te avisamos apenas estén.</div>';
+
+  (pa.docs || []).forEach(function(d){
+    var vencido = d.vence_el && d.vence_el < new Date().toISOString().slice(0,10);
+    var est = vencido ? ['mal','Vencido']
+            : d.estado === 'aprobado'  ? ['ok','Aprobado']
+            : d.estado === 'rechazado' ? ['mal','Rechazado']
+            : ['pend','Falta'];
+    h += '<div class="papel"><div class="nom">' + esc(ETIQ[d.tipo] || d.tipo);
+    if (d.vence_el) h += '<small>Vence el ' + d.vence_el.split('-').reverse().join('/') + '</small>';
+    if (d.nota)     h += '<small>' + esc(d.nota) + '</small>';
+    // Este es el unico que no se sube. Se dice aca, no en una ayuda
+    // escondida, para que nadie pierda tiempo buscando el boton.
+    if (d.tipo === 'antecedentes' && d.estado !== 'aprobado')
+      h += '<small>Este no se sube: mostralo y lo verificamos.</small>';
+    h += '</div><span class="est ' + est[0] + '">' + est[1] + '</span>';
+    if (d.tipo !== 'antecedentes' && (d.estado !== 'aprobado' || vencido))
+      h += '<button class="btn chico" onclick="subirDoc(\'' + d.tipo + '\')">Cargar</button>';
+    h += '</div>';
+  });
+  c.innerHTML = h;
+}
+
+// La foto de un celular pesa 4 MB y no entra en una funcion de Vercel.
+// Se achica en el navegador antes de mandarla: un documento se lee
+// perfecto a 1600px y pesa diez veces menos.
+function achicar(file){
+  return new Promise(function(listo, error){
+    if (file.type === 'application/pdf') {
+      var fr = new FileReader();
+      fr.onload = function(){ listo(fr.result); };
+      fr.onerror = function(){ error(new Error('No se pudo leer el archivo')); };
+      fr.readAsDataURL(file);
+      return;
+    }
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function(){
+      var max = 1600, e = Math.min(1, max / Math.max(img.width, img.height));
+      var cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * e); cv.height = Math.round(img.height * e);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      listo(cv.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = function(){ error(new Error('No pudimos abrir esa imagen')); };
+    img.src = url;
+  });
+}
+
+var _docTipo = null;
+window.subirDoc = function(tipo){ _docTipo = tipo; $('fArch').value=''; $('fArch').click(); };
+
+$('fArch').addEventListener('change', async function(){
+  var file = this.files && this.files[0];
+  if (!file || !_docTipo) return;
+  var vence = prompt('¿Hasta cuándo vale? (DD/MM/AAAA)\n\nSi no tiene vencimiento, dejalo vacío.') || '';
+  var iso = null;
+  var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(vence.trim());
+  if (vence.trim() && !m) { toast('⚠ La fecha va como 31/12/2027'); return; }
+  if (m) iso = m[3] + '-' + ('0'+m[2]).slice(-2) + '-' + ('0'+m[1]).slice(-2);
+
+  toast('Subiendo…');
+  try{
+    var dataUrl = await achicar(file);
+    var d = await api('repartidor',{method:'POST',body:{
+      accion:'subir_doc', tipo:_docTipo, archivo:dataUrl, vence_el:iso }});
+    toast('✓ ' + (d.mensaje || 'Cargado'));
+    cargar();
+  }catch(e){ toast('⚠ ' + e.message); }
+});
 
 function pintar(){
   if (!pedidos.length){
