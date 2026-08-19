@@ -122,8 +122,13 @@
     flex:none;cursor:pointer;transition:.15s}
   .prod .sw2::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
     background:#63707f;transition:.15s}
-  .prod.on .sw2{background:rgba(57,211,83,.3)}
-  .prod.on .sw2::after{left:23px;background:#39d353}
+  .prod.on{border-color:rgba(57,211,83,.45)}
+  .prod.on .nom{color:#dff5e6}
+  .prod .mini{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#dbe7f3;
+    font-size:12px;padding:8px 10px;flex:none;border-radius:9px}
+  .prod .mini.no2{color:#ffb3b3}
+  .prod.on .mini:first-of-type{background:rgba(57,211,83,.22);border-color:rgba(57,211,83,.5);color:#9fe6b0}
+  .prod.off .mini.no2{background:rgba(255,90,90,.18);border-color:rgba(255,90,90,.45)}
 
   /* ── subir lista ── */
   .subir{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#16304d,#0f1722);
@@ -210,7 +215,10 @@
         <input id="pPrecio" type="number" inputmode="numeric" min="1" placeholder="$" required>
         <button class="btn" type="submit" style="padding:12px">Sumar</button>
       </form>
+      <input id="buscarProd" placeholder="🔍 Buscar producto..." style="margin-bottom:8px">
+      <div id="resumenProd" style="font-size:13px;color:#93a9c0;margin-bottom:10px"></div>
       <div id="listaProductos"></div>
+      <div id="masProd" style="text-align:center;color:#7d8fa3;font-size:13px;padding:10px"></div>
 
       <h2>Proponer</h2>
       <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
@@ -497,32 +505,144 @@ document.querySelectorAll('.tabs button').forEach(function(b){
 });
 
 // ── mis productos ───────────────────────────────────────────────
-// Una sola lista: lo que vendo, con un interruptor por producto. Antes
-// eran dos listas separadas y habia que entender la diferencia entre
-// "mi precio" y "mis faltantes". En un mostrador eso no pasa.
+// TRES ESTADOS, no dos:
+//
+//   sin revisar  el sistema asume que lo tiene. Es como funciona hoy y
+//                es el estado de todo el catalogo mientras no lo toque.
+//   lo tengo     lo confirmo el, y ahi el precio es obligatorio. Esta
+//                confirmacion le da prioridad cuando entra un pedido.
+//   no lo tengo  faltante: no le llegan pedidos que lo incluyan.
+//
+// Con dos estados no alcanzaba: si "prendido" exigiera precio, arrancar
+// con 1.900 productos prendidos y sin precio seria un estado invalido
+// desde el minuto cero, y nadie carga 1.900 precios.
+
+var _catalogo = [];     // todo lo que vende k24hs
+var _miEstado = {};     // id o nombre -> {estado, precio}
+var _verMax = 60;
+
+// El catalogo sale del propio sitio y se guarda en el telefono. Es 1 MB:
+// bajarlo en cada visita seria abusivo con los datos del kiosquero.
+async function cargarCatalogo(){
+  try {
+    var cache = JSON.parse(localStorage.getItem('k24_catalogo') || 'null');
+    if (cache && cache.dia === new Date().toISOString().slice(0,10) && cache.items.length) {
+      _catalogo = cache.items; return;
+    }
+    var h = await (await fetch('/index.html', {cache:'force-cache'})).text();
+    var vistos = {}, items = [];
+    var re1 = /[{,]\s*["']?id["']?\s*:\s*["']([^"']+)["']\s*,\s*["']?name["']?\s*:\s*["']((?:[^"'\\]|\\.)*)["'][^}]*?["']?price["']?\s*:\s*(\d+)/g;
+    var re2 = /\["([A-Za-z0-9_\-]+)","((?:[^"\\]|\\.)*)",(\d+)/g;
+    [re1, re2].forEach(function(re){
+      var m; while ((m = re.exec(h))) {
+        if (vistos[m[1]]) continue;
+        vistos[m[1]] = 1;
+        items.push({ id:m[1], nombre:m[2], precio:Number(m[3])||0 });
+      }
+    });
+    // Los precios del index.html son los horneados y pueden estar viejos.
+    // Los de /api/precios son los que el cliente ve hoy, que es contra lo
+    // que el kiosquero tiene que comparar el suyo.
+    try {
+      var pr = await (await fetch('/api/precios')).json();
+      var vivos = {};
+      (pr.items || []).forEach(function(x){
+        if (x[3] !== 1) return;                        // inactivo: no se vende
+        vivos[String(x[0])] = Number(x[2]) > 0 ? Number(x[2]) : Number(x[1]) || 0;
+      });
+      items = items.filter(function(it){ return vivos[it.id] === undefined || vivos[it.id] > 0; });
+      items.forEach(function(it){ if (vivos[it.id] > 0) it.precio = vivos[it.id]; });
+    } catch (e) {}
+
+    items.sort(function(a,b){ return a.nombre.localeCompare(b.nombre,'es'); });
+    _catalogo = items;
+    try { localStorage.setItem('k24_catalogo',
+      JSON.stringify({ dia:new Date().toISOString().slice(0,10), items:items })); } catch(e){}
+  } catch (e) { _catalogo = []; }
+}
+
 async function cargarProductos(){
+  if (!_catalogo.length) {
+    $('resumenProd').textContent = 'Cargando el catálogo...';
+    await cargarCatalogo();
+  }
   try {
     var d = await api({ query:'?kiosco=1&productos=1' });
-    var l = d.productos || [];
-    $('listaProductos').innerHTML = l.length
-      ? l.map(function(p){
-          var on = p.disponible;
-          return '<div class="prod ' + (on ? 'on' : 'off') + '">'
-            + '<div class="nom">' + esc(p.nombre) + '</div>'
-            + (p.precio ? '<div class="pre">' + pesos(p.precio) + '</div>' : '')
-            + '<div class="sw2" onclick="cambiarDisponible(\'' + esc(p.nombre).replace(/'/g,"\\'")
-            + '\',\'' + esc(p.producto_id || '') + '\',' + (!on) + ')"></div>'
-            + '</div>';
-        }).join('')
-      : '<div class="vacio" style="padding:20px">Todavía no cargaste ninguno. Sumá los que más vendés.</div>';
+    _miEstado = {};
+    (d.productos || []).forEach(function(p){
+      var k = (p.producto_id || '').trim() || ('n:' + String(p.nombre||'').toLowerCase());
+      _miEstado[k] = { estado: p.disponible ? 'tengo' : 'no', precio: p.precio || 0 };
+    });
+    pintarProductos();
   } catch (e) {}
 }
 
-async function cambiarDisponible(nombre, prodId, queda){
+function claveDe(p){
+  return _miEstado[p.id] ? p.id : ('n:' + p.nombre.toLowerCase());
+}
+function estadoDe(p){
+  var e = _miEstado[p.id] || _miEstado['n:' + p.nombre.toLowerCase()];
+  return e || { estado:'sin', precio:0 };
+}
+
+function pintarProductos(){
+  var q = ($('buscarProd').value || '').toLowerCase().trim();
+  var lista = q ? _catalogo.filter(function(p){ return p.nombre.toLowerCase().indexOf(q) !== -1; })
+                : _catalogo;
+
+  var n = { tengo:0, no:0 };
+  _catalogo.forEach(function(p){ var e = estadoDe(p).estado; if (n[e] !== undefined) n[e]++; });
+  $('resumenProd').innerHTML =
+      '<b style="color:#4dff88">' + n.tengo + '</b> confirmados · '
+    + '<b style="color:#ffb3b3">' + n.no + '</b> que no tenés · '
+    + (_catalogo.length - n.tengo - n.no) + ' sin revisar (se asumen disponibles)';
+
+  var muestra = lista.slice(0, _verMax);
+  $('listaProductos').innerHTML = muestra.map(function(p, i){
+    var e = estadoDe(p);
+    var cls = e.estado === 'tengo' ? 'on' : (e.estado === 'no' ? 'off' : '');
+    var idx = _catalogo.indexOf(p);
+    return '<div class="prod ' + cls + '">'
+      + '<div class="nom">' + esc(p.nombre)
+      +   '<div style="font-size:12px;color:#7d8fa3">'
+      +     (e.estado === 'tengo' ? 'Lo tenés a ' + pesos(e.precio)
+          :  e.estado === 'no'    ? 'Marcado como que no lo tenés'
+          :                         'Sin revisar · vos lo vendés a ' + pesos(p.precio))
+      +   '</div></div>'
+      + '<button class="mini" onclick="marcar(' + idx + ',\'tengo\')">Lo tengo</button>'
+      + '<button class="mini no2" onclick="marcar(' + idx + ',\'no\')">No</button>'
+      + '</div>';
+  }).join('') || '<div class="vacio" style="padding:20px">Nada con ese nombre.</div>';
+
+  $('masProd').innerHTML = lista.length > _verMax
+    ? '<button class="mini" onclick="verMasProd()">Ver más (' + (lista.length - _verMax) + ' restantes)</button>'
+    : (q ? lista.length + ' resultados' : '');
+}
+
+function verMasProd(){ _verMax += 60; pintarProductos(); }
+$('buscarProd').addEventListener('input', function(){ _verMax = 60; pintarProductos(); });
+
+async function marcar(idx, queda){
+  var p = _catalogo[idx]; if (!p) return;
+  var precio = null;
+
+  if (queda === 'tengo') {
+    // Precio obligatorio al confirmar: sin el, la confirmacion no sirve
+    // para comparar y termina siendo un tilde vacio.
+    var e = estadoDe(p);
+    var sug = e.precio || p.precio || '';
+    var r = prompt('¿A cuánto vendés "' + p.nombre + '"?\n\n(k24hs lo vende a ' + pesos(p.precio) + ')', sug);
+    if (r === null) return;
+    precio = Number(String(r).replace(/[^\d]/g, ''));
+    if (!(precio > 0)) { alert('Poné un precio para confirmarlo.'); return; }
+  }
+
   try {
-    await api({ method:'POST', body:{ accion:'disponible', nombre:nombre,
-      producto_id: prodId || null, disponible: queda } });
-    cargarProductos();
+    await api({ method:'POST', body:{ accion:'disponible', nombre:p.nombre,
+      producto_id:p.id, disponible: queda === 'tengo', precio:precio } });
+    var k = _miEstado[p.id] ? p.id : ('n:' + p.nombre.toLowerCase());
+    _miEstado[k] = { estado: queda, precio: precio || 0 };
+    pintarProductos();
     refrescar();
   } catch (e) { alert(e.message); }
 }
