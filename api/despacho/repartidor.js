@@ -71,6 +71,17 @@ export default async function handler(req, res) {
               p_direccion: p.direccion,
             });
           } catch (e) { /* si falla, se muestra como domicilio nuevo */ }
+
+          // Lo que la red sabe del LUGAR, aparte de lo que sabe del
+          // cliente. Son dos cosas distintas: un cliente nuevo en una
+          // direccion donde entregamos cien veces no es un riesgo.
+          let lugar = null;
+          try {
+            const d = await rpc('perfil_direccion', {
+              p_direccion: p.direccion, p_lat: p.lat, p_lng: p.lng,
+            });
+            lugar = (Array.isArray(d) ? d[0] : d) || null;
+          } catch (e) { /* sin perfil se reparte igual, solo sin avisos */ }
           const items = Array.isArray(p.items) ? p.items : [];
           return {
             ...p,
@@ -80,6 +91,7 @@ export default async function handler(req, res) {
             unidades: items.reduce((a, it) => a + (Number(it.qty || it.cantidad) || 1), 0),
             renglones: items.length,
             punto: puntos[p.punto_id] || null,
+            lugar,
           };
         })
       );
@@ -178,7 +190,21 @@ export default async function handler(req, res) {
       }
 
       // ── Auxilio ──────────────────────────────────────────────
-      if (b.accion === 'auxilio') {
+      if (b.accion === 'reportar_direccion') {
+      const r = await rpc('reportar_direccion', {
+        p_repartidor_id: sesion.id,
+        p_direccion: String(b.direccion || ''),
+        p_tipo: String(b.tipo || ''),
+        p_nota: b.nota ? String(b.nota) : null,
+        p_pedido_id: b.pedido_id ? Number(b.pedido_id) : null,
+        p_lat: Number.isFinite(Number(b.lat)) ? Number(b.lat) : null,
+        p_lng: Number.isFinite(Number(b.lng)) ? Number(b.lng) : null,
+      });
+      const e = (Array.isArray(r) ? r[0] : r) || {};
+      return json(res, e.ok ? 200 : 400, { ok: !!e.ok, mensaje: e.motivo });
+    }
+
+    if (b.accion === 'auxilio') {
         const r = await rpc('pedir_auxilio', {
           p_repartidor_id: sesion.id,
           p_tipo: String(b.tipo || ''),

@@ -133,6 +133,19 @@
     background:#21262d;border:1px solid #30363d;color:#e6edf3;text-align:left}
   .sosop.grave{background:#3d1416;border-color:#8b2c2e;color:#ffb3b3}
   .sosop.cancelar{background:none;text-align:center;color:#8b949e;margin-top:4px}
+
+  .lugar{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:9px 12px;
+    margin:6px 0;font-size:12px;color:#8b949e;line-height:1.55}
+  .lugar.ojo{background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.4);color:#ffd79a}
+  .lugar b{display:block;color:#ffb020;margin-bottom:3px;font-size:13px}
+  .btn.chico{padding:7px 10px;font-size:12px;margin-top:6px}
+
+  #dlgRep{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.82);display:none;
+    align-items:center;justify-content:center;padding:20px}
+  #dlgRep .cardSos{background:#161b22;border:1px solid #30363d;border-radius:18px;padding:22px;
+    width:100%;max-width:340px}
+  #dlgRep h3{margin:0 0 4px;font-size:17px}
+  #dlgRep p{margin:0 0 14px;color:#8b949e;font-size:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -160,6 +173,19 @@
     <button class="sosop" data-tipo="desperfecto">🛠 Se me rompió la moto</button>
     <button class="sosop" data-tipo="pago_parcial">💸 No me quieren pagar</button>
     <button class="sosop cancelar" id="sosCancelar">Cancelar</button>
+  </div>
+</div>
+
+<div id="dlgRep">
+  <div class="cardSos">
+    <h3>Reportar dirección</h3>
+    <p>Queda para el que venga después. No se le muestra al cliente.</p>
+    <button class="sosop" data-rep="no_existe">La dirección no existe o está mal</button>
+    <button class="sosop" data-rep="nadie_atiende">Toqué y no salió nadie</button>
+    <button class="sosop" data-rep="dificil">Difícil de encontrar o sin timbre</button>
+    <button class="sosop" data-rep="mal_trato">Me trataron mal</button>
+    <button class="sosop grave" data-rep="inseguro">Me sentí inseguro</button>
+    <button class="sosop cancelar" id="repCancelar">Cancelar</button>
   </div>
 </div>
 
@@ -310,6 +336,25 @@ document.querySelectorAll('.sosop[data-tipo]').forEach(function(b){
   b.addEventListener('click', function(){ pedirAuxilio(b.dataset.tipo); });
 });
 
+// ── reportar una direccion ───────────────────────────────────────
+var _rep = null;
+window.reportar = function(id, dir){ _rep = { id:id, dir:dir }; $('dlgRep').style.display='flex'; };
+$('repCancelar').addEventListener('click', function(){ $('dlgRep').style.display='none'; });
+document.querySelectorAll('.sosop[data-rep]').forEach(function(b){
+  b.addEventListener('click', async function(){
+    $('dlgRep').style.display = 'none';
+    if (!_rep) return;
+    var nota = prompt('¿Querés agregar algo? (opcional)') || null;
+    try{
+      var d = await api('repartidor',{method:'POST',body:{
+        accion:'reportar_direccion', pedido_id:_rep.id, direccion:_rep.dir,
+        tipo:b.dataset.rep, nota:nota,
+        lat:_ultimaPos && _ultimaPos.lat, lng:_ultimaPos && _ultimaPos.lng }});
+      toast('✓ ' + (d.mensaje || 'Anotado'));
+    }catch(e){ toast('⚠ ' + e.message); }
+  });
+});
+
 async function pedirAuxilio(tipo){
   var grave = (tipo === 'robo' || tipo === 'violencia');
   var detalle = grave ? null : (prompt('Contanos qué pasó (opcional):') || null);
@@ -369,6 +414,16 @@ function tarjeta(p){
       ' entrega' + (p.entregas_previas > 1 ? 's' : '') + ' previa' + (p.entregas_previas > 1 ? 's' : '') + '</div>'
     : '<div class="sello nuevo">Primera vez en este domicilio</div>';
 
+  // El sello de arriba habla del CLIENTE; esto habla del LUGAR. Un cliente
+  // nuevo en una direccion donde entregamos cien veces no es un riesgo, y
+  // al reves tampoco: conviene que se vean separados.
+  if (p.lugar && p.lugar.avisos && p.lugar.avisos.length) {
+    h += '<div class="lugar' + (p.lugar.alerta ? ' ojo' : '') + '">'
+       + (p.lugar.alerta ? '<b>⚠ Ojo con esta dirección</b>' : '')
+       + p.lugar.avisos.map(function(a){ return '<div>· ' + esc(a) + '</div>'; }).join('')
+       + '</div>';
+  }
+
   if (p.punto && !camino) {
     var dp = (p.punto.lat && p.punto.lng) ? p.punto.lat + ',' + p.punto.lng
            : encodeURIComponent(p.punto.direccion + ', Córdoba, Argentina');
@@ -377,6 +432,8 @@ function tarjeta(p){
        + '<button class="btn btn-g" onclick="navegar(\'' + dp + '\')">🗺 Ir al kiosco</button></div>';
   }
   h += '<div class="dir">📍 ' + esc(p.direccion) + '</div>';
+  h += '<button class="btn btn-g chico" onclick="reportar(' + p.id + ',\''
+     + esc(p.direccion).replace(/'/g, "\\'") + '\')">Reportar esta dirección</button>';
   if (p.direccion_notas) h += '<div class="notas">⚠ ' + esc(p.direccion_notas) + '</div>';
   h += '<div class="cli">' + esc(p.cliente_nombre || 'Sin nombre') +
        (p.cliente_telefono ? ' · ' + esc(p.cliente_telefono) : '') + '</div>';

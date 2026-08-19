@@ -8476,6 +8476,16 @@ document.addEventListener('click', function(ev) {
         })
         .then(function (r) { return r.json(); })
         .then(function (d) {
+          // Esta direccion pide pago anticipado. Es el UNICO caso en que
+          // interrumpimos: el cliente cree que ya pidió, y si nos callamos
+          // se queda esperando un pedido que nunca va a salir. Peor que
+          // decirselo.
+          if (d && d.pago_online_requerido) {
+            var msj = d.error || 'Para esta dirección pedimos que el pedido esté pagado antes de salir.';
+            if (typeof showToast === 'function') showToast('⚠ ' + msj, 9000);
+            try { alert(msj + '\n\nElegí Mercado Pago y lo despachamos igual.'); } catch (e) {}
+            return;
+          }
           if (!d || !d.ok || !d.pedido) return;   // sin_configurar u error: no molestamos
           try {
             // Guardar el link para que el cliente pueda volver a entrar

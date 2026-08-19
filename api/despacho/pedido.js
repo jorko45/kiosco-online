@@ -243,6 +243,29 @@ export default async function handler(req, res) {
     }
   }
 
+  // Direcciones donde ya hubo problemas: se pide que el pedido salga
+  // pagado. No se bloquea a nadie. El que paga online compra igual, y el
+  // motivo que ve el cliente no dice quien reporto que: eso es entre el
+  // repartidor y nosotros.
+  if (metodo === 'efectivo') {
+    try {
+      const d = primera(
+        await rpc('exige_pago_online', { p_direccion: direccion, p_lat: lat, p_lng: lng })
+      );
+      if (d && d.exige) {
+        return json(res, 409, {
+          ok: false,
+          pago_online_requerido: true,
+          error: d.motivo || 'Para esta dirección pedimos que el pedido esté pagado antes de salir.',
+        });
+      }
+    } catch (e) {
+      // Si la consulta falla, se sigue como siempre. Un error nuestro no
+      // puede dejar sin comprar a alguien que no hizo nada.
+      console.warn('[despacho] no se pudo consultar la direccion:', e.message);
+    }
+  }
+
   const fila = {
     estado: 'nuevo',
     ultimo_actor: 'cliente',
