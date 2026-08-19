@@ -26,7 +26,10 @@ import { exigirPanel, exigirKiosco } from '../_lib/auth.js';
 const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
-const DE_KIOSCO = new Set(['latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio', 'sugerir', 'disponible']);
+const DE_KIOSCO = new Set([
+  'latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio',
+  'sugerir', 'disponible', 'lote',
+]);
 
 export default async function handler(req, res) {
   if (cors(req, res, 'GET, POST, OPTIONS')) return;
@@ -527,6 +530,44 @@ async function manejarKiosco(req, res, ses) {
       ok: !!(e && e.ok),
       motivo: e ? e.motivo : null,
       error: e && e.ok ? undefined : 'No se pudo',
+    });
+  }
+
+  // ── Toda la lista de una ───────────────────────────────────────
+  // Las filas llegan ya leidas del PDF por el navegador del kiosquero, y
+  // confirmadas por el en una vista previa. Aca no se parsea nada: solo
+  // se guarda lo que el ya vio y aprobo.
+  if (b.accion === 'lote') {
+    const filas = Array.isArray(b.filas) ? b.filas.slice(0, 3000) : [];
+    if (!filas.length) return json(res, 400, { ok: false, error: 'No llegaron productos' });
+
+    const r = await rpc('cargar_precios_lote', {
+      p_punto_id: puntoId,
+      p_filas: filas.map((f) => ({
+        nombre: String(f.nombre || '').slice(0, 200),
+        precio: Number(f.precio) || 0,
+      })),
+      p_reemplazar: Boolean(b.reemplazar),
+    });
+    const e = Array.isArray(r) ? r[0] : r;
+
+    // Queda constancia: si un dia aparecen precios raros, esto dice
+    // cuando entraron y desde que archivo.
+    try {
+      await insertar('punto_cargas', {
+        punto_id: puntoId,
+        archivo: b.archivo ? String(b.archivo).slice(0, 200) : null,
+        filas: e ? e.cargados : 0,
+        salteadas: e ? e.salteados : 0,
+        reemplazo: Boolean(b.reemplazar),
+      });
+    } catch (_) {}
+
+    return json(res, 200, {
+      ok: !!(e && e.ok),
+      cargados: e ? e.cargados : 0,
+      salteados: e ? e.salteados : 0,
+      motivo: e ? e.motivo : null,
     });
   }
 

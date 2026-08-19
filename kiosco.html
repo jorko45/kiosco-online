@@ -124,6 +124,29 @@
     background:#63707f;transition:.15s}
   .prod.on .sw2{background:rgba(57,211,83,.3)}
   .prod.on .sw2::after{left:23px;background:#39d353}
+
+  /* ── subir lista ── */
+  .subir{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#16304d,#0f1722);
+    border:1px solid rgba(90,160,255,.4);border-radius:15px;padding:14px;margin-bottom:14px}
+  .subir .ico{font-size:28px;flex:none}
+  .subir .txt{flex:1;font-size:13px;line-height:1.35;color:#cfe2f7}
+  .subir .txt b{display:block;font-family:Orbitron,sans-serif;font-size:14px;color:#fff;margin-bottom:3px}
+  .subir button{background:#1a73e8;color:#fff;font-size:14px;padding:11px 16px;flex:none}
+
+  #previa{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.8);display:none;
+    align-items:flex-end;justify-content:center}
+  #previa .caja{background:#0f1722;border-top:1px solid rgba(255,255,255,.18);border-radius:18px 18px 0 0;
+    width:100%;max-width:820px;max-height:92vh;display:flex;flex-direction:column}
+  #previa .cab{padding:16px 16px 10px;border-bottom:1px solid rgba(255,255,255,.1)}
+  #previa .cab h3{font-family:Orbitron,sans-serif;font-size:15px;margin:0 0 4px}
+  #previa .cab p{margin:0;color:#93a9c0;font-size:13px;line-height:1.4}
+  #previa .lista{overflow:auto;flex:1;padding:10px 12px}
+  #previa .fila{display:grid;grid-template-columns:1fr 96px 34px;gap:7px;margin-bottom:6px;align-items:center}
+  #previa .fila input{margin:0;padding:9px 10px;font-size:14px}
+  #previa .fila .x{background:none;border:1px solid rgba(255,255,255,.2);color:#ffb3b3;font-size:15px;padding:8px 0}
+  #previa .pie{padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.1);display:grid;gap:8px}
+  #previa .modo{display:flex;gap:8px;font-size:13px;color:#cfe2f7;align-items:center;margin-bottom:2px}
+  #previa .modo input{width:auto;margin:0}
 </style>
 </head>
 <body>
@@ -175,6 +198,13 @@
         Lo que vendés y a cuánto. El interruptor de la derecha lo prende o lo apaga:
         <b>apagado no te llegan pedidos que lo incluyan</b>. Tu precio no cambia el de k24hs.com.
       </div>
+      <div class="subir">
+        <div class="ico">📄</div>
+        <div class="txt"><b>Subí tu lista entera</b>Un PDF, un Excel o pegá el texto. Lo leemos y te lo mostramos antes de guardar nada.</div>
+        <button id="btnSubir">Subir</button>
+      </div>
+      <input type="file" id="archivo" accept=".pdf,.csv,.txt,.tsv" style="display:none">
+
       <form id="fProd" style="display:grid;grid-template-columns:1fr 108px 88px;gap:8px;margin-bottom:14px">
         <input id="pNombre" placeholder="Producto" required>
         <input id="pPrecio" type="number" inputmode="numeric" min="1" placeholder="$" required>
@@ -206,6 +236,23 @@
       </div>
       <h2>Tus pedidos</h2>
       <div id="listaPedidos"></div>
+    </div>
+  </div>
+</div>
+
+<div id="previa">
+  <div class="caja">
+    <div class="cab">
+      <h3>Revisá antes de guardar</h3>
+      <p id="previaResumen"></p>
+    </div>
+    <div class="lista" id="previaLista"></div>
+    <div class="pie">
+      <label class="modo"><input type="checkbox" id="chkReemplazar"> Reemplazar toda mi lista actual</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn" style="background:rgba(255,255,255,.08)" id="btnCancelarPrevia">Cancelar</button>
+        <button class="btn" id="btnConfirmarPrevia">Guardar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -498,6 +545,190 @@ $('fSug').addEventListener('submit', async function(e){
     $('sNombre').value = ''; $('sNota').value = '';
     alert('¡Gracias! Lo vamos a mirar.');
   } catch (err) { alert(err.message); }
+});
+
+// ── subir la lista entera ───────────────────────────────────────
+// El archivo se lee ACA, en el celular del kiosquero. No se sube a
+// ningun lado: lo que viaja son las filas que el confirmo. Un PDF de
+// lista de precios puede tener el telefono del proveedor y sus costos;
+// no hay razon para que eso pase por nuestro servidor.
+
+// Un numero argentino: 1.500 · 1.500,50 · 1500 · $ 2.399,99
+const NUM = /(?:\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?)/g;
+
+function aNumero(txt) {
+  if (!txt) return 0;
+  let s = String(txt).replace(/\$/g, '').trim();
+  // Formato argentino: el punto separa miles, la coma decimales.
+  if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (s.includes('.') && /\.\d{3}\b/.test(s)) s = s.replace(/\./g, '');
+  else if (s.includes(',')) s = s.replace(',', '.');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+// Lineas que no son productos: encabezados, totales, pie de pagina.
+const RUIDO = /^(lista|precios?|vigenc|actualiz|total|subtotal|iva|pagina|p[aá]g\.?\s*\d|tel[eé]fono|whatsapp|direcci[oó]n|www\.|http|cuit|razon social|hoja \d)/i;
+
+/**
+ * @param {string} texto  el contenido crudo
+ * @returns {{filas: Array<{nombre:string, precio:number}>, descartadas: number}}
+ */
+function leerLista(texto) {
+  const filas = [];
+  let descartadas = 0;
+  const vistos = new Set();
+
+  for (let linea of String(texto || '').split(/\r?\n/)) {
+    linea = linea.replace(/\s+/g, ' ').trim();
+    if (linea.length < 3) continue;
+    if (RUIDO.test(linea)) { descartadas++; continue; }
+
+    const nums = linea.match(NUM);
+    if (!nums || !nums.length) { descartadas++; continue; }
+
+    // El precio es el ULTIMO numero de la linea. En casi todas las listas
+    // el producto va a la izquierda y el precio a la derecha; y cuando el
+    // nombre lleva numeros (500 ml, x12, 2 lt) esos quedan antes.
+    const crudo = nums[nums.length - 1];
+    const precio = aNumero(crudo);
+
+    // Lo que queda sacando ese numero es el nombre.
+    const corte = linea.lastIndexOf(crudo);
+    // El orden importa: primero se juntan los espacios, despues se sacan
+    // los separadores del final. Al reves, un "- " con espacio detras no
+    // matchea el ancla de fin y queda pegado al nombre.
+    let nombre = (linea.slice(0, corte) + ' ' + linea.slice(corte + crudo.length))
+      .replace(/\$/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/[\s.\-–—_·|:]+$/g, '')
+      .trim();
+
+    // Un precio de menos de 10 pesos casi seguro es una cantidad mal leida
+    // ("x 6 un"), no un precio. Preferimos descartarlo a cargar basura.
+    if (!nombre || nombre.length < 2 || precio < 10) { descartadas++; continue; }
+
+    const clave = nombre.toLowerCase();
+    if (vistos.has(clave)) { descartadas++; continue; }
+    vistos.add(clave);
+
+    filas.push({ nombre: nombre.slice(0, 200), precio: Math.round(precio) });
+  }
+
+  return { filas, descartadas };
+}
+
+
+var _previaFilas = [], _previaArchivo = '';
+
+$('btnSubir').addEventListener('click', function(){ $('archivo').click(); });
+
+$('archivo').addEventListener('change', async function(e){
+  var f = e.target.files && e.target.files[0];
+  if (!f) return;
+  _previaArchivo = f.name;
+  $('btnSubir').textContent = 'Leyendo...';
+  try {
+    var texto = /\.pdf$/i.test(f.name) ? await textoDePdf(f) : await f.text();
+    var r = leerLista(texto);
+    if (!r.filas.length) {
+      alert('No pude encontrar productos con precio en ese archivo.\n\n'
+          + 'Probá copiando el texto de la lista y pegándolo, o mandanos el archivo y lo cargamos nosotros.');
+    } else {
+      abrirPrevia(r.filas, r.descartadas);
+    }
+  } catch (err) {
+    alert('No pude leer el archivo: ' + err.message);
+  } finally {
+    $('btnSubir').textContent = 'Subir';
+    e.target.value = '';
+  }
+});
+
+// pdf.js se carga solo cuando hace falta: son 300kb que el kiosquero no
+// tiene por que bajar si nunca sube un PDF.
+function textoDePdf(file){
+  return new Promise(function(resolve, reject){
+    function leer(){
+      var fr = new FileReader();
+      fr.onload = async function(){
+        try {
+          var pdf = await pdfjsLib.getDocument({ data: new Uint8Array(fr.result) }).promise;
+          var todo = [];
+          for (var i = 1; i <= pdf.numPages; i++) {
+            var pg = await pdf.getPage(i);
+            var tc = await pg.getTextContent();
+            // Reconstruir renglones: pdf.js entrega fragmentos sueltos con
+            // su posicion. Los que comparten altura son la misma linea.
+            var lineas = {};
+            tc.items.forEach(function(it){
+              var y = Math.round(it.transform[5]);
+              (lineas[y] = lineas[y] || []).push(it.str);
+            });
+            Object.keys(lineas).sort(function(a,b){ return b-a; })
+              .forEach(function(y){ todo.push(lineas[y].join(' ')); });
+          }
+          resolve(todo.join('\n'));
+        } catch (e) { reject(e); }
+      };
+      fr.onerror = function(){ reject(new Error('no se pudo abrir')); };
+      fr.readAsArrayBuffer(file);
+    }
+    if (window.pdfjsLib) return leer();
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function(){
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      leer();
+    };
+    s.onerror = function(){ reject(new Error('no pude cargar el lector de PDF')); };
+    document.head.appendChild(s);
+  });
+}
+
+function abrirPrevia(filas, descartadas){
+  _previaFilas = filas;
+  $('previaResumen').textContent = 'Encontré ' + filas.length + ' productos'
+    + (descartadas ? ' y salteé ' + descartadas + ' líneas que no parecían productos' : '')
+    + '. Corregí lo que esté mal y sacá lo que no va. Nada se guarda hasta que toques Guardar.';
+  $('previaLista').innerHTML = filas.map(function(f, i){
+    return '<div class="fila" data-i="' + i + '">'
+      + '<input class="pn" value="' + esc(f.nombre).replace(/"/g,'&quot;') + '">'
+      + '<input class="pp" type="number" inputmode="numeric" value="' + f.precio + '">'
+      + '<button class="x" onclick="sacarFila(' + i + ')">✕</button></div>';
+  }).join('');
+  $('chkReemplazar').checked = false;
+  $('previa').style.display = 'flex';
+}
+
+function sacarFila(i){
+  var d = $('previaLista').querySelector('[data-i="' + i + '"]');
+  if (d) d.remove();
+}
+
+$('btnCancelarPrevia').addEventListener('click', function(){ $('previa').style.display = 'none'; });
+
+$('btnConfirmarPrevia').addEventListener('click', async function(){
+  var filas = [];
+  $('previaLista').querySelectorAll('.fila').forEach(function(d){
+    var n = d.querySelector('.pn').value.trim();
+    var p = Number(d.querySelector('.pp').value);
+    if (n.length > 1 && p > 0) filas.push({ nombre:n, precio:p });
+  });
+  if (!filas.length) { alert('No quedó ningún producto para guardar.'); return; }
+
+  var b = $('btnConfirmarPrevia'); b.disabled = true; b.textContent = 'Guardando...';
+  try {
+    var d = await api({ method:'POST', body:{ accion:'lote', filas:filas,
+      reemplazar: $('chkReemplazar').checked, archivo:_previaArchivo } });
+    $('previa').style.display = 'none';
+    alert('Listo: ' + d.cargados + ' productos guardados'
+      + (d.salteados ? ' (' + d.salteados + ' salteados)' : '') + '.');
+    cargarProductos();
+  } catch (e) { alert(e.message); }
+  finally { b.disabled = false; b.textContent = 'Guardar'; }
 });
 
 // ── mi cuenta ───────────────────────────────────────────────────
