@@ -28,7 +28,7 @@ const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
 const DE_KIOSCO = new Set([
   'latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio',
-  'sugerir', 'disponible', 'lote',
+  'sugerir', 'disponible', 'lote', 'ean',
 ]);
 
 export default async function handler(req, res) {
@@ -530,6 +530,35 @@ async function manejarKiosco(req, res, ses) {
       ok: !!(e && e.ok),
       motivo: e ? e.motivo : null,
       error: e && e.ok ? undefined : 'No se pudo',
+    });
+  }
+
+  // ── Código de barras ───────────────────────────────────────────
+  // Buscar es libre; vincular deja el voto de este punto. La base la
+  // arma la red entre todos: el primero que escanea lo vincula una vez
+  // y los demas lo encuentran resuelto.
+  if (b.accion === 'ean') {
+    const ean = String(b.ean || '').replace(/\D/g, '');
+    if (!ean) return json(res, 400, { ok: false, error: 'Código vacío' });
+
+    if (!b.producto_id) {
+      const r = await rpc('buscar_ean', { p_ean: ean });
+      const e = Array.isArray(r) ? r[0] : r;
+      return json(res, 200, { ok: true, encontrado: !!e, producto: e || null });
+    }
+
+    const r = await rpc('vincular_ean', {
+      p_ean: ean,
+      p_producto_id: String(b.producto_id).slice(0, 80),
+      p_nombre: String(b.nombre || '').slice(0, 200),
+      p_punto_id: puntoId,
+    });
+    const e = Array.isArray(r) ? r[0] : r;
+    return json(res, e && e.ok ? 200 : 400, {
+      ok: !!(e && e.ok),
+      confirmado: e ? e.confirmado : 0,
+      motivo: e ? e.motivo : null,
+      error: e && e.ok ? undefined : (e ? e.motivo : 'No se pudo'),
     });
   }
 

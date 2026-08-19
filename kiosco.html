@@ -152,6 +152,16 @@
   #previa .pie{padding:12px 16px 16px;border-top:1px solid rgba(255,255,255,.1);display:grid;gap:8px}
   #previa .modo{display:flex;gap:8px;font-size:13px;color:#cfe2f7;align-items:center;margin-bottom:2px}
   #previa .modo input{width:auto;margin:0}
+
+  /* ── camara ── */
+  #camara{position:fixed;inset:0;z-index:80;background:#000;display:none;flex-direction:column}
+  #camara video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+  #camara .marco{position:absolute;left:8%;right:8%;top:34%;height:22%;border:3px solid #39d353;
+    border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+  #camara .pieCam{position:absolute;left:0;right:0;bottom:0;padding:20px;text-align:center;
+    background:linear-gradient(transparent,rgba(0,0,0,.85))}
+  #camara #camTxt{color:#fff;font-size:16px;font-weight:800;text-shadow:0 1px 4px #000}
+  #camara .btn{max-width:280px;margin-left:auto;margin-right:auto}
 </style>
 </head>
 <body>
@@ -215,7 +225,10 @@
         <input id="pPrecio" type="number" inputmode="numeric" min="1" placeholder="$" required>
         <button class="btn" type="submit" style="padding:12px">Sumar</button>
       </form>
-      <input id="buscarProd" placeholder="🔍 Buscar producto..." style="margin-bottom:8px">
+      <div style="display:grid;grid-template-columns:1fr 116px;gap:8px;margin-bottom:8px">
+        <input id="buscarProd" placeholder="🔍 Buscar producto..." style="margin:0">
+        <button class="btn" id="btnEscanear" style="padding:12px;background:#1a73e8">📷 Escanear</button>
+      </div>
       <div id="resumenProd" style="font-size:13px;color:#93a9c0;margin-bottom:10px"></div>
       <div id="listaProductos"></div>
       <div id="masProd" style="text-align:center;color:#7d8fa3;font-size:13px;padding:10px"></div>
@@ -245,6 +258,15 @@
       <h2>Tus pedidos</h2>
       <div id="listaPedidos"></div>
     </div>
+  </div>
+</div>
+
+<div id="camara">
+  <video id="video" playsinline muted></video>
+  <div class="marco"></div>
+  <div class="pieCam">
+    <div id="camTxt">Apuntá al código de barras</div>
+    <button class="btn" id="btnCerrarCam" style="background:rgba(255,255,255,.12);margin-top:10px">Cerrar</button>
   </div>
 </div>
 
@@ -642,6 +664,16 @@ async function marcar(idx, queda){
       producto_id:p.id, disponible: queda === 'tengo', precio:precio } });
     var k = _miEstado[p.id] ? p.id : ('n:' + p.nombre.toLowerCase());
     _miEstado[k] = { estado: queda, precio: precio || 0 };
+
+    // Si venia de escanear un codigo que nadie tenia, queda vinculado.
+    if (_eanPendiente && queda === 'tengo') {
+      try {
+        var v = await api({ method:'POST', body:{ accion:'ean', ean:_eanPendiente,
+          producto_id:p.id, nombre:p.nombre } });
+        alert('Código vinculado. Ahora todos los kioscos de la red lo van a encontrar.');
+      } catch (e) {}
+      _eanPendiente = null;
+    }
     pintarProductos();
     refrescar();
   } catch (e) { alert(e.message); }
@@ -850,6 +882,96 @@ $('btnConfirmarPrevia').addEventListener('click', async function(){
   } catch (e) { alert(e.message); }
   finally { b.disabled = false; b.textContent = 'Guardar'; }
 });
+
+// ── escanear codigo de barras ───────────────────────────────────
+// Se usa BarcodeDetector, que viene en el navegador de Android y no
+// necesita bajar ninguna libreria. En iPhone no existe, asi que ahi se
+// avisa y se ofrece tipearlo: preferible decirlo antes que abrir una
+// camara que nunca va a detectar nada.
+var _stream = null, _escaneando = false, _detector = null;
+
+$('btnEscanear').addEventListener('click', abrirCamara);
+$('btnCerrarCam').addEventListener('click', cerrarCamara);
+
+async function abrirCamara(){
+  if (!('BarcodeDetector' in window)) {
+    var m = prompt('Tu teléfono no puede escanear desde el navegador '
+      + '(le pasa a los iPhone).\n\nTipeá el código de barras:');
+    if (m) resolverEan(m);
+    return;
+  }
+  try {
+    _detector = new BarcodeDetector({ formats: ['ean_13','ean_8','upc_a','upc_e','code_128'] });
+    _stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 } }
+    });
+    $('video').srcObject = _stream;
+    await $('video').play();
+    $('camara').style.display = 'flex';
+    $('camTxt').textContent = 'Apuntá al código de barras';
+    _escaneando = true;
+    buscarCodigo();
+  } catch (e) {
+    alert('No pude usar la cámara: ' + e.message
+      + '\n\nRevisá que le hayas dado permiso al navegador.');
+  }
+}
+
+function cerrarCamara(){
+  _escaneando = false;
+  if (_stream) { _stream.getTracks().forEach(function(t){ t.stop(); }); _stream = null; }
+  $('camara').style.display = 'none';
+}
+
+async function buscarCodigo(){
+  if (!_escaneando) return;
+  try {
+    var r = await _detector.detect($('video'));
+    if (r && r.length && r[0].rawValue) {
+      var ean = String(r[0].rawValue).replace(/\D/g, '');
+      if (ean.length >= 8) {
+        try { if (navigator.vibrate) navigator.vibrate(120); } catch(e){}
+        cerrarCamara();
+        resolverEan(ean);
+        return;
+      }
+    }
+  } catch (e) {}
+  setTimeout(buscarCodigo, 250);   // ~4 lecturas por segundo
+}
+
+// Que hacer con el codigo una vez leido.
+async function resolverEan(ean){
+  ean = String(ean).replace(/\D/g, '');
+  if (ean.length < 8) { alert('Ese código no parece válido.'); return; }
+
+  var d;
+  try { d = await api({ method:'POST', body:{ accion:'ean', ean:ean } }); }
+  catch (e) { alert(e.message); return; }
+
+  if (d.encontrado && d.producto) {
+    // Alguien de la red ya lo vinculo: se resuelve solo.
+    var p = _catalogo.filter(function(x){ return x.id === d.producto.producto_id; })[0];
+    if (p) {
+      $('buscarProd').value = p.nombre;
+      _verMax = 60; pintarProductos();
+      marcar(_catalogo.indexOf(p), 'tengo');
+      return;
+    }
+  }
+
+  // Nadie lo cargo todavia: lo busca el y queda vinculado para todos.
+  var q = prompt('Código ' + ean + ' — todavía nadie lo cargó.\n\n'
+    + '¿Qué producto es? Escribí parte del nombre:');
+  if (!q) return;
+  $('buscarProd').value = q;
+  _verMax = 60; pintarProductos();
+  _eanPendiente = ean;
+  alert('Buscá el producto en la lista y tocá "Lo tengo".\n'
+      + 'Queda vinculado a ese código para toda la red.');
+}
+
+var _eanPendiente = null;
 
 // ── mi cuenta ───────────────────────────────────────────────────
 async function cargarCuenta(){
