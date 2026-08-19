@@ -52,6 +52,17 @@
        text-decoration:none;font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;
        padding:15px;border-radius:11px;margin-top:6px}
   .frescura{text-align:center;font-size:11.5px;color:var(--muted);margin-top:-8px;margin-bottom:14px}
+
+  .card.reemp{border-color:#8a6d1f;background:#1c1608}
+  .card.reemp h3{color:#ffb020;margin:0 0 6px;font-size:17px}
+  .card.reemp .ofrece{margin:0 0 12px;font-size:14px;line-height:1.6;color:#f5c469}
+  .card.reemp .ofrece b{color:#fff}
+  .card.reemp .reloj{font-size:12px;color:#8b949e;margin-bottom:12px}
+  .card.reemp .acciones{display:flex;gap:9px}
+  .card.reemp .acciones .btn{flex:1;margin:0;padding:13px;font-size:14px}
+  .card.reemp .btn.si{background:#1a7f37;border-color:#1a7f37;color:#fff}
+  .card.reemp .btn.no{background:transparent;border:1px solid #30363d;color:#8b949e}
+  .card.reemp small{display:block;margin-top:10px;color:#8b949e;font-size:11.5px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -117,6 +128,32 @@ function fallo(tit, txt){
     '<br><br><a class="btn" href="/">Volver al kiosco</a></div>';
 }
 
+// El reloj se pinta solo, sin volver a pedir nada al servidor: la
+// pantalla ya se refresca sola cada pocos segundos y no hace falta
+// gastar una consulta por segundo para mostrar una cuenta regresiva.
+setInterval(function(){
+  document.querySelectorAll('.reloj[data-seg]').forEach(function(el){
+    var s = Math.max(0, Number(el.dataset.seg) - 1);
+    el.dataset.seg = s;
+    el.textContent = s > 0
+      ? 'Te quedan ' + Math.floor(s/60) + ':' + ('0' + (s%60)).slice(-2) + ' para contestar'
+      : 'Se acabó el tiempo';
+  });
+}, 1000);
+
+window.responder = async function(id, acepta){
+  if (!acepta && !confirm('Lo sacamos del pedido y te descontamos el importe. ¿Seguro?')) return;
+  try{
+    var r = await fetch('/api/despacho/seguimiento?t=' + encodeURIComponent(token), {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ reemplazo_id:id, acepta:acepta })
+    });
+    var d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'No se pudo');
+    cargar();
+  }catch(e){ alert(e.message); }
+};
+
 function pintar(p){
   var terminado = p.estado === 'entregado' || p.estado === 'cancelado';
   var idx = PASOS.findIndex(function(s){ return s.id === p.estado; });
@@ -124,7 +161,28 @@ function pintar(p){
   if (p.estado === 'nuevo') idx = -1;
   if (p.estado === 'asignado') idx = 1;
 
-  var h = '<div class="card">';
+  var h = '';
+
+  // Va arriba de todo, antes del estado: es lo unico de esta pantalla que
+  // necesita que el cliente haga algo, y tiene reloj.
+  (p.reemplazos || []).forEach(function(r){
+    var dif = r.diferencia;
+    h += '<div class="card reemp">'
+       + '<h3>No hay ' + esc(r.item_nombre) + '</h3>'
+       + '<p class="ofrece">El kiosco tiene <b>' + esc(r.nuevo_nombre) + '</b>'
+       + (dif === 0 ? ' al mismo precio.'
+          : dif < 0 ? ' y sale ' + pesos(-dif) + ' menos.'
+                    : ' y sale ' + pesos(dif) + ' más.') + '</p>'
+       + '<div class="reloj" data-seg="' + r.segundos + '"></div>'
+       + '<div class="acciones">'
+       + '<button class="btn si" onclick="responder(' + r.id + ',true)">Sí, mandámelo</button>'
+       + '<button class="btn no" onclick="responder(' + r.id + ',false)">No, sacalo</button>'
+       + '</div>'
+       + '<small>Si no contestás a tiempo lo sacamos del pedido y te lo descontamos.</small>'
+       + '</div>';
+  });
+
+  h += '<div class="card">';
   h += '<div class="cod">' + esc(p.codigo) + '</div>';
   h += '<div class="estado">' + esc(TITULO[p.estado] || p.estado) + '</div>';
   h += '<div class="detalle">' + esc(BAJADA[p.estado] || '') + '</div>';
@@ -147,7 +205,9 @@ function pintar(p){
 
   h += '<div class="card"><h3>Tu pedido</h3>';
   (p.items || []).forEach(function(i){
-    h += '<div class="fila"><span>' + i.qty + '× ' + esc(i.nombre) + '</span></div>';
+    h += '<div class="fila"><span>' + i.qty + '× ' + esc(i.nombre)
+       + (i.reemplazo_de ? '<br><small style="color:#8b949e">en lugar de ' + esc(i.reemplazo_de) + '</small>' : '')
+       + '</span></div>';
   });
   h += '<div class="fila"><span>Envío</span><span>' + (p.envio ? pesos(p.envio) : 'gratis') + '</span></div>';
   h += '<div class="fila tot"><span>Total</span><span>' + pesos(p.total) + '</span></div>';

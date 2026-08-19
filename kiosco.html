@@ -178,6 +178,9 @@
     background:linear-gradient(transparent,rgba(0,0,0,.85))}
   #camara #camTxt{color:#fff;font-size:16px;font-weight:800;text-shadow:0 1px 4px #000}
   #camara .btn{max-width:280px;margin-left:auto;margin-right:auto}
+
+  .items .cambiar{background:#1f2937;border:1px solid #3b4a5f;color:#93c5fd;
+    padding:6px 10px;border-radius:8px;font-size:12px;margin-left:6px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -538,7 +541,10 @@ function pintarOferta(){
     var nom = esc(it.name || it.nombre || it.producto || 'Producto');
     var id  = esc(it.id || it.key || '');
     return '<li><b>' + (Number(it.qty || it.cantidad) || 1) + '</b><span>' + nom + '</span>'
-      + '<button class="nohay" onclick="noTengo(\'' + id + '\',\'' + nom.replace(/'/g,"\\'") + '\')">No tengo</button></li>';
+      + '<button class="nohay" onclick="noTengo(\'' + id + '\',\'' + nom.replace(/'/g,"\\'") + '\')">No tengo</button>'
+      // "No tengo" tira el pedido al siguiente kiosco. "Cambiar" lo
+      // conserva: es la diferencia entre perder la venta y hacerla.
+      + '<button class="cambiar" onclick="ofrecerCambio(\'' + id + '\',\'' + nom.replace(/'/g,"\\'") + '\')">Cambiar</button></li>';
   }).join('');
 
   z.innerHTML =
@@ -555,6 +561,26 @@ function pintarOferta(){
     + '</div>';
   pintarReloj();
 }
+
+// Ofrecer un cambio en lugar de rechazar el pedido entero.
+window.ofrecerCambio = async function(itemId, nombre){
+  if (!ofertaActual) return;
+  var q = prompt('No tenés "' + nombre + '".\n\n¿Qué le podés dar en su lugar?');
+  if (!q || !q.trim()) return;
+  var pr = prompt('¿A qué precio lo vendés?\n\n(solo el número)');
+  var precio = Number(String(pr || '').replace(/[^\d]/g, ''));
+  if (!(precio > 0)) { toast('⚠ Poné el precio'); return; }
+
+  try{
+    var d = await api({ method:'POST', body:{
+      accion:'reemplazo', pedido_id: ofertaActual.pedido_id,
+      item_id: itemId, nuevo_id: 'sug-' + Date.now(),
+      nuevo_nombre: q.trim(), nuevo_precio: precio }});
+    // Si el precio se va del margen, el mensaje del servidor dice entre
+    // que valores tiene que estar. Se muestra tal cual.
+    toast(d.ok ? '✓ ' + d.mensaje : '⚠ ' + (d.mensaje || d.error));
+  }catch(e){ toast('⚠ ' + e.message); }
+};
 
 function pintarReloj(){
   if (!ofertaActual) return;

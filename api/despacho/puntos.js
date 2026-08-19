@@ -28,6 +28,7 @@ const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
 const DE_KIOSCO = new Set([
+  'reemplazo',
   'latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio',
   'sugerir', 'disponible', 'lote', 'ean',
 ]);
@@ -534,6 +535,23 @@ async function manejarKiosco(req, res, ses) {
   }
 
   // ── Se me acabó / ya tengo ─────────────────────────────────────
+  // ── El kiosco ofrece un reemplazo ─────────────────────────────
+  // Lo unico que manda es que producto ofrece. El precio del original y
+  // el margen los saca la base del pedido: si el original viniera de
+  // afuera, cualquiera podria inflarlo para que el margen le cierre.
+  if (b.accion === 'reemplazo') {
+    const r = await rpc('proponer_reemplazo', {
+      p_pedido_id: Number(b.pedido_id),
+      p_punto_id: ses.punto_id,
+      p_item_id: String(b.item_id || ''),
+      p_nuevo_id: String(b.nuevo_id || ''),
+      p_nuevo_nombre: String(b.nuevo_nombre || ''),
+      p_nuevo_precio: Math.round(Number(b.nuevo_precio) || 0),
+    });
+    const e = (Array.isArray(r) ? r[0] : r) || {};
+    return json(res, e.ok ? 200 : 400, { ok: !!e.ok, mensaje: e.motivo, id: e.reemplazo_id });
+  }
+
   if (b.accion === 'faltante') {
     const prod = String(b.producto_id || '').trim();
     if (!prod) return json(res, 400, { ok: false, error: 'Falta el producto' });

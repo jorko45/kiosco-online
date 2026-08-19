@@ -6,11 +6,13 @@
 // del repartidor, ni el id interno del pedido. Del repartidor se manda
 // solo el nombre de pila y su posicion mientras el pedido esta en camino.
 
-import { seleccionar, json, cors } from '../_lib/db.js';
+import { seleccionar, rpc, json, cors, cuerpo } from '../_lib/db.js';
 
 export default async function handler(req, res) {
-  if (cors(req, res, 'GET, OPTIONS')) return;
-  if (req.method !== 'GET') return json(res, 405, { ok: false, error: 'Metodo no permitido' });
+  if (cors(req, res, 'GET, POST, OPTIONS')) return;
+  if (!['GET', 'POST'].includes(req.method)) {
+    return json(res, 405, { ok: false, error: 'Metodo no permitido' });
+  }
 
   const token = String(req.query.t || '').trim();
   // El token es hex de 16 bytes. Validar el formato evita mandar basura a la base.
@@ -28,6 +30,35 @@ export default async function handler(req, res) {
     const p = filas[0];
     if (!p) return json(res, 404, { ok: false, error: 'Seguimiento inexistente' });
 
+    // ── El cliente contesta un reemplazo ───────────────────────────
+    // El token del seguimiento es la unica llave: quien lo tiene es el
+    // dueño del pedido. Se verifica que el reemplazo sea de ESTE pedido,
+    // porque el id es un numero corrido y se puede adivinar.
+    if (req.method === 'POST') {
+      const b = cuerpo(req);
+      const mios = await seleccionar('pedido_reemplazos', {
+        select: 'id',
+        id: `eq.${Number(b.reemplazo_id) || 0}`,
+        pedido_id: `eq.${p.id}`,
+      });
+      if (!mios.length) {
+        return json(res, 404, { ok: false, error: 'Esa propuesta no es de este pedido' });
+      }
+      const r = await rpc('responder_reemplazo', {
+        p_reemplazo_id: Number(b.reemplazo_id),
+        p_acepta: b.acepta === true,
+      });
+      const e = (Array.isArray(r) ? r[0] : r) || {};
+      return json(res, e.r_ok ? 200 : 400,
+        { ok: !!e.r_ok, total: e.r_total, mensaje: e.r_motivo });
+    }
+
+    // Lo que tiene que contestar ahora, si hay algo.
+    let reemplazos = [];
+    try {
+      reemplazos = await rpc('reemplazos_abiertos', { p_pedido_id: p.id });
+    } catch (e) { /* sin esto el seguimiento anda igual */ }
+
     const salida = {
       codigo: p.codigo,
       estado: p.estado,
@@ -35,13 +66,20 @@ export default async function handler(req, res) {
       total: p.total,
       envio: p.envio,
       metodo_pago: p.metodo_pago,
-      items: (p.items || []).map((i) => ({ nombre: i.nombre, qty: i.qty })),
+      // El carrito del sitio manda name/qty y el despacho a veces
+      // nombre/cantidad. Leer solo uno dejaba la lista en blanco.
+      items: (p.items || []).map((i) => ({
+        nombre: i.nombre || i.name || '',
+        qty: i.qty || i.cantidad || 1,
+        reemplazo_de: i.reemplazo_de || null,
+      })),
       creado_at: p.creado_at,
       asignado_at: p.asignado_at,
       retirado_at: p.retirado_at,
       entregado_at: p.entregado_at,
       repartidor: null,
       posicion: null,
+      reemplazos: Array.isArray(reemplazos) ? reemplazos : [],
     };
 
     // La posicion del repartidor solo se expone mientras el pedido va en camino.

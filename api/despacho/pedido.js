@@ -50,6 +50,24 @@ function ipDe(req) {
 
 async function accionesReferidos(req, res, b) {
   const accion = String(b.accion || '').trim();
+
+  // "Llevás Fernet, ¿te falta la Coca?"
+  // Sale de lo que la gente compro junto de verdad. Al principio no va a
+  // devolver nada porque no hay pedidos entregados de donde aprender, y
+  // esta bien: mejor no sugerir que sugerir cualquier cosa.
+  if (accion === 'sugerir') {
+    try {
+      const l = await rpc('sugerir_acompanamientos', {
+        p_items: Array.isArray(b.items) ? b.items : [],
+        p_limite: 4,
+      });
+      return json(res, 200, { ok: true, sugerencias: Array.isArray(l) ? l : [] });
+    } catch (e) {
+      // Una sugerencia que falla no puede romper un carrito.
+      return json(res, 200, { ok: true, sugerencias: [] });
+    }
+  }
+
   const telefono = String(b.telefono || '').trim();
 
   try {
