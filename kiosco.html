@@ -84,6 +84,46 @@
     align-items:center;justify-content:center;padding:22px}
   #ayudaInstalar .card{max-width:330px}
   #ayudaInstalar ol{margin:0 0 4px;padding-left:20px;color:#cfe2f7;font-size:15px;line-height:1.7}
+
+  /* ── solapas ── */
+  .tabs{display:flex;gap:6px;background:#0f1722;border-bottom:1px solid rgba(255,255,255,.1);
+    padding:0 10px;position:sticky;top:57px;z-index:19}
+  .tabs button{flex:1;background:none;border:none;border-bottom:3px solid transparent;color:#7d8fa3;
+    font-size:14px;padding:13px 6px;letter-spacing:.3px}
+  .tabs button.on{color:#fff;border-bottom-color:#cc1010}
+  .tabs .punto{position:absolute;top:8px;right:6px;width:8px;height:8px;border-radius:50%;background:#39d353}
+  .hoja{display:none}
+  .hoja.on{display:block}
+
+  /* ── plata ── */
+  .plata-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+  .kpi{background:#0f1722;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px}
+  .kpi b{display:block;font-family:Orbitron,sans-serif;font-size:22px;color:#4dff88;margin-bottom:2px}
+  .kpi span{font-size:12px;color:#93a9c0;letter-spacing:.3px}
+  .kpi.alerta b{color:#ffd79a}
+  .ped{background:#0f1722;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px;margin-bottom:8px}
+  .ped .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px}
+  .ped .cod{font-family:Orbitron,sans-serif;font-size:13px}
+  .ped .mon{font-weight:800;color:#4dff88}
+  .ped .det{font-size:13px;color:#93a9c0;line-height:1.35}
+  .est{font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.3px}
+  .est.cobrado{background:rgba(57,211,83,.18);color:#7ef0a0}
+  .est.curso{background:rgba(90,160,255,.18);color:#a9d1ff}
+  .est.falta{background:rgba(255,176,32,.18);color:#ffd79a}
+  .est.cancel{background:rgba(255,90,90,.16);color:#ffb3b3}
+
+  /* ── productos ── */
+  .prod{display:flex;align-items:center;gap:10px;background:#0f1722;border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;padding:11px 12px;margin-bottom:7px}
+  .prod.off{opacity:.55;border-style:dashed}
+  .prod .nom{flex:1;font-size:14px;line-height:1.25}
+  .prod .pre{font-weight:800;color:#4dff88;font-size:14px}
+  .prod .sw2{width:46px;height:26px;border-radius:14px;background:rgba(255,255,255,.14);position:relative;
+    flex:none;cursor:pointer;transition:.15s}
+  .prod .sw2::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+    background:#63707f;transition:.15s}
+  .prod.on .sw2{background:rgba(57,211,83,.3)}
+  .prod.on .sw2::after{left:23px;background:#39d353}
 </style>
 </head>
 <body>
@@ -106,6 +146,12 @@
     <button class="salir" id="btnSalir">Salir</button>
   </header>
 
+  <div class="tabs">
+    <button data-hoja="hPedidos" class="on">Pedidos<span class="punto" id="puntoNuevo" style="display:none"></span></button>
+    <button data-hoja="hProductos">Mis productos</button>
+    <button data-hoja="hPlata">Mi cuenta</button>
+  </div>
+
   <div class="wrap">
     <div class="instalar" id="cajaInstalar" style="display:none">
       <div class="ico">📲</div>
@@ -117,43 +163,50 @@
       Estás <b>cerrado</b>: no te van a llegar pedidos. Tocá el interruptor de arriba para abrir.
     </div>
 
-    <div id="zonaOferta"></div>
-
-    <div id="zonaPrep"></div>
-
-    <h2>Mis precios de mostrador</h2>
-    <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
-      A cuánto vendés vos en el kiosco. <b>Esto no cambia el precio de k24hs.com</b> —
-      nos sirve para ver quién está comprando bien y conseguir mejores precios para todos.
+    <!-- ── PEDIDOS ── -->
+    <div class="hoja on" id="hPedidos">
+      <div id="zonaOferta"></div>
+      <div id="zonaPrep"></div>
     </div>
-    <form id="fPrecio" style="display:grid;grid-template-columns:1fr 110px 92px;gap:8px;margin-bottom:12px">
-      <input id="pNombre" placeholder="Producto" required>
-      <input id="pPrecio" type="number" inputmode="numeric" min="1" placeholder="$" required>
-      <button class="btn" type="submit" style="padding:12px">Guardar</button>
-    </form>
-    <div id="misPrecios"></div>
 
-    <h2>Proponer</h2>
-    <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
-      ¿Te piden algo que no está en la página? ¿Se te ocurre una oferta? Contanos.
-    </div>
-    <form id="fSug" style="display:grid;gap:8px;margin-bottom:20px">
-      <select id="sTipo">
-        <option value="falta_en_catalogo">Me lo piden y no está en la página</option>
-        <option value="para_oferta">Lo pondría en oferta</option>
-        <option value="otro">Otra cosa</option>
-      </select>
-      <input id="sNombre" placeholder="Producto" required>
-      <input id="sNota" placeholder="Comentario (opcional)">
-      <button class="btn" type="submit">Enviar</button>
-    </form>
+    <!-- ── MIS PRODUCTOS ── -->
+    <div class="hoja" id="hProductos">
+      <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
+        Lo que vendés y a cuánto. El interruptor de la derecha lo prende o lo apaga:
+        <b>apagado no te llegan pedidos que lo incluyan</b>. Tu precio no cambia el de k24hs.com.
+      </div>
+      <form id="fProd" style="display:grid;grid-template-columns:1fr 108px 88px;gap:8px;margin-bottom:14px">
+        <input id="pNombre" placeholder="Producto" required>
+        <input id="pPrecio" type="number" inputmode="numeric" min="1" placeholder="$" required>
+        <button class="btn" type="submit" style="padding:12px">Sumar</button>
+      </form>
+      <div id="listaProductos"></div>
 
-    <h2>Lo que no tengo</h2>
-    <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
-      Marcá acá lo que se te acabó y no te van a llegar pedidos que lo incluyan.
-      Se borra solo a los 7 días, así que si sigue faltando volvé a marcarlo.
+      <h2>Proponer</h2>
+      <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
+        ¿Te piden algo que no está en la página? ¿Se te ocurre una oferta? Contanos.
+      </div>
+      <form id="fSug" style="display:grid;gap:8px;margin-bottom:20px">
+        <select id="sTipo">
+          <option value="falta_en_catalogo">Me lo piden y no está en la página</option>
+          <option value="para_oferta">Lo pondría en oferta</option>
+          <option value="otro">Otra cosa</option>
+        </select>
+        <input id="sNombre" placeholder="Producto" required>
+        <input id="sNota" placeholder="Comentario (opcional)">
+        <button class="btn" type="submit">Enviar</button>
+      </form>
     </div>
-    <div id="listaFaltantes"></div>
+
+    <!-- ── MI CUENTA ── -->
+    <div class="hoja" id="hPlata">
+      <div class="plata-grid" id="kpis"></div>
+      <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
+        Es lo que <b>generaste</b>, no lo que ya cobraste. La liquidación se acuerda aparte.
+      </div>
+      <h2>Tus pedidos</h2>
+      <div id="listaPedidos"></div>
+    </div>
   </div>
 </div>
 
@@ -232,7 +285,6 @@ function entrar(){
   $('login').style.display = 'none';
   $('app').style.display = 'block';
   refrescar();
-  cargarMisPrecios();
   timer  = setInterval(refrescar, 4000);
   latido = setInterval(function(){
     api({ method:'POST', body:{ accion:'latido' } }).catch(function(){});
@@ -288,7 +340,6 @@ async function refrescar(){
 
     pintarOferta();
     pintarPreparando(d.preparando || []);
-    pintarFaltantes(d.faltantes || []);
   } catch (err) {
     if (!/Sesion vencida/.test(err.message)) {
       // Sin conexion no se avisa fuerte: vuelve solo en 4 segundos.
@@ -384,56 +435,60 @@ function pintarPreparando(lista){
   }).join('');
 }
 
-function pintarFaltantes(lista){
-  var z = $('listaFaltantes');
-  if (!lista.length) {
-    z.innerHTML = '<div class="vacio" style="padding:18px">No marcaste nada. El sistema asume que tenés todo.</div>';
-    return;
-  }
-  z.innerHTML = lista.map(function(f){
-    return '<div class="falt"><span>' + esc(f.nombre || f.producto_id) + '</span>'
-      + '<button onclick="yaTengo(\'' + esc(f.producto_id) + '\')">Ya tengo</button></div>';
-  }).join('');
+
+
+// ── solapas ─────────────────────────────────────────────────────
+document.querySelectorAll('.tabs button').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){ x.classList.remove('on'); });
+    document.querySelectorAll('.hoja').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    $(b.dataset.hoja).classList.add('on');
+    if (b.dataset.hoja === 'hProductos') cargarProductos();
+    if (b.dataset.hoja === 'hPlata')     cargarCuenta();
+  });
+});
+
+// ── mis productos ───────────────────────────────────────────────
+// Una sola lista: lo que vendo, con un interruptor por producto. Antes
+// eran dos listas separadas y habia que entender la diferencia entre
+// "mi precio" y "mis faltantes". En un mostrador eso no pasa.
+async function cargarProductos(){
+  try {
+    var d = await api({ query:'?kiosco=1&productos=1' });
+    var l = d.productos || [];
+    $('listaProductos').innerHTML = l.length
+      ? l.map(function(p){
+          var on = p.disponible;
+          return '<div class="prod ' + (on ? 'on' : 'off') + '">'
+            + '<div class="nom">' + esc(p.nombre) + '</div>'
+            + (p.precio ? '<div class="pre">' + pesos(p.precio) + '</div>' : '')
+            + '<div class="sw2" onclick="cambiarDisponible(\'' + esc(p.nombre).replace(/'/g,"\\'")
+            + '\',\'' + esc(p.producto_id || '') + '\',' + (!on) + ')"></div>'
+            + '</div>';
+        }).join('')
+      : '<div class="vacio" style="padding:20px">Todavía no cargaste ninguno. Sumá los que más vendés.</div>';
+  } catch (e) {}
 }
 
-async function yaTengo(prodId){
+async function cambiarDisponible(nombre, prodId, queda){
   try {
-    await api({ method:'POST', body:{ accion:'faltante', producto_id:prodId, falta:false } });
+    await api({ method:'POST', body:{ accion:'disponible', nombre:nombre,
+      producto_id: prodId || null, disponible: queda } });
+    cargarProductos();
     refrescar();
   } catch (e) { alert(e.message); }
 }
 
-// ── mis precios ───────────────────────────────────────────────────
-// Se cargan aparte del ciclo de 4 segundos: es una lista que casi no
-// cambia y no tiene sentido volver a pedirla todo el tiempo.
-async function cargarMisPrecios(){
-  try {
-    var d = await api({ query:'?kiosco=1&precios=1' });
-    var l = d.precios || [];
-    $('misPrecios').innerHTML = l.length
-      ? l.map(function(p){
-          return '<div class="falt"><span>' + esc(p.nombre) + '</span>'
-            + '<b style="color:#4dff88;margin-right:8px">' + pesos(p.precio) + '</b>'
-            + '<button onclick="borrarPrecio(' + p.id + ')">Quitar</button></div>';
-        }).join('')
-      : '<div class="vacio" style="padding:18px">Todavía no cargaste ninguno.</div>';
-  } catch (e) {}
-}
-
-$('fPrecio').addEventListener('submit', async function(e){
+$('fProd').addEventListener('submit', async function(e){
   e.preventDefault();
   try {
-    await api({ method:'POST', body:{ accion:'mi_precio',
-      nombre: $('pNombre').value, precio: Number($('pPrecio').value) } });
+    await api({ method:'POST', body:{ accion:'disponible', nombre: $('pNombre').value,
+      precio: Number($('pPrecio').value), disponible: true } });
     $('pNombre').value = ''; $('pPrecio').value = '';
-    cargarMisPrecios();
+    cargarProductos();
   } catch (err) { alert(err.message); }
 });
-
-async function borrarPrecio(id){
-  try { await api({ method:'POST', body:{ accion:'borrar_precio', id:id } }); cargarMisPrecios(); }
-  catch (e) { alert(e.message); }
-}
 
 $('fSug').addEventListener('submit', async function(e){
   e.preventDefault();
@@ -444,6 +499,42 @@ $('fSug').addEventListener('submit', async function(e){
     alert('¡Gracias! Lo vamos a mirar.');
   } catch (err) { alert(err.message); }
 });
+
+// ── mi cuenta ───────────────────────────────────────────────────
+async function cargarCuenta(){
+  try {
+    var d = await api({ query:'?kiosco=1&resumen=1' });
+    var g = d.ganancias || {};
+    var k = [
+      ['hoy_generado','Generaste hoy', false],
+      ['semana_generado','Esta semana', false],
+      ['mes_generado','Este mes', false],
+      ['sin_cobrar','Entregado sin cobrar', true]
+    ].map(function(x){
+      return '<div class="kpi' + (x[2] && (g[x[0]]||0) > 0 ? ' alerta' : '') + '">'
+        + '<b>' + pesos(g[x[0]]) + '</b><span>' + x[1] + '</span></div>';
+    }).join('');
+    k += '<div class="kpi"><b>' + (g.hoy_pedidos||0) + '</b><span>Pedidos hoy</span></div>'
+       + '<div class="kpi"><b>' + (g.en_curso||0) + '</b><span>En curso ahora</span></div>';
+    $('kpis').innerHTML = k;
+
+    var clase = { 'cobrado':'cobrado', 'en curso':'curso',
+                  'entregado, falta cobrar':'falta', 'cancelado':'cancel' };
+    $('listaPedidos').innerHTML = (d.pedidos || []).length
+      ? d.pedidos.map(function(p){
+          var items = Array.isArray(p.items) ? p.items : [];
+          var det = items.map(function(it){
+            return (Number(it.qty||it.cantidad)||1) + '× ' + esc(it.name||it.nombre||'Producto');
+          }).join(' · ');
+          return '<div class="ped"><div class="top">'
+            + '<span class="cod">' + esc(p.codigo) + '</span>'
+            + '<span class="est ' + (clase[p.situacion]||'curso') + '">' + esc(p.situacion) + '</span>'
+            + '<span class="mon">' + pesos(p.pago_al_punto) + '</span></div>'
+            + '<div class="det">' + (p.unidades||0) + ' unidades · ' + det + '</div></div>';
+        }).join('')
+      : '<div class="vacio" style="padding:20px">Todavía no preparaste ningún pedido.</div>';
+  } catch (e) {}
+}
 
 // ── instalar la app ───────────────────────────────────────────────
 // Un kiosquero que la deja como pestaña la pierde entre otras veinte y no

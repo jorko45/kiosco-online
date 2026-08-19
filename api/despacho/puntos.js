@@ -26,7 +26,7 @@ import { exigirPanel, exigirKiosco } from '../_lib/auth.js';
 const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
-const DE_KIOSCO = new Set(['latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio', 'sugerir']);
+const DE_KIOSCO = new Set(['latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio', 'sugerir', 'disponible']);
 
 export default async function handler(req, res) {
   if (cors(req, res, 'GET, POST, OPTIONS')) return;
@@ -358,14 +358,30 @@ async function manejarKiosco(req, res, ses) {
   const puntoId = ses.punto_id;
 
   if (req.method === 'GET') {
-    // Mi lista de precios, en pantalla aparte para no cargarla siempre.
-    if (req.query.precios) {
-      const mios = await seleccionar('punto_precios', {
-        select: 'id,nombre,precio,producto_id,actualizado_at',
+    // Mis productos: una sola lista, disponibles y no disponibles juntos.
+    if (req.query.precios || req.query.productos) {
+      const mios = await seleccionar('v_kiosco_productos', {
         punto_id: `eq.${puntoId}`,
         order: 'nombre.asc',
       });
-      return json(res, 200, { ok: true, precios: mios });
+      return json(res, 200, { ok: true, productos: mios, precios: mios });
+    }
+
+    // Mi cuenta: historial y plata.
+    if (req.query.resumen) {
+      const [g, pedidos] = await Promise.all([
+        rpc('ganancias_punto', { p_punto_id: puntoId }),
+        seleccionar('v_kiosco_pedidos', {
+          punto_id: `eq.${puntoId}`,
+          order: 'punto_asignado_at.desc',
+          limit: '60',
+        }),
+      ]);
+      return json(res, 200, {
+        ok: true,
+        ganancias: Array.isArray(g) ? g[0] : g,
+        pedidos,
+      });
     }
 
     const [punto, ofertas, faltantes] = await Promise.all([
@@ -492,6 +508,26 @@ async function manejarKiosco(req, res, ses) {
     // borrar la lista de otro pasando un id cualquiera.
     await fetchDelete('punto_precios', { id: `eq.${id}`, punto_id: `eq.${puntoId}` });
     return json(res, 200, { ok: true });
+  }
+
+  // ── Lo tengo / no lo tengo ─────────────────────────────────────
+  // Un solo interruptor por producto. Antes eran dos listas separadas y
+  // el kiosquero tenia que entender la diferencia entre "mi precio" y
+  // "mis faltantes"; en el mostrador eso no pasa.
+  if (b.accion === 'disponible') {
+    const r = await rpc('poner_disponible', {
+      p_punto_id: puntoId,
+      p_nombre: String(b.nombre || '').slice(0, 200),
+      p_disponible: Boolean(b.disponible),
+      p_producto_id: b.producto_id ? String(b.producto_id).slice(0, 80) : null,
+      p_precio: Number(b.precio) > 0 ? Math.round(Number(b.precio)) : null,
+    });
+    const e = Array.isArray(r) ? r[0] : r;
+    return json(res, e && e.ok ? 200 : 400, {
+      ok: !!(e && e.ok),
+      motivo: e ? e.motivo : null,
+      error: e && e.ok ? undefined : 'No se pudo',
+    });
   }
 
   // ── Te propongo algo ───────────────────────────────────────────
