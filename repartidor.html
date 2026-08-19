@@ -107,6 +107,32 @@
          border-radius:10px;font-size:14px;z-index:100;opacity:0;transition:opacity .25s;
          pointer-events:none;max-width:92vw;text-align:center}
   .toast.ver{opacity:1}
+
+  .ganancias{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .ganancias div{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:12px;text-align:center}
+  .ganancias b{display:block;font-size:20px;color:#3fb950;font-weight:800}
+  .ganancias .rendir{grid-column:1/-1;background:rgba(255,176,32,.1);border-color:rgba(255,176,32,.35)}
+  .ganancias .rendir b{color:#ffb020}
+  .ganancias span{font-size:11px;color:#8b949e;letter-spacing:.3px}
+
+  .retiro{background:rgba(255,176,32,.1);border:1px solid rgba(255,176,32,.35);border-radius:10px;
+    padding:10px 12px;margin:8px 0;font-size:13px;color:#ffd79a;line-height:1.4}
+  .retiro b{color:#fff}
+  .retiro button{margin-top:8px}
+
+  #sos{position:fixed;right:14px;bottom:14px;z-index:40;width:62px;height:62px;border-radius:50%;
+    background:#b62324;color:#fff;font-weight:900;font-size:16px;letter-spacing:1px;
+    box-shadow:0 6px 20px rgba(182,35,36,.5);display:none}
+  #dlgSos{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.82);display:none;
+    align-items:center;justify-content:center;padding:20px}
+  #dlgSos .cardSos{background:#161b22;border:1px solid #30363d;border-radius:18px;padding:22px;
+    width:100%;max-width:340px}
+  #dlgSos h3{margin:0 0 4px;font-size:18px}
+  #dlgSos p{margin:0 0 16px;color:#8b949e;font-size:13px}
+  .sosop{display:block;width:100%;padding:15px;margin-bottom:9px;border-radius:12px;font-size:15px;
+    background:#21262d;border:1px solid #30363d;color:#e6edf3;text-align:left}
+  .sosop.grave{background:#3d1416;border-color:#8b2c2e;color:#ffb3b3}
+  .sosop.cancelar{background:none;text-align:center;color:#8b949e;margin-top:4px}
 </style>
 </head>
 <body>
@@ -121,6 +147,19 @@
       <div class="err" id="errLogin"></div>
       <button class="btn" type="submit" id="btnLogin">Entrar</button>
     </form>
+  </div>
+</div>
+
+<button id="sos" title="Auxilio">SOS</button>
+<div id="dlgSos">
+  <div class="cardSos">
+    <h3>¿Qué pasó?</h3>
+    <p>Se avisa al instante con tu ubicación.</p>
+    <button class="sosop grave" data-tipo="violencia">🚨 Me están agrediendo</button>
+    <button class="sosop grave" data-tipo="robo">🚨 Robo</button>
+    <button class="sosop" data-tipo="desperfecto">🛠 Se me rompió la moto</button>
+    <button class="sosop" data-tipo="pago_parcial">💸 No me quieren pagar</button>
+    <button class="sosop cancelar" id="sosCancelar">Cancelar</button>
   </div>
 </div>
 
@@ -144,6 +183,7 @@
     </div>
 
     <!-- Rendición del turno: lo que tiene en el bolsillo -->
+    <div class="ganancias" id="ganancias"></div>
     <div class="caja-turno" id="cajaTurno"></div>
 
     <div id="lista"></div>
@@ -166,6 +206,7 @@
 
 var TOKEN = localStorage.getItem('k24_rep_token') || null;
 var yo = null, pedidos = [], enTurno = false;
+var _ultimaPos = null;
 var watchId = null, ultimoEnvio = 0, wakeLock = null, timer = null;
 var INTERVALO_GPS = 15000;   // no mandar posicion mas seguido que esto
 
@@ -233,6 +274,8 @@ async function cargar(){
     $('nPed').textContent = pedidos.length;
     $('nHoy').textContent = d.entregados_hoy || 0;
     pintarCaja(d.caja);
+    pintarGanancias(d.ganancias);
+    _sosVisible();
 
     if (yo.en_turno !== enTurno) { enTurno = yo.en_turno; sincronizarTurno(); }
     pintar();
@@ -243,6 +286,52 @@ async function cargar(){
 
 // Cuánto efectivo tiene que rendir al cerrar el turno.
 // Se separa lo que cobró en mano de lo que ya venía pagado y nunca tocó.
+function pintarGanancias(g){
+  if (!g || (!g.hoy_entregas && !g.semana_entregas)) { $('ganancias').innerHTML = ''; return; }
+  $('ganancias').innerHTML =
+      '<div><b>' + pesos(g.hoy_ganado) + '</b><span>GANASTE HOY · ' + (g.hoy_entregas||0) + ' entregas</span></div>'
+    + '<div><b>' + pesos(g.semana_ganado) + '</b><span>ESTA SEMANA · ' + (g.semana_entregas||0) + ' entregas</span></div>'
+    // Lo que lleva encima y no es suyo. Se muestra aparte y en otro color a
+    // proposito: confundirlo con lo ganado es la forma mas facil de que le
+    // falte plata cuando toca rendir.
+    + (g.hoy_a_rendir > 0
+        ? '<div class="rendir"><b>' + pesos(g.hoy_a_rendir) + '</b><span>TENÉS QUE RENDIR · no es tuyo</span></div>'
+        : '');
+}
+
+// ── auxilio ──────────────────────────────────────────────────────
+// Cuatro motivos y no son lo mismo: un pinchazo se resuelve mandando otra
+// moto, un robo se resuelve llamando al 911. El aviso sale con la
+// ubicacion, que es el dato que nadie va a poder dictar si esta en
+// problemas.
+$('sos').addEventListener('click', function(){ $('dlgSos').style.display = 'flex'; });
+$('sosCancelar').addEventListener('click', function(){ $('dlgSos').style.display = 'none'; });
+document.querySelectorAll('.sosop[data-tipo]').forEach(function(b){
+  b.addEventListener('click', function(){ pedirAuxilio(b.dataset.tipo); });
+});
+
+async function pedirAuxilio(tipo){
+  var grave = (tipo === 'robo' || tipo === 'violencia');
+  var detalle = grave ? null : (prompt('Contanos qué pasó (opcional):') || null);
+  $('dlgSos').style.display = 'none';
+  try {
+    var pid = (pedidos[0] && pedidos[0].id) || null;
+    await api('repartidor', { method:'POST', body:{
+      accion:'auxilio', tipo:tipo, detalle:detalle, pedido_id:pid,
+      lat: _ultimaPos && _ultimaPos.lat, lng: _ultimaPos && _ultimaPos.lng }});
+    if (grave) {
+      // En un robo el aviso no alcanza: se le ofrece el 911 en el acto.
+      if (confirm('Aviso enviado con tu ubicación.\n\n¿Llamamos al 911?')) {
+        window.location.href = 'tel:911';
+      }
+    } else {
+      toast('✓ Aviso enviado');
+    }
+  } catch (e) { toast('⚠ ' + e.message); }
+}
+
+function _sosVisible(){ $('sos').style.display = enTurno ? 'block' : 'none'; }
+
 function pintarCaja(c){
   if (!c || !c.entregados){ $('cajaTurno').innerHTML = ''; return; }
   var h = '<h4>Tu turno</h4>';
@@ -280,6 +369,13 @@ function tarjeta(p){
       ' entrega' + (p.entregas_previas > 1 ? 's' : '') + ' previa' + (p.entregas_previas > 1 ? 's' : '') + '</div>'
     : '<div class="sello nuevo">Primera vez en este domicilio</div>';
 
+  if (p.punto && !camino) {
+    var dp = (p.punto.lat && p.punto.lng) ? p.punto.lat + ',' + p.punto.lng
+           : encodeURIComponent(p.punto.direccion + ', Córdoba, Argentina');
+    h += '<div class="retiro">🏪 <b>Retirás en ' + esc(p.punto.nombre) + '</b>'
+       + '<div>' + esc(p.punto.direccion) + '</div>'
+       + '<button class="btn btn-g" onclick="navegar(\'' + dp + '\')">🗺 Ir al kiosco</button></div>';
+  }
   h += '<div class="dir">📍 ' + esc(p.direccion) + '</div>';
   if (p.direccion_notas) h += '<div class="notas">⚠ ' + esc(p.direccion_notas) + '</div>';
   h += '<div class="cli">' + esc(p.cliente_nombre || 'Sin nombre') +
@@ -310,7 +406,7 @@ function tarjeta(p){
   h += '</div>';
 
   if (!camino) {
-    h += '<button class="btn" onclick="marcar(' + p.id + ',\'en_camino\')">Retiré el pedido</button>';
+    h += '<button class="btn" onclick="retirar(' + p.id + ')">Retiré el pedido</button>';
   } else {
     h += '<button class="btn btn-ok" onclick="entregar(' + p.id + ',' + (cobra?'true':'false') + ',' + p.total + ')">Entregué</button>';
   }
@@ -322,6 +418,15 @@ window.navegar = function(d){ window.open('https://www.google.com/maps/dir/?api=
 window.wsp = function(t){ window.open('https://wa.me/' + t, '_blank'); };
 window.llamar = function(t){ window.location.href = 'tel:+54' + t; };
 
+window.retirar = async function(id){
+  try{
+    await api('repartidor',{method:'POST',body:{accion:'retirar', pedido_id:id}});
+    toast('Listo, salí tranquilo');
+    if (enTurno) arrancarGps();
+    cargar();
+  }catch(e){ toast('⚠ ' + e.message); }
+};
+
 window.marcar = async function(id, estado){
   try{
     await api('estado',{method:'POST',body:{pedido_id:id,estado:estado}});
@@ -332,12 +437,25 @@ window.marcar = async function(id, estado){
 };
 
 window.entregar = async function(id, cobra, total){
-  if (cobra && !confirm('¿Cobraste ' + pesos(total) + '?')) return;
-  var quien = prompt('¿Quién recibió? (opcional)') || '';
+  // Se pregunta CUANTO entro, no si cobro. No es lo mismo: si cobro de
+  // menos y solo tildamos "entregado", esa plata desaparece sin que nadie
+  // se entere hasta contar la caja. Preguntado, queda registrado.
+  var cobrado = total;
+  if (cobra) {
+    var r = prompt('¿Cuánto cobraste?\n\nTotal del pedido: ' + pesos(total)
+                 + '\n(dejá el número como está si cobró todo)', total);
+    if (r === null) return;
+    cobrado = Number(String(r).replace(/[^\d]/g, ''));
+    if (!(cobrado >= 0)) { toast('⚠ Poné cuánto cobraste'); return; }
+    if (cobrado < total && !confirm('Cobraste ' + pesos(total - cobrado)
+        + ' menos que el total.\n\nVa a quedar registrado. ¿Confirmás?')) return;
+  }
   try{
-    await api('estado',{method:'POST',body:{
-      pedido_id:id, estado:'entregado', receptor:quien.trim(), pagado:true }});
-    toast('✓ Entregado');
+    var d = await api('repartidor',{method:'POST',body:{
+      accion:'entregar', pedido_id:id, cobrado:cobrado,
+      metodo: cobra ? 'efectivo' : null,
+      lat: _ultimaPos && _ultimaPos.lat, lng: _ultimaPos && _ultimaPos.lng }});
+    toast(d.vuelto ? '✓ Entregado · vuelto ' + pesos(d.vuelto) : '✓ Entregado');
     cargar();
   }catch(e){ toast('⚠ ' + e.message); }
 };
@@ -373,6 +491,10 @@ function arrancarGps(){
   watchId = navigator.geolocation.watchPosition(function(pos){
     $('luzGps').className = 'luz on';
     $('txtGps').textContent = 'GPS activo';
+    // Se guarda siempre, aunque no se envie: el freno de abajo es para no
+    // saturar la base, no para perder de vista donde esta el repartidor.
+    // Si pide auxilio, la ubicacion tiene que estar a mano ya.
+    _ultimaPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     var ahora = Date.now();
     if (ahora - ultimoEnvio < INTERVALO_GPS) return;   // no saturar la base
     ultimoEnvio = ahora;
