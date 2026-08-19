@@ -13,7 +13,7 @@ function faltantes(rol) {
     f.push('DESPACHO_SECRET (minimo 16 caracteres)');
   }
   if (rol === 'panel' && !process.env.ADMIN_PASSWORD) f.push('ADMIN_PASSWORD');
-  if (rol === 'repartidor' || rol === 'kiosco') {
+  if (rol === 'repartidor' || rol === 'kiosco' || rol === 'kiosco_alta') {
     if (!process.env.SUPABASE_URL) f.push('SUPABASE_URL');
     if (!process.env.SUPABASE_SERVICE_KEY) f.push('SUPABASE_SERVICE_KEY');
   }
@@ -119,6 +119,59 @@ export default async function handler(req, res) {
         token: crearToken({ rol: 'kiosco', punto_id: k.id, nombre: k.nombre }, 16),
         rol: 'kiosco',
         punto: { id: k.id, nombre: k.nombre, tipo: k.tipo, online: k.online },
+      });
+    }
+
+    // ── Alta de un kiosco, sin que nadie lo habilite ───────────────
+    // Es un endpoint publico a proposito: la idea es que un kiosquero se
+    // registre un domingo a las 3 AM sin depender de que alguien mire.
+    // Lo que lo protege no es una aprobacion manual sino que no recibe
+    // pedidos hasta tener direccion ubicable, horario y 10 productos
+    // cargados con precio. Un registro trucho no carga 10 precios.
+    if (b.rol === 'kiosco_alta') {
+      if (!dbConfigurada()) {
+        return json(res, 503, { ok: false, error: 'Despacho no configurado' });
+      }
+      // Freno por IP: un endpoint abierto sin esto es una invitacion.
+      if (!frenarIntentos(`alta:${ip}`, 5)) {
+        return json(res, 429, { ok: false, error: 'Demasiados intentos. Probá más tarde.' });
+      }
+
+      const direccion = String(b.direccion || '').trim();
+      let lat = Number(b.lat), lng = Number(b.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        const { geocodificar } = await import('../_lib/geo.js');
+        const g = await geocodificar(direccion);
+        if (!g) {
+          return json(res, 400, {
+            ok: false,
+            error: 'No pudimos ubicar esa dirección. Revisá que tenga calle, número y ciudad.',
+          });
+        }
+        lat = g.lat; lng = g.lng;
+      }
+
+      const r = await rpc('registrar_kiosco', {
+        p_nombre: String(b.nombre || ''),
+        p_direccion: direccion,
+        p_lat: lat,
+        p_lng: lng,
+        p_usuario: String(b.usuario || ''),
+        p_pin: String(b.pin || ''),
+        p_telefono: b.telefono ? String(b.telefono) : null,
+        p_radio_km: Number(b.radio_km) > 0 ? Number(b.radio_km) : 5,
+      });
+      const e = Array.isArray(r) ? r[0] : r;
+      if (!e || !e.ok) {
+        return json(res, 400, { ok: false, error: e ? e.motivo : 'No se pudo registrar' });
+      }
+
+      limpiarIntentos(`alta:${ip}`);
+      return json(res, 201, {
+        ok: true,
+        token: crearToken({ rol: 'kiosco', punto_id: e.punto_id, nombre: b.nombre }, 16),
+        rol: 'kiosco',
+        punto: { id: e.punto_id, nombre: String(b.nombre || ''), tipo: 'kiosco_adherido', online: false },
       });
     }
 

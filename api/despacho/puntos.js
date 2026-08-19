@@ -387,7 +387,7 @@ async function manejarKiosco(req, res, ses) {
       });
     }
 
-    const [punto, ofertas, faltantes] = await Promise.all([
+    const [punto, ofertas, faltantes, falta] = await Promise.all([
       seleccionar('puntos_preparacion', {
         select: 'id,nombre,tipo,online,ultimo_latido,activo',
         id: `eq.${puntoId}`,
@@ -398,6 +398,9 @@ async function manejarKiosco(req, res, ses) {
         punto_id: `eq.${puntoId}`,
         order: 'desde.desc',
       }),
+      // Que le falta para empezar a recibir. Es lo primero que quiere
+      // saber un kiosco recien registrado, y si no se lo decimos se va.
+      rpc('que_le_falta', { p_punto_id: puntoId }).catch(() => null),
     ]);
 
     const p = punto[0] || {};
@@ -417,6 +420,7 @@ async function manejarKiosco(req, res, ses) {
       oferta,
       preparando: enPreparacion,
       faltantes,
+      falta: Array.isArray(falta) ? falta[0] : falta,
     });
   }
 

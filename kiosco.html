@@ -85,6 +85,22 @@
   #ayudaInstalar .card{max-width:330px}
   #ayudaInstalar ol{margin:0 0 4px;padding-left:20px;color:#cfe2f7;font-size:15px;line-height:1.7}
 
+  /* ── abierto / cerrado ── */
+  #cartelCerrado{background:linear-gradient(160deg,#3a1418,#1a0f13);border:2px solid rgba(255,90,90,.55);
+    border-radius:18px;padding:22px 18px;text-align:center;margin-bottom:16px}
+  #cartelCerrado .ico{font-size:38px;line-height:1;margin-bottom:8px}
+  #cartelCerrado b{display:block;font-family:Orbitron,sans-serif;font-size:19px;color:#ffb3b3;margin-bottom:6px}
+  #cartelCerrado p{margin:0 0 16px;color:#e8c9c9;font-size:15px;line-height:1.4}
+  #cartelCerrado button{background:#1f9d3f;color:#fff;font-size:17px;padding:16px;width:100%;
+    border-radius:13px;letter-spacing:.5px;box-shadow:0 6px 20px rgba(31,157,63,.35)}
+  #cartelAbierto{display:flex;align-items:center;justify-content:center;gap:9px;
+    background:rgba(57,211,83,.12);border:1px solid rgba(57,211,83,.4);border-radius:13px;
+    padding:11px;margin-bottom:14px;color:#9fe6b0;font-weight:800;font-size:14px;letter-spacing:.4px}
+  #cartelAbierto .pulso{width:10px;height:10px;border-radius:50%;background:#39d353;
+    animation:lat 1.6s infinite}
+  @keyframes lat{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(57,211,83,.6)}
+                 50%{opacity:.7;box-shadow:0 0 0 7px rgba(57,211,83,0)}}
+
   /* ── solapas ── */
   .tabs{display:flex;gap:6px;background:#0f1722;border-bottom:1px solid rgba(255,255,255,.1);
     padding:0 10px;position:sticky;top:57px;z-index:19}
@@ -174,6 +190,26 @@
     <input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="current-password" required>
     <button class="btn" id="btnLogin" type="submit">Entrar</button>
     <div class="err" id="errLogin"></div>
+    <button type="button" id="btnIrAlta"
+      style="background:none;border:1px solid rgba(255,255,255,.22);color:#a9d1ff;width:100%;padding:12px;margin-top:6px;font-size:14px">
+      No tengo cuenta · Registrar mi kiosco
+    </button>
+  </form>
+
+  <form class="card" id="fAlta" style="display:none">
+    <h1>Sumá tu kiosco</h1>
+    <p>Empezás a recibir pedidos hoy mismo. No hace falta que nadie te habilite.</p>
+    <input id="aNombre" placeholder="Nombre del kiosco" required>
+    <input id="aDir" placeholder="Dirección con calle, número y ciudad" required>
+    <input id="aTel" placeholder="WhatsApp (opcional)" inputmode="tel">
+    <input id="aUsuario" placeholder="Usuario para entrar" autocapitalize="none" required>
+    <input id="aPin" type="password" inputmode="numeric" placeholder="PIN (4 dígitos o más)" required>
+    <button class="btn" id="btnAlta" type="submit">Crear mi kiosco</button>
+    <div class="err" id="errAlta"></div>
+    <button type="button" id="btnVolverLogin"
+      style="background:none;border:1px solid rgba(255,255,255,.22);color:#bcd;width:100%;padding:12px;margin-top:6px;font-size:14px">
+      Ya tengo cuenta
+    </button>
   </form>
 </div>
 
@@ -197,8 +233,16 @@
       <button id="btnInstalar">Instalar</button>
     </div>
 
-    <div id="avisoOffline" class="aviso" style="display:none">
-      Estás <b>cerrado</b>: no te van a llegar pedidos. Tocá el interruptor de arriba para abrir.
+    <div id="cartelFalta" class="aviso" style="display:none"></div>
+
+    <div id="cartelCerrado" style="display:none">
+      <div class="ico">🔴</div>
+      <b>Estás cerrado</b>
+      <p>No te va a llegar ningún pedido hasta que abras.</p>
+      <button id="btnAbrirGrande">ABRIR Y RECIBIR PEDIDOS</button>
+    </div>
+    <div id="cartelAbierto" style="display:none">
+      <span class="pulso"></span> Abierto · recibiendo pedidos
     </div>
 
     <!-- ── PEDIDOS ── -->
@@ -344,6 +388,38 @@ $('fLogin').addEventListener('submit', async function(e){
   } finally { b.disabled = false; }
 });
 
+// ── registrarse solo ────────────────────────────────────────────
+$('btnIrAlta').addEventListener('click', function(){
+  $('fLogin').style.display = 'none'; $('fAlta').style.display = 'block';
+});
+$('btnVolverLogin').addEventListener('click', function(){
+  $('fAlta').style.display = 'none'; $('fLogin').style.display = 'block';
+});
+
+$('fAlta').addEventListener('submit', async function(e){
+  e.preventDefault();
+  var b = $('btnAlta'); b.disabled = true; b.textContent = 'Creando...'; $('errAlta').textContent = '';
+  try {
+    var r = await fetch('/api/despacho/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rol:'kiosco_alta',
+        nombre: $('aNombre').value, direccion: $('aDir').value,
+        telefono: $('aTel').value, usuario: $('aUsuario').value, pin: $('aPin').value })
+    });
+    var d = await r.json().catch(function(){ return {}; });
+    if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
+    TOKEN = d.token; PUNTO = d.punto;
+    sessionStorage.setItem('k24_kiosco_token', TOKEN);
+    $('fAlta').style.display = 'none'; $('fLogin').style.display = 'block';
+    entrar();
+    alert('¡Listo, ya tenés tu kiosco!\n\n'
+        + 'Para empezar a recibir pedidos te falta cargar al menos 10 productos '
+        + 'con precio en "Mis productos", y prender el interruptor.');
+  } catch (err) {
+    $('errAlta').textContent = err.message;
+  } finally { b.disabled = false; b.textContent = 'Crear mi kiosco'; }
+});
+
 function salir(){
   TOKEN = null; PUNTO = null;
   sessionStorage.removeItem('k24_kiosco_token');
@@ -382,8 +458,19 @@ $('swOnline').addEventListener('click', async function(){
 function pintarOnline(on){
   $('swOnline').classList.toggle('on', !!on);
   $('txOnline').textContent = on ? 'Abierto' : 'Cerrado';
-  $('avisoOffline').style.display = on ? 'none' : 'block';
+  // Cerrado es el estado que le cuesta plata y el que nadie nota: por eso
+  // ocupa media pantalla con un boton grande, y no un aviso al costado.
+  $('cartelCerrado').style.display = on ? 'none' : 'block';
+  $('cartelAbierto').style.display = on ? 'flex' : 'none';
 }
+
+$('btnAbrirGrande').addEventListener('click', async function(){
+  try {
+    var d = await api({ method:'POST', body:{ accion:'latido', online:true } });
+    pintarOnline(d.online);
+    refrescar();
+  } catch (e) { alert(e.message); }
+});
 
 // ── el bip ────────────────────────────────────────────────────────
 function bip(){
@@ -415,6 +502,7 @@ async function refrescar(){
     if (nueva) { sonoAviso = false; }
     if (ofertaActual && !sonoAviso) { bip(); sonoAviso = true; }
 
+    pintarFalta(d.falta);
     pintarOferta();
     pintarPreparando(d.preparando || []);
   } catch (err) {
@@ -422,6 +510,16 @@ async function refrescar(){
       // Sin conexion no se avisa fuerte: vuelve solo en 4 segundos.
     }
   }
+}
+
+// Mientras no este listo, lo unico que importa es decirle QUE le falta.
+// Un kiosco que no entiende por que no le llegan pedidos se va.
+function pintarFalta(f){
+  var c = $('cartelFalta');
+  if (!f || f.listo || !f.faltan || !f.faltan.length) { c.style.display = 'none'; return; }
+  c.style.display = 'block';
+  c.innerHTML = '<b>Todavía no te llegan pedidos.</b> Te falta:<ul style="margin:8px 0 0;padding-left:20px">'
+    + f.faltan.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
 }
 
 function pintarOferta(){
