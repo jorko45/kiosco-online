@@ -181,6 +181,19 @@
 
   .items .cambiar{background:#1f2937;border:1px solid #3b4a5f;color:#93c5fd;
     padding:6px 10px;border-radius:8px;font-size:12px;margin-left:6px;cursor:pointer}
+
+  .gps{width:100%;padding:12px;margin-bottom:8px;border-radius:10px;
+    background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.4);
+    color:#a9d1ff;font-size:14px;cursor:pointer}
+  .gps.listo{background:rgba(63,185,80,.14);border-color:rgba(63,185,80,.45);color:#7ee787}
+  .gpsEstado{font-size:11.5px;color:#8b949e;margin:-4px 0 10px;line-height:1.5}
+
+  #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);
+    z-index:120;max-width:88vw;padding:13px 18px;border-radius:12px;
+    background:#161b22;border:1px solid #30363d;color:#e6edf3;font-size:14px;
+    line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.55);
+    opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+  #toast.ver{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body>
@@ -203,7 +216,9 @@
     <h1>Sumá tu kiosco</h1>
     <p>Empezás a recibir pedidos hoy mismo. No hace falta que nadie te habilite.</p>
     <input id="aNombre" placeholder="Nombre del kiosco" required>
-    <input id="aDir" placeholder="Dirección con calle, número y ciudad" required>
+    <input id="aDir" placeholder="Dirección: calle y número" required>
+    <button type="button" id="btnGps" class="gps">📍 Usar mi ubicación actual</button>
+    <div class="gpsEstado" id="gpsEstado">Si estás en el kiosco, esto es lo más exacto.</div>
     <input id="aTel" placeholder="WhatsApp (opcional)" inputmode="tel">
     <input id="aUsuario" placeholder="Usuario para entrar" autocapitalize="none" required>
     <input id="aPin" type="password" inputmode="numeric" placeholder="PIN (4 dígitos o más)" required>
@@ -298,6 +313,7 @@
 
     <!-- ── MI CUENTA ── -->
     <div class="hoja" id="hPlata">
+      <div id="zonaUbicar"></div>
       <div class="plata-grid" id="kpis"></div>
       <div class="aviso" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:#a9bdd2">
         Es lo que <b>generaste</b>, no lo que ya cobraste. La liquidación se acuerda aparte.
@@ -392,6 +408,93 @@ $('fLogin').addEventListener('submit', async function(e){
 });
 
 // ── registrarse solo ────────────────────────────────────────────
+// ── ubicación ────────────────────────────────────────────────────
+// La dirección escrita a mano falla seguido: en Córdoba se dice "Colón
+// 1200 esq. Fragueiro" o "Sabattini casi Richieri" y ningún
+// geocodificador entiende eso. Estando parado en el kiosco, el celular
+// da la coordenada exacta y no hace falta adivinar nada.
+var _gps = null;
+
+// Se usa desde varios lados y no existia: las llamadas a toast() tiraban
+// ReferenceError. Un cartel que se va solo molesta menos que un alert()
+// que hay que cerrar a mano detras del mostrador.
+var _tToast = null;
+function toast(txt, ms){
+  var t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = txt;
+  t.classList.add('ver');
+  clearTimeout(_tToast);
+  _tToast = setTimeout(function(){ t.classList.remove('ver'); }, ms || 3500);
+}
+
+function _pedirUbicacion(alGuardar){
+  var b = $('btnGps'), e = $('gpsEstado');
+  if (!navigator.geolocation) {
+    e.textContent = 'Este teléfono no comparte ubicación. Podés seguir sin esto.';
+    return;
+  }
+  b.disabled = true; b.textContent = 'Buscando…';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    _gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    b.disabled = false; b.classList.add('listo');
+    b.textContent = '✓ Ubicación tomada';
+    e.textContent = 'Listo. Precisión de unos ' + Math.round(pos.coords.accuracy) + ' metros.';
+    if (alGuardar) alGuardar(_gps);
+  }, function(err){
+    b.disabled = false; b.textContent = '📍 Usar mi ubicación actual';
+    // No es un error que frene nada: se puede registrar igual.
+    e.textContent = err.code === 1
+      ? 'No nos diste permiso. Podés registrarte igual y ubicarte después.'
+      : 'No pudimos tomar la ubicación. Podés registrarte igual.';
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+}
+
+$('btnGps').addEventListener('click', function(){ _pedirUbicacion(null); });
+
+function pintarUbicar(){
+  var z = $('zonaUbicar');
+  if (!z) return;
+  if (PUNTO && PUNTO.lat && PUNTO.lng) { z.innerHTML = ''; return; }
+
+  z.innerHTML =
+      '<div class="aviso" style="background:rgba(255,176,32,.12);border-color:rgba(255,176,32,.4);color:#ffd79a">'
+    + '<b>No sabemos dónde queda tu kiosco</b><br>'
+    + 'Sin eso no te llegan pedidos: no podemos saber qué clientes te quedan cerca. '
+    + 'Tocá el botón parado adentro del local.'
+    + '<button class="btn" id="btnUbicarAhora" style="margin-top:10px;width:100%">📍 Ubicar mi kiosco</button>'
+    + '<div class="gpsEstado" id="ubicarEstado"></div>'
+    + '</div>';
+
+  $('btnUbicarAhora').addEventListener('click', function(){
+    var b = this, e = $('ubicarEstado');
+    if (!navigator.geolocation) { e.textContent = 'Este teléfono no comparte ubicación.'; return; }
+    b.disabled = true; b.textContent = 'Buscando…';
+    navigator.geolocation.getCurrentPosition(async function(pos){
+      try {
+        var d = await api({ method:'POST', body:{ accion:'ubicar',
+          lat: pos.coords.latitude, lng: pos.coords.longitude }});
+        if (!d.ok) throw new Error(d.mensaje || d.error || 'No se pudo');
+        PUNTO.lat = pos.coords.latitude; PUNTO.lng = pos.coords.longitude;
+        toast('✓ Listo, ya sabemos dónde estás');
+        pintarUbicar();
+      } catch (err) {
+        b.disabled = false; b.textContent = '📍 Ubicar mi kiosco';
+        e.textContent = err.message;
+      }
+    }, function(err){
+      b.disabled = false; b.textContent = '📍 Ubicar mi kiosco';
+      e.textContent = err.code === 1
+        ? 'Necesitamos permiso de ubicación. Está en los ajustes del navegador.'
+        : 'No pudimos tomar la ubicación. Probá de nuevo cerca de una ventana.';
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+  });
+}
+
 $('btnIrAlta').addEventListener('click', function(){
   $('fLogin').style.display = 'none'; $('fAlta').style.display = 'block';
 });
@@ -407,7 +510,8 @@ $('fAlta').addEventListener('submit', async function(e){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ rol:'kiosco_alta',
         nombre: $('aNombre').value, direccion: $('aDir').value,
-        telefono: $('aTel').value, usuario: $('aUsuario').value, pin: $('aPin').value })
+        telefono: $('aTel').value, usuario: $('aUsuario').value, pin: $('aPin').value,
+        lat: _gps && _gps.lat, lng: _gps && _gps.lng })
     });
     var d = await r.json().catch(function(){ return {}; });
     if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
@@ -416,6 +520,11 @@ $('fAlta').addEventListener('submit', async function(e){
     $('fAlta').style.display = 'none'; $('fLogin').style.display = 'block';
     entrar();
     alert('¡Listo, ya tenés tu kiosco!\n\n'
+        + (d.sin_ubicar
+            ? 'No pudimos ubicar tu dirección en el mapa. Entrá a "Mi cuenta" y '
+              + 'tocá "Ubicar mi kiosco" parado adentro del local: sin eso no te '
+              + 'llegan pedidos, porque no sabemos a qué clientes te quedan cerca.\n\n'
+            : '')
         + 'Para empezar a recibir pedidos te falta cargar al menos 10 productos '
         + 'con precio en "Mis productos", y prender el interruptor.');
   } catch (err) {
@@ -646,7 +755,7 @@ document.querySelectorAll('.tabs button').forEach(function(b){
     b.classList.add('on');
     $(b.dataset.hoja).classList.add('on');
     if (b.dataset.hoja === 'hProductos') cargarProductos();
-    if (b.dataset.hoja === 'hPlata')     cargarCuenta();
+    if (b.dataset.hoja === 'hPlata')     { cargarCuenta(); pintarUbicar(); }
   });
 });
 

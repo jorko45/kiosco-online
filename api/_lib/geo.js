@@ -33,6 +33,89 @@ function dentroDeCordoba(lat, lng) {
 }
 
 /**
+ * Las direcciones se escriben como se hablan: "Colón 1200 esq. Fragueiro",
+ * "Rondeau 165 local 3", "Av. Sabattini casi Richieri". Nominatim entiende
+ * calle y numero; el resto le sobra y le hace fallar la busqueda entera.
+ *
+ * Se prueba de mas especifico a mas general. Alcanza con llegar a la
+ * cuadra: el reparto lo termina una persona que sabe leer un numero.
+ */
+function variantes(dir) {
+  const base = /c[oó]rdoba/i.test(dir) ? dir : `${dir}, Córdoba, Argentina`;
+  const salida = [base];
+
+  // Sacar lo que no es calle ni numero
+  let limpia = dir
+    .replace(/\b(esq\.?|esquina|casi|entre|y)\s+.*/i, '')
+    .replace(/\b(local|depto|dpto|piso|of\.?|oficina|casa|lote|mz|manzana)\s*\S*/gi, '')
+    .replace(/\bb[°ºo]\.?\s*/gi, '')
+    .replace(/[,;]+\s*$/, '')
+    .trim();
+  if (limpia.length >= 5 && limpia.toLowerCase() !== dir.toLowerCase()) {
+    salida.push(`${limpia}, Córdoba, Argentina`);
+  }
+
+  // Solo calle y numero, que es lo que Nominatim resuelve mejor
+  const m = /([a-zá-úñ'.\s]+?)\s*(\d{1,5})\b/i.exec(limpia || dir);
+  if (m) {
+    const corta = `${m[1].trim()} ${m[2]}, Córdoba, Argentina`;
+    if (!salida.some((s) => s.toLowerCase() === corta.toLowerCase())) salida.push(corta);
+  }
+  return salida;
+}
+
+/**
+ * Una consulta a Nominatim. Devuelve {lat,lng} o null.
+ *
+ * El primer intento acota la busqueda a Cordoba (bounded=1). Si no
+ * encuentra nada, se repite sin acotar y se verifica el resultado a mano:
+ * bounded=1 descarta direcciones legitimas que caen justo en el borde de
+ * la caja, y esas son barrios enteros de las afueras.
+ */
+async function preguntar(consulta) {
+  for (const acotado of [true, false]) {
+    try {
+      const url =
+        `${NOMINATIM}?format=jsonv2&limit=5&countrycodes=ar` +
+        (acotado ? `&viewbox=${encodeURIComponent(VIEWBOX)}&bounded=1` : '') +
+        `&q=${encodeURIComponent(consulta)}`;
+
+      const ctrl = new AbortController();
+      const corte = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(url, {
+        headers: { 'User-Agent': UA, 'Accept-Language': 'es' },
+        signal: ctrl.signal,
+      });
+      clearTimeout(corte);
+      if (!r.ok) {
+        // 403 o 429 = Nominatim nos esta frenando. Insistir empeora las
+        // cosas, asi que se corta y se deja que el alta siga sin mapa.
+        if (r.status === 403 || r.status === 429) {
+          console.warn('[geo] nominatim nos frenó:', r.status);
+          return null;
+        }
+        continue;
+      }
+
+      const datos = await r.json();
+      if (!Array.isArray(datos)) continue;
+      for (const d of datos) {
+        const la = Number(d.lat), ln = Number(d.lon);
+        // Se verifica siempre, acotado o no: un resultado fuera de Cordoba
+        // es peor que ninguno, porque mandaria el pedido al nodo
+        // equivocado sin que nadie lo note.
+        if (Number.isFinite(la) && Number.isFinite(ln) && dentroDeCordoba(la, ln)) {
+          return { lat: la, lng: ln };
+        }
+      }
+    } catch (e) {
+      console.warn('[geo] nominatim falló:', e.message);
+    }
+  }
+  return null;
+}
+
+/**
  * Devuelve { lat, lng, origen } o null.
  * origen: 'cache' | 'nominatim' | null
  *
@@ -56,38 +139,11 @@ export async function geocodificar(direccion) {
     console.warn('[geo] cache no disponible:', e.message);
   }
 
-  // 2) Nominatim
+  // 2) Nominatim, con varios intentos
   let lat = null, lng = null;
-  try {
-    const consulta = /c[oó]rdoba/i.test(dir) ? dir : `${dir}, Córdoba, Argentina`;
-    const url =
-      `${NOMINATIM}?format=jsonv2&limit=1&countrycodes=ar` +
-      `&viewbox=${encodeURIComponent(VIEWBOX)}&bounded=1` +
-      `&q=${encodeURIComponent(consulta)}`;
-
-    const ctrl = new AbortController();
-    const corte = setTimeout(() => ctrl.abort(), 4000);   // no colgar el checkout
-    const r = await fetch(url, {
-      headers: { 'User-Agent': UA, 'Accept-Language': 'es' },
-      signal: ctrl.signal,
-    });
-    clearTimeout(corte);
-
-    if (r.ok) {
-      const datos = await r.json();
-      if (Array.isArray(datos) && datos[0]) {
-        const la = Number(datos[0].lat);
-        const ln = Number(datos[0].lon);
-        // Aunque acotamos la busqueda, verificamos: un resultado fuera de
-        // Cordoba es peor que ninguno, porque enviaria el pedido al nodo
-        // equivocado sin que nadie lo note.
-        if (Number.isFinite(la) && Number.isFinite(ln) && dentroDeCordoba(la, ln)) {
-          lat = la; lng = ln;
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('[geo] nominatim falló:', e.message);
+  for (const consulta of variantes(dir)) {
+    const r = await preguntar(consulta);
+    if (r) { lat = r.lat; lng = r.lng; break; }
   }
 
   // 3) Guardar el resultado, incluso si no se encontro: asi no volvemos a

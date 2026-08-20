@@ -118,7 +118,11 @@ export default async function handler(req, res) {
         ok: true,
         token: crearToken({ rol: 'kiosco', punto_id: k.id, nombre: k.nombre }, 16),
         rol: 'kiosco',
-        punto: { id: k.id, nombre: k.nombre, tipo: k.tipo, online: k.online },
+        // lat/lng van para que la pantalla sepa si el kiosco esta ubicado.
+        // Sin esto le mostraria el aviso de "ubicá tu kiosco" a todos.
+        punto: { id: k.id, nombre: k.nombre, tipo: k.tipo, online: k.online,
+                 lat: k.lat, lng: k.lng },
+        sin_ubicar: k.lat === null || k.lat === undefined,
       });
     }
 
@@ -139,17 +143,26 @@ export default async function handler(req, res) {
 
       const direccion = String(b.direccion || '').trim();
       let lat = Number(b.lat), lng = Number(b.lng);
+
+      // Si el navegador ya mandó la ubicación, se usa esa y no se
+      // molesta a nadie: el kiosquero está parado adentro del kiosco, no
+      // hay dato más exacto que ese.
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        const { geocodificar } = await import('../_lib/geo.js');
-        const g = await geocodificar(direccion);
-        if (!g) {
-          return json(res, 400, {
-            ok: false,
-            error: 'No pudimos ubicar esa dirección. Revisá que tenga calle, número y ciudad.',
-          });
+        lat = null; lng = null;
+        try {
+          const { geocodificar } = await import('../_lib/geo.js');
+          const g = await geocodificar(direccion);
+          if (g) { lat = g.lat; lng = g.lng; }
+        } catch (e) {
+          console.warn('[despacho] geocodificar falló:', e.message);
         }
-        lat = g.lat; lng = g.lng;
       }
+
+      // Y si no se pudo ubicar, se registra IGUAL. Antes esto cortaba el
+      // alta, que era redundante y dejaba gente afuera: punto_listo ya
+      // exige coordenadas para recibir pedidos, así que un kiosco sin
+      // ubicar no recibe nada hasta resolverlo. Puede entrar, cargar sus
+      // precios, y ubicarse desde el celular cuando quiera.
 
       const r = await rpc('registrar_kiosco', {
         p_nombre: String(b.nombre || ''),
@@ -171,7 +184,13 @@ export default async function handler(req, res) {
         ok: true,
         token: crearToken({ rol: 'kiosco', punto_id: e.punto_id, nombre: b.nombre }, 16),
         rol: 'kiosco',
-        punto: { id: e.punto_id, nombre: String(b.nombre || ''), tipo: 'kiosco_adherido', online: false },
+        punto: {
+          id: e.punto_id, nombre: String(b.nombre || ''),
+          tipo: 'kiosco_adherido', online: false,
+          lat, lng,
+        },
+        sin_ubicar: lat === null,
+        mensaje: e.motivo,
       });
     }
 

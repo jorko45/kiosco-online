@@ -28,7 +28,7 @@ const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
 const DE_KIOSCO = new Set([
-  'reemplazo',
+  'reemplazo', 'ubicar',
   'latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio',
   'sugerir', 'disponible', 'lote', 'ean',
 ]);
@@ -535,6 +535,21 @@ async function manejarKiosco(req, res, ses) {
   }
 
   // ── Se me acabó / ya tengo ─────────────────────────────────────
+  // ── Ubicar el kiosco en el mapa ───────────────────────────────
+  // Se manda desde el celular, parado adentro del kiosco. Es el unico
+  // camino que no depende de que un geocodificador entienda como se
+  // escriben las direcciones en Cordoba.
+  if (b.accion === 'ubicar') {
+    const r = await rpc('ubicar_punto', {
+      p_punto_id: ses.punto_id,
+      p_lat: Number(b.lat),
+      p_lng: Number(b.lng),
+      p_direccion: b.direccion ? String(b.direccion) : null,
+    });
+    const e = (Array.isArray(r) ? r[0] : r) || {};
+    return json(res, e.ok ? 200 : 400, { ok: !!e.ok, mensaje: e.motivo });
+  }
+
   // ── El kiosco ofrece un reemplazo ─────────────────────────────
   // Lo unico que manda es que producto ofrece. El precio del original y
   // el margen los saca la base del pedido: si el original viniera de
