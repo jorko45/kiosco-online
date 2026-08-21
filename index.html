@@ -1522,17 +1522,17 @@
       </div>
     </div>
 
-    <!-- Red de comercios -->
+    <!-- Kioscos adheridos -->
     <div class="red-box">
-      <div class="red-titulo">🤝 SUMATE A NUESTRA RED DE COMERCIOS</div>
-      <div class="red-bajada">Comprando juntos conseguimos mejores precios. Sumá tu kiosco, almacén o despensa a la red k24hs y accedé a <b>ofertas constantes</b> y precios de compra que solo se consiguen comprando en volumen.</div>
+      <div class="red-titulo">🏪 SÉ PARTE DE NUESTROS KIOSCOS ADHERIDOS · GRATIS</div>
+      <div class="red-bajada">Nosotros te llevamos los clientes. Cuando alguien de tu zona hace un pedido, te llega a vos: lo armás con lo que ya tenés en la góndola y un repartidor lo pasa a buscar. <b>Vender más sin gastar un peso de más.</b></div>
       <div class="red-benes">
-        <div class="red-bene"><span>📉</span><div><b>Mejores precios</b><br>Compra conjunta: más volumen, menos costo.</div></div>
-        <div class="red-bene"><span>🔁</span><div><b>Ofertas constantes</b><br>Promos rotativas todas las semanas.</div></div>
-        <div class="red-bene"><span>🚚</span><div><b>Entrega en tu comercio</b><br>Sin que muevas el auto ni cierres el local.</div></div>
-        <div class="red-bene"><span>🤝</span><div><b>Sin costo de ingreso</b><br>Sumarse no te cuesta nada.</div></div>
+        <div class="red-bene"><span>💰</span><div><b>Cobrás por cada pedido</b><br>El 85% de lo que se vende queda para vos.</div></div>
+        <div class="red-bene"><span>🛵</span><div><b>El reparto lo ponemos nosotros</b><br>Vos no salís del mostrador.</div></div>
+        <div class="red-bene"><span>🔌</span><div><b>Prendés y apagás cuando querés</b><br>Si estás con mucha gente, lo cortás y listo.</div></div>
+        <div class="red-bene"><span>🆓</span><div><b>Entrar es gratis</b><br>Sin cuota, sin exclusividad, sin permanencia.</div></div>
       </div>
-      <button class="btn-red" onclick="abrirRedComercios()">Quiero sumar mi comercio</button>
+      <button class="btn-red" onclick="abrirAltaKiosco()">Quiero sumar mi kiosco</button>
     </div>
 
     <!-- Fuera de cobertura -->
@@ -7355,8 +7355,28 @@ function enviarZonaPedida() {
   _cerrarOverlays();
   showToast('✅ ¡Anotado! Te avisamos apenas lleguemos a ' + loc + '.');
 }
-// ── Red de comercios: alta de interesados ────────────────────────────────
-function abrirRedComercios(){
+// ── Kioscos adheridos: se registran ellos, no dejan un dato ─────────────
+//
+// Antes esto abria un formulario para que dejaran el telefono y despues
+// alguien los llamara. Eso perdia a la mayoria: entre que completan y que
+// los llaman se enfrian. Ahora van derecho a crear su cuenta.
+//
+// El ?alta=1 es para que kiosco.html abra el formulario de registro solo:
+// si aterrizan en la pantalla de login, el que no tiene cuenta se va.
+function abrirAltaKiosco(){
+  try { _cerrarOverlays(); } catch (e) {}
+  window.location.href = '/kiosco.html?alta=1';
+}
+
+// Se mantiene el nombre viejo porque hay anuncios y enlaces dando vueltas
+// que apuntan a ?s=comercios. Romperlos seria tirar el trafico que ya
+// pagamos.
+function abrirRedComercios(){ abrirAltaKiosco(); }
+
+// ── Formulario viejo de la red mayorista ───────────────────────────────
+// Ya no lo abre nadie desde la pantalla. Se deja porque /api/cuenta sigue
+// aceptando la accion 'comercio' y puede haber datos viejos que mirar.
+function _abrirRedComerciosViejo(){
   _cerrarOverlays();
   var inp='width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);'
         + 'color:#fff;font-family:Rajdhani,sans-serif;font-size:14px;padding:10px 11px;border-radius:9px;margin-bottom:9px';
@@ -7609,8 +7629,8 @@ function _botResponder(t) {
     _botChips(['💬 Hablar con una persona']); return;
   }
   // Comercios / mayorista / red
-  if (_botTiene(t, ['comercio','mayorista','revend','kiosco propio','sumar mi','red de comercio','al por mayor'])) {
-    _botDecir('🤝 ¡Buenísimo! Tenemos la <b>Red de comercios</b>: comprando en volumen accedés a mejores precios y ofertas constantes. En el inicio está el botón <b>“Quiero sumar mi comercio”</b> para dejarnos tus datos.');
+  if (_botTiene(t, ['comercio','mayorista','revend','kiosco propio','sumar mi','red de comercio','al por mayor','adherido','adherir','sumar mi kiosco'])) {
+    _botDecir('🏪 ¡Buenísimo! Podés sumar tu kiosco <b>gratis</b>: cuando alguien de tu zona hace un pedido te llega a vos, lo armás con lo que tenés, y el reparto lo ponemos nosotros. Te queda el <b>85%</b> de cada pedido. Sin cuota ni exclusividad. En el inicio está el botón <b>“Quiero sumar mi kiosco”</b>, o entrá directo a <b>k24hs.com/kiosco.html</b>.');
     _botChips(['💬 Hablar con una persona']); return;
   }
   // Fuera de cobertura / ¿llegan a mi zona?

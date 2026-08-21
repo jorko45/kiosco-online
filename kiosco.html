@@ -495,9 +495,21 @@ function pintarUbicar(){
   });
 }
 
-$('btnIrAlta').addEventListener('click', function(){
-  $('fLogin').style.display = 'none'; $('fAlta').style.display = 'block';
-});
+function irAlAlta(){
+  $('fLogin').style.display = 'none';
+  $('fAlta').style.display = 'block';
+}
+$('btnIrAlta').addEventListener('click', irAlAlta);
+
+// Si viene del botón del sitio (?alta=1) se le abre el registro directo.
+// Aterrizar en un login cuando lo que querés es crear una cuenta es la
+// forma más rápida de perder a alguien que ya venía decidido.
+try {
+  if (new URLSearchParams(location.search).get('alta') === '1'
+      && !sessionStorage.getItem('k24_kiosco_token')) {
+    irAlAlta();
+  }
+} catch (e) {}
 $('btnVolverLogin').addEventListener('click', function(){
   $('fAlta').style.display = 'none'; $('fLogin').style.display = 'block';
 });
