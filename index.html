@@ -7373,51 +7373,8 @@ function abrirAltaKiosco(){
 // pagamos.
 function abrirRedComercios(){ abrirAltaKiosco(); }
 
-// ── Formulario viejo de la red mayorista ───────────────────────────────
-// Ya no lo abre nadie desde la pantalla. Se deja porque /api/cuenta sigue
-// aceptando la accion 'comercio' y puede haber datos viejos que mirar.
-function _abrirRedComerciosViejo(){
-  _cerrarOverlays();
-  var inp='width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);'
-        + 'color:#fff;font-family:Rajdhani,sans-serif;font-size:14px;padding:10px 11px;border-radius:9px;margin-bottom:9px';
-  var lbl='font-family:Rajdhani,sans-serif;font-size:12px;color:#9fb4c8;margin-bottom:3px';
-  var body =
-      '<div style="font-size:13.5px;color:#cfe0ee;line-height:1.5;margin-bottom:14px">'
-    + 'Dejanos los datos de tu comercio y te contactamos para explicarte cómo funciona la red y qué precios podés conseguir.</div>'
-    + '<div style="'+lbl+'">Nombre del comercio *</div><input id="rcNombre" style="'+inp+'" placeholder="Ej: Kiosco La Esquina">'
-    + '<div style="'+lbl+'">Rubro</div><select id="rcRubro" style="'+inp+'">'
-    + '<option>Kiosco</option><option>Almacén / Despensa</option><option>Autoservicio</option>'
-    + '<option>Fiambrería</option><option>Bar / Restó</option><option>Otro</option></select>'
-    + '<div style="'+lbl+'">Zona o barrio *</div><input id="rcZona" style="'+inp+'" placeholder="Ej: Nueva Córdoba">'
-    + '<div style="'+lbl+'">WhatsApp *</div><input id="rcTel" style="'+inp+'" placeholder="Ej: 351 555 5555" inputmode="tel">'
-    + '<div style="'+lbl+'">Tu nombre</div><input id="rcContacto" style="'+inp+'" placeholder="Con quién hablamos">'
-    + '<div style="'+lbl+'">¿Qué comprás más? (opcional)</div><textarea id="rcMsg" rows="2" style="'+inp+'" placeholder="Ej: gaseosas, cigarrillos, golosinas"></textarea>'
-    + '<button onclick="enviarRedComercios()" style="width:100%;background:#0a7d3c;border:none;color:#fff;'
-    + 'font-family:Orbitron,sans-serif;font-weight:900;font-size:13px;padding:13px;border-radius:10px;cursor:pointer;margin-top:5px">'
-    + 'Enviar mis datos</button>';
-  _overlay('🤝 Sumate a la red de comercios', body);
-}
-function enviarRedComercios(){
-  function v(id){ var e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; }
-  var comercio=v('rcNombre'), zona=v('rcZona'), tel=v('rcTel');
-  if (!comercio || !zona || !tel) { showToast('⚠️ Completá comercio, zona y WhatsApp'); return; }
-  var datos = { action:'comercio', comercio:comercio, rubro:v('rcRubro'), zona:zona,
-                telefono:tel, contacto:v('rcContacto'), mensaje:v('rcMsg') };
-  try {
-    fetch('/api/cuenta', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(datos) }).catch(function(){});
-  } catch(e) {}
-  var msg = '🤝 *Quiero sumarme a la red de comercios k24hs*\n\n'
-          + '🏪 Comercio: ' + comercio + '\n'
-          + '🏷️ Rubro: ' + datos.rubro + '\n'
-          + '📍 Zona: ' + zona + '\n'
-          + '📱 WhatsApp: ' + tel
-          + (datos.contacto ? '\n👤 Contacto: ' + datos.contacto : '')
-          + (datos.mensaje ? '\n🛒 Compra habitual: ' + datos.mensaje : '');
-  _cerrarOverlays();
-  showToast('✅ ¡Gracias! Te contactamos a la brevedad.');
-  try { window.open('https://wa.me/5493513260094?text=' + encodeURIComponent(msg), '_blank'); } catch(e) {}
-}
+// El formulario mayorista se borró: la oferta a los kioscos ahora vive
+// dentro de su propio panel, donde ya están logueados.
 function abrirArrepentimiento(){
   _cerrarOverlays();
   var p = userProfile || {};
@@ -8281,13 +8238,11 @@ document.addEventListener('click', function(ev) {
     log('compra por', canal, '$' + v);
   });
 
-  // Lead B2B — un comercio pide sumarse a la red
-  envolver('enviarRedComercios', function () {
-    track('Lead', {
-      meta:   { content_name: 'red-de-comercios', content_category: 'b2b' },
-      google: { nombre: 'generate_lead', params: { lead_type: 'comercio' } }
-    });
-  });
+  // Lead B2B — el alta del kiosco ya no ocurre en esta pagina, asi que la
+  // conversion se dispara en kiosco.html cuando el registro SALE BIEN.
+  // Antes se disparaba al mandar un formulario; medir el clic en su lugar
+  // habria inflado el numero y hecho que Google optimice para clics en vez
+  // de para kioscos registrados, que es lo que de verdad vale.
 
   // Lead zona — alguien de fuera de cobertura deja su ciudad
   envolver('enviarZonaPedida', function () {

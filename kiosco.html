@@ -495,6 +495,31 @@ function pintarUbicar(){
   });
 }
 
+// ── Conversion de Google Ads: kiosco registrado ─────────────────────
+//
+// Se carga SOLO si vino de un anuncio o del sitio (?alta=1) y SOLO cuando
+// el registro sale bien. El panel que el kiosquero usa todos los días no
+// lleva ningún seguimiento: no hay motivo para medir a alguien que ya es
+// parte de la red mientras trabaja.
+var ADS_ID = 'AW-18368017284';
+
+function _avisarAlta(){
+  try {
+    if (new URLSearchParams(location.search).get('alta') !== '1') return;
+
+    var t = document.createElement('script');
+    t.async = true;
+    t.src = 'https://www.googletagmanager.com/gtag/js?id=' + ADS_ID;
+    document.head.appendChild(t);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ window.dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', ADS_ID);
+    gtag('event', 'generate_lead', { lead_type: 'kiosco_registrado' });
+  } catch (e) { /* que no se registre la conversion no puede romper el alta */ }
+}
+
 function irAlAlta(){
   $('fLogin').style.display = 'none';
   $('fAlta').style.display = 'block';
@@ -529,6 +554,7 @@ $('fAlta').addEventListener('submit', async function(e){
     if (!r.ok || d.ok === false) throw new Error(d.error || ('Error ' + r.status));
     TOKEN = d.token; PUNTO = d.punto;
     sessionStorage.setItem('k24_kiosco_token', TOKEN);
+    _avisarAlta();
     $('fAlta').style.display = 'none'; $('fLogin').style.display = 'block';
     entrar();
     alert('¡Listo, ya tenés tu kiosco!\n\n'
