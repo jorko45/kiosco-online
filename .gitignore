@@ -41,3 +41,11 @@ log_precios.txt
 
 # Secreto que autoriza a tocar la planilla de precios
 secreto_planilla.txt
+
+# jsdom y demas dependencias de prueba: no van al repo ni a Vercel.
+# package.json tambien queda afuera a proposito: el sitio nunca tuvo uno,
+# y agregarlo hace que Vercel corra npm install en cada deploy. Para
+# reproducir las pruebas alcanza con: npm install jsdom
+node_modules/
+package.json
+package-lock.json

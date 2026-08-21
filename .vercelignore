@@ -46,3 +46,4 @@ logos_pendientes*.txt
 *PASSWORD*.txt
 .env
 .env.*
+node_modules/

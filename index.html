@@ -8459,6 +8459,100 @@ document.addEventListener('click', function(ev) {
     };
   }
 
+  // ── Cerrar la compra ──────────────────────────────────────────────
+  //
+  // Antes esto no existia y era el agujero mas caro del sitio: el cliente
+  // mandaba el pedido por WhatsApp, volvia, y encontraba el carrito lleno
+  // igual que antes. No sabia si habia comprado. Los que dudan vuelven a
+  // apretar y piden dos veces; los que no, se van pensando que fallo.
+  //
+  // El pedido ya quedo registrado en despacho antes de llegar aca, y
+  // recordarCompra ya consumio los creditos y sumo la compra. Asi que el
+  // sitio YA lo trata como una compra hecha: lo unico que faltaba era
+  // decirselo al cliente y limpiar la mesa.
+
+  function _vaciarCarrito() {
+    try {
+      Object.keys(cart).forEach(function (k) { delete cart[k]; });
+      if (typeof saveCart === 'function') saveCart();
+      if (typeof renderCart === 'function') renderCart();
+      // Cerrar el carrito y la caja: si quedan abiertos, lo primero que
+      // ve al volver es un carrito vacio, que parece un error.
+      ['cartSidebar', 'cartOverlay', 'cajaPage'].forEach(function (id) {
+        var e = document.getElementById(id);
+        if (e) e.classList.remove('open');
+      });
+      window.k24PagaCon = null;
+    } catch (e) {}
+  }
+
+  function _gracias(codigo, link, canal) {
+    if (document.getElementById('k24Gracias')) return;   // no apilar dos
+
+    var d = document.createElement('div');
+    d.id = 'k24Gracias';
+    d.style.cssText =
+      'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.75);' +
+      'display:flex;align-items:center;justify-content:center;padding:22px;' +
+      'font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+
+    d.innerHTML =
+      '<div style="background:#fff;border-radius:20px;max-width:380px;width:100%;' +
+        'padding:30px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+        '<div style="font-size:52px;line-height:1;margin-bottom:12px">🎉</div>' +
+        '<h2 style="font-family:Rajdhani,sans-serif;font-size:25px;margin:0 0 8px;color:#111">' +
+          '¡Gracias por tu compra!</h2>' +
+        (codigo
+          ? '<p style="margin:0 0 4px;color:#666;font-size:14px;line-height:1.5">Tu pedido es el</p>' +
+            '<div style="font-family:Rajdhani,sans-serif;font-weight:800;font-size:27px;' +
+              'color:#CC0000;letter-spacing:1px;margin-bottom:14px">' + codigo + '</div>'
+          : '<p style="margin:0 0 14px;color:#666;font-size:14px;line-height:1.55">' +
+            'Ya lo estamos preparando.</p>') +
+        (canal === 'whatsapp'
+          ? '<p style="margin:0 0 16px;color:#666;font-size:13.5px;line-height:1.6">' +
+            'Si WhatsApp no te abrió el mensaje, volvé a intentarlo: ' +
+            'el pedido ya quedó registrado igual.</p>'
+          : '') +
+        (link
+          ? '<a href="' + link + '" style="display:block;background:#CC0000;color:#fff;' +
+              'text-decoration:none;padding:15px;border-radius:12px;font-family:Rajdhani,sans-serif;' +
+              'font-weight:700;font-size:16.5px;margin-bottom:9px">📍 Seguí tu pedido en vivo</a>' +
+            '<button id="k24CopiarLink" style="display:block;width:100%;background:#f2f2f2;' +
+              'border:none;padding:12px;border-radius:12px;font-size:13.5px;color:#555;' +
+              'cursor:pointer;margin-bottom:9px">Copiar el link del seguimiento</button>' +
+            '<p style="margin:0 0 14px;color:#888;font-size:12px;line-height:1.55">' +
+              'Guardalo: ahí vas a ver cuándo sale y por dónde viene.</p>'
+          : '<p style="margin:0 0 14px;color:#888;font-size:12.5px;line-height:1.55">' +
+            'Te vamos a escribir por WhatsApp para confirmarte.</p>') +
+        '<button id="k24SeguirComprando" style="display:block;width:100%;background:none;' +
+          'border:1.5px solid #ddd;padding:13px;border-radius:12px;font-size:14px;' +
+          'color:#666;cursor:pointer">Seguir comprando</button>' +
+      '</div>';
+
+    document.body.appendChild(d);
+
+    var cerrar = function () { try { d.remove(); } catch (e) {} };
+    document.getElementById('k24SeguirComprando').onclick = cerrar;
+    // Tocar el fondo tambien cierra, pero no el cartel: es facil que el
+    // dedo caiga al lado del boton y perder el link seria molesto.
+    d.addEventListener('click', function (ev) { if (ev.target === d) cerrar(); });
+
+    var cp = document.getElementById('k24CopiarLink');
+    if (cp) {
+      cp.onclick = function () {
+        try {
+          navigator.clipboard.writeText(link);
+          cp.textContent = '✓ Copiado';
+        } catch (e) {
+          // Sin permiso de portapapeles: al menos que lo pueda leer.
+          cp.textContent = link;
+          cp.style.fontSize = '11px';
+          cp.style.wordBreak = 'break-all';
+        }
+      };
+    }
+  }
+
   window.recordarCompra = function (canal) {
     // 1) Lo de siempre, primero y pase lo que pase.
     var pedido = null;
@@ -8466,7 +8560,20 @@ document.addEventListener('click', function(ev) {
 
     var resultado = original.apply(this, arguments);
 
-    // 2) Alta en despacho, sin bloquear ni romper nada.
+    // 2) Cerrar la compra. Se espera un momento a que despacho conteste
+    //    con el codigo y el link, porque el cartel es mucho mejor con
+    //    ellos. Pero si no contesta, se cierra igual: dejar el carrito
+    //    lleno porque nuestra API tardo es el peor de los dos mundos.
+    var _cerrado = false;
+    function cerrarCompra(codigo, link) {
+      if (_cerrado) return;
+      _cerrado = true;
+      _vaciarCarrito();
+      _gracias(codigo || null, link || null, canal);
+    }
+    setTimeout(function () { cerrarCompra(null, null); }, 3500);
+
+    // 3) Alta en despacho, sin bloquear ni romper nada.
     if (pedido) {
       try {
         fetch('/api/despacho/pedido', {
@@ -8481,12 +8588,18 @@ document.addEventListener('click', function(ev) {
           // se queda esperando un pedido que nunca va a salir. Peor que
           // decirselo.
           if (d && d.pago_online_requerido) {
+            // Acá NO hubo compra: el carrito se deja como está y no se
+            // agradece nada. Se marca cerrado para frenar el temporizador,
+            // que si no vaciaría el carrito de alguien que no compró.
+            _cerrado = true;
             var msj = d.error || 'Para esta dirección pedimos que el pedido esté pagado antes de salir.';
             if (typeof showToast === 'function') showToast('⚠ ' + msj, 9000);
             try { alert(msj + '\n\nElegí Mercado Pago y lo despachamos igual.'); } catch (e) {}
             return;
           }
-          if (!d || !d.ok || !d.pedido) return;   // sin_configurar u error: no molestamos
+          // Sin despacho configurado la compra existe igual (fue por
+          // WhatsApp): se agradece sin código ni link.
+          if (!d || !d.ok || !d.pedido) { cerrarCompra(null, null); return; }
           try {
             // Guardar el link para que el cliente pueda volver a entrar
             var guardados = JSON.parse(localStorage.getItem('k24_seguimientos') || '[]');
@@ -8498,14 +8611,12 @@ document.addEventListener('click', function(ev) {
             localStorage.setItem('k24_seguimientos', JSON.stringify(guardados.slice(0, 20)));
           } catch (e) {}
 
-          if (typeof showToast === 'function') {
-            showToast('📦 Pedido ' + d.pedido.codigo + ' registrado');
-          }
-          // En WhatsApp el usuario se va del sitio, asi que el link se le
-          // muestra al volver. En MercadoPago redirige enseguida: por eso
-          // solo guardamos y no abrimos nada.
+          // El cartel queda montado en la pagina. En WhatsApp el usuario
+          // se va y al volver se lo encuentra ahi, que es justo cuando lo
+          // necesita. Un toast se habria perdido mientras no miraba.
+          cerrarCompra(d.pedido.codigo, d.pedido.seguimiento);
         })
-        .catch(function () { /* silencio: la compra ya esta hecha */ });
+        .catch(function () { cerrarCompra(null, null); });
       } catch (e) {}
     }
 
