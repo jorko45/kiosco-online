@@ -28,7 +28,7 @@ const TIPOS = ['mami', 'kiosco_adherido', 'propio'];
 
 // Acciones que puede pedir un kiosco. Todo lo demas exige sesion de panel.
 const DE_KIOSCO = new Set([
-  'reemplazo', 'ubicar',
+  'reemplazo', 'ubicar', 'pedir_mercaderia',
   'latido', 'responder', 'faltante', 'mi_precio', 'borrar_precio',
   'sugerir', 'disponible', 'lote', 'ean',
 ]);
@@ -435,6 +435,22 @@ async function manejarKiosco(req, res, ses) {
       return json(res, 200, { ok: true, productos: mios, precios: mios });
     }
 
+    // Lo que le conviene comprarnos. Solo devuelve donde le ahorramos:
+    // ofertas_para ya filtra el resto en la base.
+    if (req.query.ofertas) {
+      const [lista, res2] = await Promise.all([
+        rpc('ofertas_para', { p_punto_id: puntoId }),
+        rpc('ahorro_posible', { p_punto_id: puntoId }),
+      ]);
+      const r = (Array.isArray(res2) ? res2[0] : res2) || {};
+      return json(res, 200, {
+        ok: true,
+        ofertas: Array.isArray(lista) ? lista : [],
+        items: r.items || 0,
+        ahorro_total: r.ahorro_total || 0,
+      });
+    }
+
     // Mi cuenta: historial y plata.
     if (req.query.resumen) {
       const [g, pedidos] = await Promise.all([
@@ -535,6 +551,20 @@ async function manejarKiosco(req, res, ses) {
   }
 
   // ── Se me acabó / ya tengo ─────────────────────────────────────
+  // ── Pedir mercaderia ──────────────────────────────────────────
+  // El total lo calcula la base leyendo ofertas_kiosco. Del navegador
+  // solo se acepta que oferta y cuantas: si el precio viniera de afuera,
+  // cualquiera podria pedir diez cajas a un peso.
+  if (b.accion === 'pedir_mercaderia') {
+    const r = await rpc('pedir_mercaderia', {
+      p_punto_id: ses.punto_id,
+      p_items: Array.isArray(b.items) ? b.items : [],
+      p_nota: b.nota ? String(b.nota) : null,
+    });
+    const e = (Array.isArray(r) ? r[0] : r) || {};
+    return json(res, e.ok ? 200 : 400, { ok: !!e.ok, mensaje: e.motivo, id: e.pedido_id });
+  }
+
   // ── Ubicar el kiosco en el mapa ───────────────────────────────
   // Se manda desde el celular, parado adentro del kiosco. Es el unico
   // camino que no depende de que un geocodificador entienda como se

@@ -194,6 +194,26 @@
     line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.55);
     opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
   #toast.ver{opacity:1;transform:translate(-50%,0)}
+
+  .of-cab{background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.4);
+    border-radius:14px;padding:16px;margin-bottom:14px;text-align:center}
+  .of-cab b{display:block;font-size:26px;color:#3fb950;font-family:Rajdhani,sans-serif;font-weight:800}
+  .of-cab span{font-size:12.5px;color:#8fc9a0;line-height:1.5}
+  .of{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;margin-bottom:10px}
+  .of h3{margin:0 0 8px;font-size:15px;color:#e6edf3}
+  .of-precios{display:flex;gap:14px;align-items:baseline;margin-bottom:4px}
+  .of-precios .suyo{font-size:13px;color:#8b949e;text-decoration:line-through}
+  .of-precios .nuestro{font-size:21px;color:#3fb950;font-weight:800;font-family:Rajdhani,sans-serif}
+  .of-ahorro{font-size:13px;color:#3fb950;margin-bottom:10px}
+  .of-min{font-size:11.5px;color:#8b949e;margin-bottom:10px}
+  .of-cant{display:flex;align-items:center;gap:10px}
+  .of-cant button{width:38px;height:38px;border-radius:9px;background:#21262d;
+    border:1px solid #30363d;color:#e6edf3;font-size:19px;cursor:pointer}
+  .of-cant span{min-width:34px;text-align:center;font-size:17px;font-weight:700}
+  .of-nada{background:#161b22;border:1px solid #30363d;border-radius:14px;
+    padding:22px;text-align:center;color:#8b949e;font-size:13.5px;line-height:1.65}
+  .of-nada b{display:block;color:#e6edf3;font-size:15px;margin-bottom:7px}
+  .of-legal{margin-top:16px;font-size:11.5px;color:#8b949e;line-height:1.6;text-align:center}
 </style>
 </head>
 <body>
@@ -241,6 +261,7 @@
   <div class="tabs">
     <button data-hoja="hPedidos" class="on">Pedidos<span class="punto" id="puntoNuevo" style="display:none"></span></button>
     <button data-hoja="hProductos">Mis productos</button>
+    <button data-hoja="hOfertas">Comprá mejor<span class="punto" id="puntoOferta" style="display:none"></span></button>
     <button data-hoja="hPlata">Mi cuenta</button>
   </div>
 
@@ -312,6 +333,10 @@
     </div>
 
     <!-- ── MI CUENTA ── -->
+    <div class="hoja" id="hOfertas">
+      <div id="zonaOfertas"></div>
+    </div>
+
     <div class="hoja" id="hPlata">
       <div id="zonaUbicar"></div>
       <div class="plata-grid" id="kpis"></div>
@@ -455,6 +480,109 @@ function _pedirUbicacion(alGuardar){
 }
 
 $('btnGps').addEventListener('click', function(){ _pedirUbicacion(null); });
+
+// ── Comprá mejor ──────────────────────────────────────────────────
+//
+// Solo aparece lo que le AHORRA plata: la base ya filtra el resto. Meterle
+// ofertas que no le convienen dentro de la herramienta que usa para
+// trabajar es la forma más rápida de que deje de abrirla.
+//
+// Y está acotado a cigarrillos, Coca, Fernet y Quilmes porque son las
+// únicas donde le ganamos a los distribuidores. En licores perdemos por
+// 13 a 20%: si se lo ofreciéramos, compara una vez y no vuelve.
+var _carritoOf = {};
+
+async function cargarOfertas(){
+  var z = $('zonaOfertas');
+  z.innerHTML = '<div class="of-nada">Buscando…</div>';
+  try {
+    var d = await api({ query:'?kiosco=1&ofertas=1' });
+    pintarOfertas(d.ofertas || [], d.ahorro_total || 0);
+  } catch (e) {
+    z.innerHTML = '<div class="of-nada">No pudimos cargar las ofertas. Probá de nuevo.</div>';
+  }
+}
+
+function pintarOfertas(l, ahorro){
+  var z = $('zonaOfertas');
+
+  if (!l.length) {
+    // Dos motivos distintos y conviene no confundirlos: o no cargó su
+    // lista, o ya compra bien. El segundo es una buena noticia.
+    z.innerHTML =
+      '<div class="of-nada"><b>Por ahora no tenemos nada que te convenga</b>'
+      + 'Solo te mostramos productos donde te ahorrás plata de verdad. '
+      + 'Si todavía no cargaste tus precios en "Mis productos", hacelo: '
+      + 'sin eso no podemos comparar.</div>';
+    $('puntoOferta').style.display = 'none';
+    return;
+  }
+
+  $('puntoOferta').style.display = 'inline-block';
+
+  var h = '<div class="of-cab"><b>' + pesos(ahorro) + '</b>'
+        + '<span>es lo que te ahorrarías comprándonos<br>estos ' + l.length
+        + (l.length === 1 ? ' producto' : ' productos') + '</span></div>';
+
+  h += l.map(function(o){
+    var n = _carritoOf[o.oferta_id] || 0;
+    return '<div class="of">'
+      + '<h3>' + esc(o.nombre) + '</h3>'
+      + '<div class="of-precios">'
+      +   '<span class="nuestro">' + pesos(o.precio_k24) + '</span>'
+      +   '<span class="suyo">' + pesos(o.precio_suyo) + '</span>'
+      + '</div>'
+      + '<div class="of-ahorro">Te ahorrás ' + pesos(o.ahorro) + ' por ' + esc(o.unidad || 'unidad')
+      +   ' · ' + o.ahorro_pct + '% menos</div>'
+      + '<div class="of-min">Pedido mínimo: ' + o.minimo + ' ' + esc(o.unidad || 'unidad')
+      +   (o.minimo > 1 ? 's' : '') + (o.nota ? ' · ' + esc(o.nota) : '') + '</div>'
+      + '<div class="of-cant">'
+      +   '<button onclick="ofCant(' + o.oferta_id + ',-' + o.minimo + ')">−</button>'
+      +   '<span id="ofc' + o.oferta_id + '">' + n + '</span>'
+      +   '<button onclick="ofCant(' + o.oferta_id + ',' + o.minimo + ')">+</button>'
+      + '</div></div>';
+  }).join('');
+
+  var total = 0, cuantos = 0;
+  l.forEach(function(o){
+    var n = _carritoOf[o.oferta_id] || 0;
+    total += n * o.precio_k24; cuantos += n;
+  });
+  if (cuantos) {
+    h += '<button class="btn" style="width:100%;margin-top:6px" onclick="pedirMercaderia()">'
+       + 'Pedir · ' + pesos(total) + '</button>';
+  }
+
+  h += '<div class="of-legal">No hay obligación de comprarnos. Si nunca nos comprás, '
+     + 'no cambia en nada tu lugar en la red ni los pedidos que te llegan.</div>';
+
+  z.innerHTML = h;
+  _ofertasCache = l;
+}
+
+var _ofertasCache = [];
+
+window.ofCant = function(id, paso){
+  var n = (_carritoOf[id] || 0) + paso;
+  if (n < 0) n = 0;
+  _carritoOf[id] = n;
+  pintarOfertas(_ofertasCache, _ofertasCache.reduce(function(a,o){ return a + o.ahorro; }, 0));
+};
+
+window.pedirMercaderia = async function(){
+  var items = Object.keys(_carritoOf)
+    .filter(function(k){ return _carritoOf[k] > 0; })
+    .map(function(k){ return { oferta_id: Number(k), cantidad: _carritoOf[k] }; });
+  if (!items.length) return;
+  if (!confirm('¿Mandamos el pedido? Te contactamos para coordinar la entrega.')) return;
+  try {
+    var d = await api({ method:'POST', body:{ accion:'pedir_mercaderia', items: items }});
+    if (!d.ok) throw new Error(d.mensaje || d.error || 'No se pudo');
+    _carritoOf = {};
+    toast('✓ ' + d.mensaje);
+    cargarOfertas();
+  } catch (e) { toast('⚠ ' + e.message); }
+};
 
 function pintarUbicar(){
   var z = $('zonaUbicar');
@@ -794,6 +922,7 @@ document.querySelectorAll('.tabs button').forEach(function(b){
     $(b.dataset.hoja).classList.add('on');
     if (b.dataset.hoja === 'hProductos') cargarProductos();
     if (b.dataset.hoja === 'hPlata')     { cargarCuenta(); pintarUbicar(); }
+    if (b.dataset.hoja === 'hOfertas')   cargarOfertas();
   });
 });
 
