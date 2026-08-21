@@ -468,8 +468,20 @@ def main():
             faltantes.append((fid, fuente))
             continue
         if fid in ANCLAS:
-            # Se mira, se informa, no se toca.
+            # Se mira, se informa, y NO se le toca el precio.
             anclas.append((fid, nom, nuevo, Number_(f[2]) or Number_(f[1])))
+            # Pero SI entra al reporte, que es de donde sale el "Activo = SI".
+            #
+            # Antes esto hacia `continue` y ahi estaba el error: proteger el
+            # PRECIO del ancla terminaba impidiendo que se volviera a PRENDER.
+            # Una vez apagada por cualquier tropiezo, quedaba apagada para
+            # siempre, y encima justo las anclas, que son los productos que
+            # mas se venden. En la Coca eso escondia 9 de 15 variantes.
+            #
+            # Son dos cosas distintas y hay que tratarlas distinto:
+            #   el precio de un ancla lo mueve Joe, a mano
+            #   que el ancla se VEA depende de si el proveedor la tiene
+            reporte.append((fid, fuente, nom, nuevo))
             continue
         actualizar.append([fid, nuevo])
         reporte.append((fid, fuente, nom, nuevo))
